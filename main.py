@@ -10,6 +10,8 @@ from database.engine import async_session
 from middlewares.db import DataBaseSession
 from handlers import other_handlers
 
+from keyboards.set_menu  import set_main_menu
+
 logger = logging.getLogger(__name__)
 
 
@@ -27,9 +29,8 @@ async def main():
     )
     dp = Dispatcher()
 
-
-
     # await set_main_menu(bot)
+    dp.startup.register(set_main_menu)
 
     logger.info('Подключаем роутеры')
     dp.include_router(other_handlers.router)
