@@ -12,6 +12,8 @@ async def set_main_menu(bot: Bot):
                    description='Кормлениe'),
         BotCommand(command='/pets',
                    description='Питомцы'),
+        BotCommand(command='/pets',
+                   description='Личный кабинет'),
         BotCommand(command='/help',
                    description='Справка по работе бота'),
         BotCommand(command='/support',
