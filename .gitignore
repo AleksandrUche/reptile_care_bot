@@ -1,0 +1,10 @@
+__pycache__/
+.env
+
+### macOS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+
+### PyCharm ###
+.idea
