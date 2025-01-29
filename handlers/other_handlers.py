@@ -1,36 +1,29 @@
-from aiogram import Router
+from aiogram import Router, F
 from aiogram.filters import Command, CommandStart
-from aiogram.types import (
-    KeyboardButton,
-    Message,
-    ReplyKeyboardMarkup,
-)
+from aiogram.types import Message
 
+from keyboards.reply_keyboards import reply_keyboards
 from lexicon.lexicon import LEXICON_RU
 
 router = Router()
-
-button1 = KeyboardButton(text='Добавить питомца')
-button2 = KeyboardButton(text='Мои питомцы')
-keyboard = [[button1, button2]]
-
-my_keyboard = ReplyKeyboardMarkup(
-    keyboard=keyboard,
-    resize_keyboard=True
-)
 
 
 @router.message(CommandStart())
 async def process_start_command(message: Message):
     await message.answer(
         text=LEXICON_RU['/start'],
-        reply_markup=my_keyboard,
+        reply_markup=reply_keyboards.main_menu,
     )
 
 
 @router.message(Command(commands='help'))
 async def process_help_command(message: Message):
     await message.answer(text=LEXICON_RU['/help'])
+
+
+@router.message(F.text == 'Профиль')
+async def send_answer(message: Message):
+    await message.answer(text=LEXICON_RU['profile'])
 
 
 @router.message()
