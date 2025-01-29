@@ -4,16 +4,10 @@ from aiogram.types import BotCommand
 
 async def set_main_menu(bot: Bot):
     main_menu_commands = [
-        BotCommand(command='/group',
-                   description='Группы'),
-        BotCommand(command='/add_pet',
-                   description='Добавить питомца'),
-        BotCommand(command='/feeding',
-                   description='Кормлениe'),
-        BotCommand(command='/pets',
-                   description='Питомцы'),
-        BotCommand(command='/account',
-                   description='Личный кабинет'),
+        BotCommand(command='/start',
+                   description='Начать'),
+        BotCommand(command='/menu',
+                   description='Главное меню'),
         BotCommand(command='/help',
                    description='Справка по работе бота'),
         BotCommand(command='/support',
