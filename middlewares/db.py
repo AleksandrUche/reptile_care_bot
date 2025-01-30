@@ -17,4 +17,12 @@ class DataBaseSession(BaseMiddleware):
     ) -> Any:
         async with self.session_pool() as session:
             data['session'] = session
-            return await handler(event, data)
+            try:
+                return await handler(event, data)
+            except Exception as e:
+                # В случае ошибки откатываем изменения
+                await session.rollback()
+                raise e
+            finally:
+                # Сессия автоматически закрывается
+                pass
