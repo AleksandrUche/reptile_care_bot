@@ -44,7 +44,7 @@ class SubscriptionOrm(Base):
     __tablename__ = "subscriptions"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    type: Mapped[SubscriptionType] = mapped_column(
+    subscription_type: Mapped[SubscriptionType] = mapped_column(
         'Тип подписки', Enum(SubscriptionType), default=SubscriptionType.ONE_MONTH)
     price: Mapped[int] = mapped_column(nullable=False)
     created_date = mapped_column(
