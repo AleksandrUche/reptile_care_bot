@@ -12,3 +12,10 @@ class SubscriptionType(Enum):
     TWO_MONTHS = "two months"
     SIX_MONTHS = "six months"
     YEAR = 'year'
+
+
+class UserRoleCompany(Enum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    EDITOR = 'editor'
+    VIEWER = 'viewer'
