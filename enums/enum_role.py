@@ -4,7 +4,7 @@ from enum import Enum
 class UserRole(Enum):
     OWNER = "owner"
     ADMIN = "admin"
-    BASE = "base"
+    USER = "user"
 
 
 class SubscriptionType(Enum):
