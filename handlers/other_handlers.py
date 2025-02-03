@@ -5,7 +5,7 @@ from aiogram.types import Message
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models import UserOrm
+from database.user_models import UserOrm
 from keyboards.reply_keyboards import reply_keyboards
 from lexicon.lexicon import LEXICON_RU
 
