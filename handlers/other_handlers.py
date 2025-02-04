@@ -13,7 +13,7 @@ router = Router()
 
 
 @router.message(CommandStart())
-async def start_handler(message: types.Message, session: AsyncSession):
+async def start_handler(message: Message, session: AsyncSession):
     user = UserOrm(
         telegram_id=message.from_user.id,
         username=message.from_user.username,
@@ -24,7 +24,7 @@ async def start_handler(message: types.Message, session: AsyncSession):
     try:
         await session.commit()
         await message.answer(
-            text=f'Привет, {user.first_name}! Вы успешно зарегистрированы!\n'
+            text=f'Здравствуйте, {user.first_name}! Вы успешно зарегистрированы!\n'
                  'Я бот-помощник создан для ухода за вашими питомцами 🦎🐍🦖\n',
             reply_markup=reply_keyboards.main_menu
         )
