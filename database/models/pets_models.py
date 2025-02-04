@@ -21,6 +21,7 @@ class CompanyOrm(Base):
     )
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), nullable=False,
                                          index=True)
+    user: Mapped['UserOrm'] = relationship('UserOrm', back_populates='companies')
     groups: Mapped[list['GroupOrm']] = relationship('GroupOrm',
                                                     back_populates='company')
     shared_users: Mapped[list['UserCompanyAssociation']] = relationship(
