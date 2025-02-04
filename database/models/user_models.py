@@ -62,7 +62,8 @@ class UserSubscriptionOrm(Base):
     is_active: Mapped[bool] = mapped_column('Активная?', Boolean, default=True)
     users: Mapped['UserOrm'] = relationship('UserOrm', back_populates='subscriptions')
     subscriptions: Mapped[list['SubscriptionOrm']] = relationship(
-        'SubscriptionOrm', back_populates='user_subscription')
+        'SubscriptionOrm', back_populates='user_subscription'
+    )
 
 
 class SubscriptionOrm(Base):
@@ -86,11 +87,13 @@ class UserCompanyAssociation(Base):
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
     company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), primary_key=True)
-    role: Mapped[UserRoleCompany] = mapped_column('Роль', Enum(UserRoleCompany),
-                                                  default=UserRoleCompany.VIEWER)
+    role: Mapped[UserRoleCompany] = mapped_column(
+        'Роль', Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
+    )
     user: Mapped['UserOrm'] = relationship('UserOrm', back_populates='shared_companies')
-    company: Mapped['CompanyOrm'] = relationship('CompanyOrm',
-                                                 back_populates='shared_users')
+    company: Mapped['CompanyOrm'] = relationship(
+        'CompanyOrm', back_populates='shared_users'
+    )
 
 
 class UserGroupAssociation(Base):
