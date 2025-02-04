@@ -4,11 +4,13 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from sqlalchemy.testing.suite.test_reflection import users
 
 from config_data.config import BOT_TOKEN
 from database.engine import async_session
 from middlewares.db import DataBaseSession
 from handlers import other_handlers
+from handlers import user_handler
 
 from keyboards.set_menu  import set_main_menu
 
@@ -29,11 +31,12 @@ async def main():
     )
     dp = Dispatcher()
 
-    # await set_main_menu(bot)
     dp.startup.register(set_main_menu)
 
     logger.info('Подключаем роутеры')
+    dp.include_router(user_handler.router)
     dp.include_router(other_handlers.router)
+
 
 
     logger.info('Подключаем миддлвари')
