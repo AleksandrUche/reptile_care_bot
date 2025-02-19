@@ -22,6 +22,6 @@ DB_HOST = os.environ.get('DB_HOST')
 DB_PORT = os.environ.get('DB_PORT')
 
 DATABASE_URL = f"postgresql+asyncpg://{DB_USER}:{DB_PASS}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
+SQLITE_ASYNC_URL = 'sqlite+aiosqlite:///./test.db'
 
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
-
