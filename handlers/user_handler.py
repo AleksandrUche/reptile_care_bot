@@ -1,14 +1,15 @@
+import logging
+
 from aiogram import F
 from aiogram import Router
 from aiogram.types import CallbackQuery
-from aiogram.types import Message
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from database.models.user_models import UserOrm
 from keyboards.inline_keyboards import inline_keyboards
+from services.registration.registration_services import user_exists
 
 router = Router()
+logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == 'profile')
