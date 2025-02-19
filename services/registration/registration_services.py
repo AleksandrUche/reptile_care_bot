@@ -1,3 +1,5 @@
+import logging
+
 from aiogram.types import Message
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,7 +8,8 @@ from database.models.pets_models import CompanyOrm, GroupOrm
 from database.models.user_models import UserOrm
 from keyboards.inline_keyboards import inline_keyboards
 from keyboards.reply_keyboards import reply_keyboards
-from main import logger
+
+logger = logging.getLogger(__name__)
 
 
 async def user_exists(telegram_id: int, session: AsyncSession) -> UserOrm | None:
