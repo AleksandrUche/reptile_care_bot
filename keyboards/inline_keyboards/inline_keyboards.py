@@ -20,5 +20,19 @@ main_menu_inline = InlineKeyboardMarkup(
         [InlineKeyboardButton(text='Профиль', callback_data='profile')],
         [InlineKeyboardButton(text='Поддержка', callback_data='supports')],
     ]
+)
 
+main_menu_pets = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='➕ Добавить питомца', callback_data='add_pet')],
+        [InlineKeyboardButton(text='🧾 Мои питомцы', callback_data='my_pets')],
+        [InlineKeyboardButton(text='⬅ Назад', callback_data='back_to_main_menu')],
+    ]
+)
+
+menu_add_pet = InlineKeyboardMarkup(
+    inline_keyboard=[
+        [InlineKeyboardButton(text='Кнопка', callback_data='test')],
+        [InlineKeyboardButton(text='⬅ Назад', callback_data='back_to_pets_menu')],
+    ]
 )
