@@ -1,6 +1,7 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Boolean, DateTime, BigInteger, func, Enum
+from sqlalchemy import ForeignKey, Boolean, DateTime, BigInteger, func, Enum, \
+    UniqueConstraint
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.engine import Base
@@ -85,8 +86,8 @@ class UserCompanyAssociation(Base):
     __tablename__ = 'user_company_association'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
-    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'))
     role: Mapped[UserRoleCompany] = mapped_column(
         'Роль', Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
     )
@@ -95,14 +96,22 @@ class UserCompanyAssociation(Base):
         'CompanyOrm', back_populates='shared_users'
     )
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'company_id', name='uq_user_company'),
+    )
+
 
 class UserGroupAssociation(Base):
     __tablename__ = 'user_group_association'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), primary_key=True)
-    group_id: Mapped[int] = mapped_column(ForeignKey('group.id'), primary_key=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    group_id: Mapped[int] = mapped_column(ForeignKey('group.id'))
     role: Mapped[UserRoleCompany] = mapped_column('Роль', Enum(UserRoleCompany),
                                                   default=UserRoleCompany.VIEWER)
     user: Mapped['UserOrm'] = relationship('UserOrm', back_populates='shared_groups')
     group: Mapped['GroupOrm'] = relationship('GroupOrm', back_populates='shared_users')
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'group_id', name='uq_user_group'),
+    )
