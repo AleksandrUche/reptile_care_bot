@@ -6,7 +6,7 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards.inline_keyboards import inline_keyboards
-from services.registration.registration_services import user_exists
+from services.registration_services import user_exists
 
 router = Router()
 logger = logging.getLogger(__name__)
