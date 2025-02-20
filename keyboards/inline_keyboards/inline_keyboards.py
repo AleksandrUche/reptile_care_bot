@@ -1,5 +1,7 @@
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 
+from keyboards.keyboard_utils.inline_kb_utils import create_inline_kb
+
 my_profile = InlineKeyboardMarkup(
     inline_keyboard=[
         [InlineKeyboardButton(text='О боте', callback_data='about_bot'),
@@ -12,27 +14,24 @@ my_profile = InlineKeyboardMarkup(
     ],
 )
 
-main_menu_inline = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='Питомцы', callback_data='pets_menu')],
-        [InlineKeyboardButton(text='Компания', callback_data='company')],
-        [InlineKeyboardButton(text='Кормления', callback_data='pets')],
-        [InlineKeyboardButton(text='Профиль', callback_data='profile')],
-        [InlineKeyboardButton(text='Поддержка', callback_data='supports')],
-    ]
+main_menu_inline = create_inline_kb(
+    2,
+    pets_menu='Питомцы',
+    company='Компания',
+    pets='Кормления',
+    profile='Профиль',
+    supports='Поддержка',
 )
 
-main_menu_pets = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='➕ Добавить питомца', callback_data='add_pet')],
-        [InlineKeyboardButton(text='🧾 Мои питомцы', callback_data='my_pets')],
-        [InlineKeyboardButton(text='⬅ Назад', callback_data='back_to_main_menu')],
-    ]
+main_menu_pets = create_inline_kb(
+    2,
+    add_pet='➕ Добавить питомца',
+    my_pets='🧾 Мои питомцы',
+    back_to_main_menu='⬅ Назад',
 )
 
-menu_add_pet = InlineKeyboardMarkup(
-    inline_keyboard=[
-        [InlineKeyboardButton(text='Кнопка', callback_data='test')],
-        [InlineKeyboardButton(text='⬅ Назад', callback_data='back_to_pets_menu')],
-    ]
+menu_add_pet = create_inline_kb(
+    2, cancel_add_pet='Отмена', back_to_pets_menu='⬅ Назад'
 )
+
+menu_company = create_inline_kb(2, my_companies='Мои компании')
