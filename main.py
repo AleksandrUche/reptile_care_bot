@@ -4,6 +4,7 @@ import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
+from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data.config import BOT_TOKEN
 from database.engine import async_session
@@ -22,18 +23,22 @@ async def main():
 
     logger.info('Starting bot')
 
+    storage = MemoryStorage()
+
     bot = Bot(
         token=BOT_TOKEN,
         default=DefaultBotProperties(parse_mode=ParseMode.HTML)
     )
-    dp = Dispatcher()
+    dp = Dispatcher(storage=storage)
 
     dp.startup.register(set_main_menu)
 
     logger.info('Подключаем роутеры')
     dp.include_router(user_handler.router)
-    dp.include_router(other_handlers.router)
     dp.include_router(pet_hendlers.router)
+
+    dp.include_router(other_handlers.router)
+
 
     logger.info('Подключаем миддлвари')
     dp.update.middleware(DataBaseSession(session_pool=async_session))
