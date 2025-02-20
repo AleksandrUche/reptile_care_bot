@@ -58,14 +58,15 @@ class PetOrm(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column('Имя', nullable=False)
-    date_birth: Mapped[DateTime] = mapped_column('Дата рождения',
-                                                 DateTime(timezone=True),
-                                                 nullable=False)
-    date_purchase: Mapped[DateTime] = mapped_column('Дата приобретения',
-                                                    DateTime(timezone=True),
-                                                    nullable=False)
-    gender: Mapped[GenderRole] = mapped_column('Пол', Enum(GenderRole),
-                                               default=GenderRole.NOT_DEFINED)
+    date_birth: Mapped[DateTime] = mapped_column(
+        'Дата рождения', DateTime(timezone=True), nullable=True
+    )
+    date_purchase: Mapped[DateTime] = mapped_column(
+        'Дата приобретения', DateTime(timezone=True), nullable=True
+    )
+    gender: Mapped[GenderRole] = mapped_column(
+        'Пол', Enum(GenderRole), default=GenderRole.NOT_DEFINED
+    )
     morph: Mapped[str] = mapped_column('Морфа', nullable=True)
     view: Mapped[str] = mapped_column('Вид', nullable=True)
     photo: Mapped[str] = mapped_column('Фото', nullable=True)
