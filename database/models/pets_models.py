@@ -26,6 +26,7 @@ class CompanyOrm(Base):
                                                     back_populates='company')
     shared_users: Mapped[list['UserCompanyAssociation']] = relationship(
         'UserCompanyAssociation', back_populates='company')
+    pets: Mapped[list['PetOrm']] = relationship('PetOrm', back_populates='company')
 
 
 class GroupOrm(Base):
@@ -76,6 +77,13 @@ class PetOrm(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
+    company_id: Mapped[int] = mapped_column(
+        ForeignKey('company.id'), unique=True, nullable=False
+    )
+    company: Mapped['CompanyOrm'] = relationship(
+        'CompanyOrm', back_populates='pets'
+    )
+
     group_id: Mapped[int] = mapped_column(ForeignKey('group.id'), nullable=False)
     group: Mapped['GroupOrm'] = relationship('GroupOrm', back_populates='pets')
 
