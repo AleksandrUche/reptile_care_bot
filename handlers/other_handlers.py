@@ -1,13 +1,11 @@
-from aiogram import F
-from aiogram import Router
-from aiogram.filters import Command
-from aiogram.filters import CommandStart
+from aiogram import F, Router
+from aiogram.filters import Command, CommandStart
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards.inline_keyboards.inline_keyboards import main_menu_inline
 from lexicon.lexicon import LEXICON_RU
-from services.registration.registration_services import user_registration
+from services.registration_services import user_registration
 
 router = Router()
 
