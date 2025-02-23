@@ -77,9 +77,7 @@ class PetOrm(Base):
         server_default=func.now(),
         onupdate=func.now(),
     )
-    company_id: Mapped[int] = mapped_column(
-        ForeignKey('company.id'), unique=True, nullable=False
-    )
+    company_id: Mapped[int] = mapped_column(ForeignKey('company.id'), nullable=False)
     company: Mapped['CompanyOrm'] = relationship(
         'CompanyOrm', back_populates='pets'
     )
