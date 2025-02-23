@@ -8,7 +8,7 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards.inline_keyboards import inline_keyboards
-from services.pet_services import get_user_company
+from services.pet_services import get_user_company, get_company_and_groups, add_pet
 from states.pet_states import AddPetFSM
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ async def pets_menu(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'add_pet', StateFilter(default_state))
-async def add_pet(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+async def add_pet_handler(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
     await callback.answer()
     await  callback.message.edit_text(
         text='Добавление питомца 🦝\n'
@@ -43,8 +43,8 @@ async def process_pet_name(message: Message, state: FSMContext, session: AsyncSe
     await state.update_data(pet_name=message.text)
     state_data = await state.get_data()
 
-    # await add_pet(user_id, data['pet_name'], session)
-
+    await add_pet(user_id, state_data['pet_name'], session)
+    #TODO Добавить проверку статуса записи
     await message.answer(f"Питомец '{state_data['pet_name']}' успешно добавлен!")
     await state.clear()
 
@@ -58,7 +58,7 @@ async def cancel_handler(message: Message, state: FSMContext):
 @router.callback_query(
     F.data.in_({'company', 'back_to_company_menu'}), StateFilter(default_state)
 )
-async def pets_menu(callback: CallbackQuery):
+async def company_main_menu(callback: CallbackQuery):
     await callback.answer()
     await  callback.message.edit_text(
         text='Компании 🏙',
@@ -68,7 +68,7 @@ async def pets_menu(callback: CallbackQuery):
 @router.callback_query(
     F.data == 'my_companies', StateFilter(default_state)
 )
-async def pets_menu(callback: CallbackQuery, session: AsyncSession):
+async def my_company(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
     my_company = await get_user_company(callback.from_user.id, session)
     companies = ['Все компании: 🏙']
