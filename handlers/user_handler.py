@@ -22,9 +22,12 @@ async def my_profile(callback: CallbackQuery, session: AsyncSession):
             f'Ошибка при открытии профиля пользователя c id = {callback.from_user.id}: {e}',
             exc_info=True
         )
-        await callback.message.answer(text='Произошла ошибка, пользователь не найден')
-    else:
         await callback.message.answer(
+            text='Произошла ошибка, пользователь не найден\n'
+                 'Попробуйте еще раз, в случае неудачи обратитесь в поддержку.'
+        )
+    else:
+        await callback.message.edit_text(
             text=f'Ваше имя: {user.first_name}\n',
             reply_markup=inline_keyboards.my_profile,
         )
