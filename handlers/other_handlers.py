@@ -15,11 +15,22 @@ async def start_handler(message: Message, session: AsyncSession):
     await user_registration(message, session)
 
 
-@router.message(Command(commands='menu'))
+@router.message(Command('menu'))
 async def get_main_menu(message: Message):
+    """Срабатывает на команду /menu (возврат в меню)"""
     await message.answer(
-        text='📋Главное меню',
-        reply_markup=main_menu_inline,
+        text='📋Главное меню📋',
+        reply_markup=inline_keyboards.main_menu_inline,
+    )
+
+
+@router.callback_query(F.data == 'back_to_main_menu')
+async def get_main_menu_callback(callback: CallbackQuery):
+    """Срабатывает на callback query (возврат в меню)"""
+    await callback.answer()
+    await callback.message.edit_text(
+        text='📋Главное меню📋',
+        reply_markup=inline_keyboards.main_menu_inline,
     )
 
 
