@@ -28,11 +28,12 @@ async def user_registration(message: Message, session: AsyncSession):
     регистрирует его и создает компанию и группу по умолчанию.
     """
     user_exist = await user_exists(message.from_user.id, session)
+    keyboard = inline_keyboards.main_menu_inline
     if user_exist:
         await message.answer(
             text=f'Рады вас видеть снова {user_exist.first_name}😊\n'
                  'Напомню, я бот-помощник,  для ухода за вашими питомцами 🦎🐍🦖\n',
-            reply_markup=inline_keyboards.my_profile,
+            reply_markup=keyboard,
         )
     else:
         user = UserOrm(
@@ -61,5 +62,5 @@ async def user_registration(message: Message, session: AsyncSession):
             await message.answer(
                 text=f'Здравствуйте, {user.first_name}! Вы успешно зарегистрированы!\n'
                      'Я бот-помощник создан для ухода за вашими питомцами 🦎🐍🦖\n',
-                reply_markup=reply_keyboards.main_menu
+                reply_markup=keyboard
             )
