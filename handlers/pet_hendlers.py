@@ -37,15 +37,23 @@ async def add_pet_handler(callback: CallbackQuery, state: FSMContext, session: A
     await state.set_state(AddPetFSM.pet_name)
 
 
-@router.message(StateFilter(AddPetFSM.pet_name), F.text.isalnum())
+@router.message(StateFilter(AddPetFSM.pet_name), F.text.func(is_alnum_with_spaces))
 async def process_pet_name(message: Message, state: FSMContext, session: AsyncSession):
-    user_id = message.from_user.id
+    """Добавляет питомца (с именем) в компанию со стандартной группой"""
     await state.update_data(pet_name=message.text)
     state_data = await state.get_data()
 
-    await add_pet(user_id, state_data['pet_name'], session)
-    #TODO Добавить проверку статуса записи
-    await message.answer(f"Питомец '{state_data['pet_name']}' успешно добавлен!")
+    added_pet = await add_pet(message.from_user.id, state_data['pet_name'], session)
+    if added_pet:
+        await message.answer(
+            f"Питомец '{state_data['pet_name']}' успешно добавлен!",
+            reply_markup=inline_keyboards.main_menu_pets,
+        )
+    else:
+        await message.answer(
+            'Произошла ошибка при добавлении питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
     await state.clear()
 
 
