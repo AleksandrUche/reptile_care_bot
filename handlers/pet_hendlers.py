@@ -27,11 +27,12 @@ async def pets_menu(callback: CallbackQuery):
 
 
 @router.callback_query(F.data == 'add_pet', StateFilter(default_state))
-async def add_pet_handler(callback: CallbackQuery, state: FSMContext, session: AsyncSession):
+async def add_pet_handler(callback: CallbackQuery, state: FSMContext):
     await callback.answer()
     await  callback.message.edit_text(
-        text='Добавление питомца 🦝\n'
-             'Введите имя питомца:',
+        text='🦎Добавление питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите имя питомца:</b>',
         reply_markup=inline_keyboards.menu_add_pet,
     )
     await state.set_state(AddPetFSM.pet_name)
