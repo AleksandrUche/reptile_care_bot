@@ -4,7 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
-from database.models.pets_models import CompanyOrm, GroupOrm, PetOrm
+from database.models.pets_models import CompanyOrm, PetOrm
 from database.models.user_models import UserOrm
 
 logger = logging.getLogger(__name__)
@@ -46,3 +46,15 @@ async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении питомца: {e}', exc_info=True)
+    else:
+        return True
+
+
+async def get_my_companies_and_pets(user_id: int, session: AsyncSession):
+    result = await session.scalars(
+        select(CompanyOrm)
+        .join(UserOrm, CompanyOrm.user_id == UserOrm.id)
+        .where(UserOrm.telegram_id == user_id)
+        .options(joinedload(CompanyOrm.pets))
+    )
+    return result.unique().all()
