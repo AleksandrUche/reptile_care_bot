@@ -9,6 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from filters.pet_filters import is_alnum_with_spaces
 from keyboards.inline_keyboards import inline_keyboards
+from keyboards.keyboard_utils.inline_kb_utils import show_pets_page_inline_kb
 from services.pet_services import get_user_company, add_pet, get_my_companies_and_pets
 from states.pet_states import AddPetFSM
 
