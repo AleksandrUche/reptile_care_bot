@@ -76,20 +76,12 @@ async def get_all_pets_handler(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
     pets_and_company = await get_my_companies_and_pets(callback.from_user.id, session)
 
-    result = []
-    for company in pets:
-        result.append(f'{company.name}:\n\n')
-        for pet in company.pets:
-            result.append(f'- id: {pet.id} Имя: {pet.name}\n')
-        result.append('\n')
     pets = []
     for company in pets_and_company:
         pets.extend(company.pets)
     inline_kb = await show_pets_page_inline_kb(pets, page=0)
 
     await callback.message.edit_text(
-        text=f'🦎<b>Мои питомцы</b>\n\n' + ''.join(result),
-        reply_markup=inline_keyboards.back_to_main_menu,
         text='🦎<b>Все питомцы:</b>\n\n',
         reply_markup=inline_kb,
     )
