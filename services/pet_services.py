@@ -46,6 +46,7 @@ async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении питомца: {e}', exc_info=True)
+        return False
     else:
         return True
 
