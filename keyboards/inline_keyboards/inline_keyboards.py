@@ -21,7 +21,7 @@ main_menu_inline = create_inline_kb(
 main_menu_pets = create_inline_kb(
     2,
     add_pet='➕ Добавить питомца',
-    my_pets_list='🧾 Мои питомцы',
+    my_pets_list='🧾 Все питомцы',
     back_to_main_menu='⬅ Назад',
 )
 
