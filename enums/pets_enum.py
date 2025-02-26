@@ -2,6 +2,6 @@ from enum import Enum
 
 
 class GenderRole(Enum):
-    BOY = 'boy'
-    GIRL = 'girl'
-    NOT_DEFINED = 'not_defined'
+    BOY = 'мальчик'
+    GIRL = 'девочка'
+    NOT_DEFINED = 'не определен'
