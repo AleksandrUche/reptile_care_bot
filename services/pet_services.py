@@ -2,9 +2,16 @@ import logging
 
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy.orm import joinedload
+from sqlalchemy.orm import joinedload, aliased, selectinload
 
-from database.models.pets_models import CompanyOrm, PetOrm
+from database.models.pets_models import (
+    CompanyOrm,
+    PetOrm,
+    WeightPetOrm,
+    LengthPetOrm,
+    MoltingPetOrm,
+    GroupOrm,
+)
 from database.models.user_models import UserOrm
 
 logger = logging.getLogger(__name__)
@@ -22,17 +29,16 @@ async def get_user_company(user_id: int, session: AsyncSession):
 
 async def get_company_and_groups(user_id: int, session: AsyncSession):
     """Возвращает компанию и все группы связанные с ней"""
-    company = await session.scalar(
+    return await session.scalar(
         select(CompanyOrm)
         .options(joinedload(CompanyOrm.groups))
         .filter(CompanyOrm.user.has(telegram_id=user_id))
     )
-    return company
 
 
 async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
     """
-    Добавляет питомца в компанию пользователя, с группой "По умолчанию".
+    Добавляет питомца в компанию пользователя, с группой 'По умолчанию'.
     """
     user_company = await get_company_and_groups(user_id, session)
 
@@ -59,3 +65,72 @@ async def get_my_companies_and_pets(user_id: int, session: AsyncSession):
         .options(joinedload(CompanyOrm.pets))
     )
     return result.unique().all()
+
+
+async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSession):
+    """
+    Возвращает объект питомца, название компании и группы, а также последние
+    измерения длины, веса и последнюю дату линьки.
+    :return: dict{pet_obj, company_name, group_name, latest_weight, latest_length, latest_molting_date}
+    """
+    latest_weight_subquery = (
+        select(WeightPetOrm)
+        .filter(WeightPetOrm.pet_id == pet_id)
+        .order_by(WeightPetOrm.date_measure.desc())
+        .limit(1)
+        .subquery()
+    )
+    latest_weight_alias = aliased(WeightPetOrm, latest_weight_subquery)
+
+    latest_length_subquery = (
+        select(LengthPetOrm)
+        .filter(LengthPetOrm.pet_id == pet_id)
+        .order_by(LengthPetOrm.date_measure.desc())
+        .limit(1)
+        .subquery()
+    )
+    latest_length_alias = aliased(LengthPetOrm, latest_length_subquery)
+
+    latest_molting_subquery = (
+        select(MoltingPetOrm)
+        .filter(MoltingPetOrm.pet_id == pet_id)
+        .order_by(MoltingPetOrm.date_measure.desc())
+        .limit(1)
+        .subquery()
+    )
+    latest_molting_alias = aliased(MoltingPetOrm, latest_molting_subquery)
+
+    stmt = (
+        select(PetOrm)
+        .outerjoin(latest_weight_alias, PetOrm.id == latest_weight_alias.pet_id)
+        .outerjoin(latest_length_alias, PetOrm.id == latest_length_alias.pet_id)
+        .outerjoin(latest_molting_alias, PetOrm.id == latest_molting_alias.pet_id)
+        .options(
+            selectinload(PetOrm.company).load_only(CompanyOrm.name),
+            selectinload(PetOrm.group).load_only(GroupOrm.name),
+        )
+        .filter(
+            PetOrm.id == pet_id,
+            PetOrm.company_id == company_id,
+            PetOrm.group_id == group_id,
+        )
+        .add_columns(
+            CompanyOrm.name.label('company_name'),
+            GroupOrm.name.label('group_name'),
+            latest_weight_alias.weight.label('latest_weight'),
+            latest_length_alias.length.label('latest_length'),
+            latest_molting_alias.date_measure.label('latest_molting_date'),
+        )
+    )
+
+    result = await session.execute(stmt)
+    row = result.one()
+
+    return {
+        'pet': row.PetOrm,
+        'company_name': row.company_name,
+        'group_name': row.group_name,
+        'latest_weight': row.latest_weight,
+        'latest_length': row.latest_length,
+        'latest_molting_date': row.latest_molting_date,
+    }
