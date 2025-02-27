@@ -134,7 +134,7 @@ async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSes
     )
 
     result = await session.execute(stmt)
-    row = result.one()
+    row = result.first()
 
     return {
         'pet': row.PetOrm,
