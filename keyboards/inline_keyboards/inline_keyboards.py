@@ -26,7 +26,9 @@ main_menu_pets = create_inline_kb(
 )
 
 menu_add_pet = create_inline_kb(
-    2, cancel_state='Отмена', back_to_pets_menu='⬅ Назад'
+    2,
+    cancel_state='Отмена',
+    back_to_pets_menu='⬅ Назад'
 )
 
 back_to_all_pets = create_inline_kb(
@@ -41,4 +43,8 @@ menu_company = create_inline_kb(
     1,
     my_companies='Мои компании',
     back_to_main_menu='⬅ Назад',
+)
+
+back_to_all_company = create_inline_kb(
+    1, back_to_all_company='⬅ Назад'
 )
