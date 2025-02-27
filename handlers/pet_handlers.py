@@ -8,14 +8,16 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import (
-    PaginationCallbackFactory,
-    PetsCallbackFactory,
+    PaginationCallback,
+    PetsCallback,
 )
 from filters.pet_filters import is_alnum_with_spaces
 from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import show_pets_page_inline_kb
+from keyboards.keyboard_utils.inline_kb_utils import (
+    show_pets_page_inline_kb,
+    get_edit_pet_inline_kb,
+)
 from services.pet_services import (
-    get_user_company,
     add_pet,
     get_my_companies_and_pets,
     get_pet,
@@ -100,10 +102,10 @@ async def get_all_pets_handler(callback: CallbackQuery, session: AsyncSession):
     )
 
 
-@router.callback_query(PaginationCallbackFactory.filter(F.action == 'next'))
+@router.callback_query(PaginationCallback.filter(F.action == 'next'))
 async def next_page_my_pets_handler(
     callback: CallbackQuery,
-    callback_data: PaginationCallbackFactory,
+    callback_data: PaginationCallback,
     session: AsyncSession
 ):
     """Обработчик для кнопки 'Вперед'"""
@@ -124,10 +126,10 @@ async def next_page_my_pets_handler(
     )
 
 
-@router.callback_query(PaginationCallbackFactory.filter(F.action == 'prev'))
+@router.callback_query(PaginationCallback.filter(F.action == 'prev'))
 async def prev_page_my_pets_handler(
     callback: CallbackQuery,
-    callback_data: PaginationCallbackFactory,
+    callback_data: PaginationCallback,
     session: AsyncSession,
 ):
     """Обработчик для кнопки 'Назад'"""
@@ -148,9 +150,9 @@ async def prev_page_my_pets_handler(
     )
 
 
-@router.callback_query(PetsCallbackFactory.filter())
+@router.callback_query(PetsCallback.filter())
 async def detail_pets_handler(
-    callback: CallbackQuery, callback_data: PetsCallbackFactory, session: AsyncSession
+    callback: CallbackQuery, callback_data: PetsCallback, session: AsyncSession
 ):
     """Обработчик для детального просмотра питомца"""
     await callback.answer()
@@ -161,6 +163,8 @@ async def detail_pets_handler(
         callback_data.group_id,
         session
     )
+
+    inline_kb = await get_edit_pet_inline_kb(pet['pet'].id)
 
     await callback.message.edit_text(
         text=f'Имя питомца: {pet["pet"].name}\n\n'
@@ -174,7 +178,7 @@ async def detail_pets_handler(
              f'Группа: {pet["group_name"]}\n'
              f'Дата рождения: {pet["pet"].date_birth}\n'
              f'Дата приобретения: {pet["pet"].date_purchase}\n',
-        reply_markup=inline_keyboards.back_to_all_pets
+        reply_markup=inline_kb
     )
 
 

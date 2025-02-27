@@ -2,11 +2,12 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from factory.callback_factory.company_factory import CompanyCallback
 from factory.callback_factory.pet_factory import (
-    PaginationCallbackFactory,
-    PetsCallbackFactory,
+    PaginationCallback,
+    PetsCallback,
+    EditPetCallback,
 )
-from factory.callback_factory.company_factory import CompanyCallbackFactory
 from lexicon.lexicon import LEXICON_RU
 
 
@@ -55,7 +56,7 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
     for pet in pets_page:
         builder.button(
             text=pet.name,
-            callback_data=PetsCallbackFactory(
+            callback_data=PetsCallback(
                 id=pet.id, company_id=pet.company_id, group_id=pet.group_id
             )
         )
@@ -63,12 +64,12 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
     if page > 0:
         builder.button(
             text='⬅️ Назад',
-            callback_data=PaginationCallbackFactory(action='prev', page=page).pack()
+            callback_data=PaginationCallback(action='prev', page=page).pack()
         )
     if end_index < len(pets):
         builder.button(
             text='Вперед ➡️',
-            callback_data=PaginationCallbackFactory(action='next', page=page).pack()
+            callback_data=PaginationCallback(action='next', page=page).pack()
         )
 
     builder.button(text='🔙 Главное меню', callback_data='back_to_main_menu')
@@ -77,7 +78,8 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
     return builder.as_markup()
 
 
-async def show_companies_page_inline_kb(companies: list, page: int = 0, per_page: int = 6):
+async def show_companies_page_inline_kb(companies: list, page: int = 0,
+                                        per_page: int = 6):
     """
     Отображает компании на странице с пагинацией.
     :param company: Список всех компаний.
@@ -95,7 +97,7 @@ async def show_companies_page_inline_kb(companies: list, page: int = 0, per_page
     for company in companies_page:
         builder.button(
             text=company.name,
-            callback_data=CompanyCallbackFactory(
+            callback_data=CompanyCallback(
                 company_id=company.id, user_id=company.user_id
             )
         )
@@ -103,15 +105,65 @@ async def show_companies_page_inline_kb(companies: list, page: int = 0, per_page
     if page > 0:
         builder.button(
             text='⬅️ Назад',
-            callback_data=PaginationCallbackFactory(action='prev', page=page).pack()
+            callback_data=PaginationCallback(action='prev', page=page).pack()
         )
     if end_index < len(companies):
         builder.button(
             text='Вперед ➡️',
-            callback_data=PaginationCallbackFactory(action='next', page=page).pack()
+            callback_data=PaginationCallback(action='next', page=page).pack()
         )
 
     builder.button(text='🔙 Меню', callback_data='back_to_company_menu')
     builder.adjust(1)
 
+    return builder.as_markup()
+
+
+async def get_edit_pet_inline_kb(pet_id: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Изменить имя',
+        callback_data=EditPetCallback(field='name', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Изменить морфу',
+        callback_data=EditPetCallback(field='morph', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Изменить вид',
+        callback_data=EditPetCallback(field='view', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Изменить пол',
+        callback_data=EditPetCallback(field='gender', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Добавить вес',
+        callback_data=EditPetCallback(field='weight', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Добавить длину',
+        callback_data=EditPetCallback(field='length', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Добавить дату линьки',
+        callback_data=EditPetCallback(field='molting', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Изменить дату рождения',
+        callback_data=EditPetCallback(field='birth', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Изменить дату приобретения',
+        callback_data=EditPetCallback(field='purchase', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Удалить питомца',
+        callback_data=EditPetCallback(field='delete', pet_id=pet_id).pack()
+    )
+    builder.button(
+        text='Назад',
+        callback_data='back_to_all_pets'
+    )
+    builder.adjust(2)  # По 2 кнопки в строке
     return builder.as_markup()
