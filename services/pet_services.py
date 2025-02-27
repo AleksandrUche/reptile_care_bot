@@ -29,6 +29,14 @@ async def get_all_companies_user(user_id: int, session: AsyncSession):
     return result.unique().all()
 
 
+async def get_company(company_id: int, session: AsyncSession):
+    """Возвращает компанию по id"""
+    return await session.scalar(
+        select(CompanyOrm)
+        .filter(CompanyOrm.id == company_id)
+    )
+
+
 async def get_company_and_groups(user_id: int, session: AsyncSession):
     """Возвращает компанию и все группы связанные с ней"""
     return await session.scalar(
