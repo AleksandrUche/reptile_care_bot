@@ -7,7 +7,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database.models.pets_models import CompanyOrm, GroupOrm
 from database.models.user_models import UserOrm
 from keyboards.inline_keyboards import inline_keyboards
-from keyboards.reply_keyboards import reply_keyboards
 
 logger = logging.getLogger(__name__)
 
@@ -45,11 +44,19 @@ async def user_registration(message: Message, session: AsyncSession):
         session.add(user)
         await session.flush()
 
-        company = CompanyOrm(name='По умолчанию', user_id=user.id)
+        company = CompanyOrm(
+            name='Моя компания',
+            description='Первая компания, создается автоматически.',
+            user_id=user.id
+        )
         session.add(company)
         await session.flush()
 
-        group = GroupOrm(name='По умолчанию', company_id=company.id)
+        group = GroupOrm(
+            name='Мои питомцы',
+            description='Данная группа создана автоматически.',
+            company_id=company.id
+        )
         session.add(group)
         try:
             await session.commit()
