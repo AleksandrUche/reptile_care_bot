@@ -183,29 +183,3 @@ async def cancel_state_handler(message: Message, state: FSMContext):
     """Выходит из машины состояния"""
     await state.clear()
     await message.answer("Действие отменено.")
-
-
-@router.callback_query(
-    F.data.in_({'company', 'back_to_company_menu'}), StateFilter(default_state)
-)
-async def company_main_menu(callback: CallbackQuery):
-    await callback.answer()
-    await  callback.message.edit_text(
-        text='Компании 🏢',
-        reply_markup=inline_keyboards.menu_company,
-    )
-
-
-@router.callback_query(
-    F.data == 'my_companies', StateFilter(default_state)
-)
-async def my_company(callback: CallbackQuery, session: AsyncSession):
-    await callback.answer()
-    my_company = await get_user_company(callback.from_user.id, session)
-
-    companies = []
-    for company in my_company:
-        companies.append(company.name)
-
-    await  callback.message.edit_text(
-        text='Все компании: 🏢\n\n' + '\n'.join(companies), )
