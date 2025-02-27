@@ -26,6 +26,7 @@ async def get_all_companies_user(user_id: int, session: AsyncSession):
         .filter(UserOrm.telegram_id == user_id)
     )
     return company.companies
+    return result.unique().all()
 
 
 async def get_company_and_groups(user_id: int, session: AsyncSession):
