@@ -3,6 +3,7 @@ import logging
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, aliased, selectinload
+from sqlalchemy.util import await_only
 
 from database.models.pets_models import (
     CompanyOrm,
@@ -25,7 +26,6 @@ async def get_all_companies_user(user_id: int, session: AsyncSession):
         .options(joinedload(CompanyOrm.user).load_only(UserOrm.telegram_id))
         .filter(UserOrm.telegram_id == user_id)
     )
-    return company.companies
     return result.unique().all()
 
 
