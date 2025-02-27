@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config_data.config import BOT_TOKEN
 from database.engine import async_session
-from handlers import user_handler, other_handlers, pet_handlers
+from handlers import user_handler, other_handlers, pet_handlers, company_handler
 from keyboards.set_menu import set_main_menu
 from middlewares.db import DataBaseSession
 
@@ -36,6 +36,7 @@ async def main():
     logger.info('Подключаем роутеры')
     dp.include_router(user_handler.router)
     dp.include_router(pet_handlers.router)
+    dp.include_router(company_handler.router)
 
     dp.include_router(other_handlers.router)
 
