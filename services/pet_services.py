@@ -17,11 +17,12 @@ from database.models.user_models import UserOrm
 logger = logging.getLogger(__name__)
 
 
-async def get_user_company(user_id: int, session: AsyncSession):
+async def get_all_companies_user(user_id: int, session: AsyncSession):
     """Возвращает все компании пользователя"""
-    company = await session.scalar(
-        select(UserOrm)
-        .options(joinedload(UserOrm.companies))
+    result = await session.scalars(
+        select(CompanyOrm)
+        .join(UserOrm)
+        .options(joinedload(CompanyOrm.user).load_only(UserOrm.telegram_id))
         .filter(UserOrm.telegram_id == user_id)
     )
     return company.companies
