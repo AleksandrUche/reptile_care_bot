@@ -1,9 +1,8 @@
 import logging
 
-from sqlalchemy import select
+from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, aliased, selectinload
-from sqlalchemy.util import await_only
 
 from database.models.pets_models import (
     CompanyOrm,
@@ -63,6 +62,42 @@ async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
     except Exception as e:
         logger.error(f'Ошибка при добавлении питомца: {e}', exc_info=True)
         return False
+    else:
+        return True
+
+
+async def edit_pet_value(pet_id: int, name_field: str, pet_morph: str,
+                         session: AsyncSession):
+    """
+    Изменяет значения указанного поля.
+    :param pet_id: ID питомца.
+    :param name_field: Имя поля, которое нужно обновить (например, "name").
+    :param pet_morph: Новое значение для поля.
+    :param session: Сессия.
+    :return: True, если обновление прошло успешно, иначе False.
+    """
+    update_data = {name_field: pet_morph}
+    stmt = update(PetOrm).filter(PetOrm.id == pet_id).values(**update_data)
+
+    try:
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при изменении \"{name_field}\" питомца: {e}',
+                     exc_info=True)
+    else:
+        return True
+
+
+async def delete_pet(pet_id: int, session: AsyncSession):
+    """Удаление питомца по id"""
+    stmt = delete(PetOrm).filter(PetOrm.id == pet_id)
+
+    try:
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при удалении питомца с ID-{pet_id}: {e}', exc_info=True)
     else:
         return True
 
