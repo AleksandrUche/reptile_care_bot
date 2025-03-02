@@ -15,3 +15,9 @@ class PetsCallback(CallbackData, prefix='pet'):
 class EditPetCallback(CallbackData, prefix='edit_pet'):
     field: str  # Поле, которое нужно изменить (например, "name", "morph"...)
     pet_id: int
+
+
+class DeletePetCallback(CallbackData, prefix='delete_pet'):
+    action: str # menu, delete, cancel
+    pet_id: int
+    pet_name: str
