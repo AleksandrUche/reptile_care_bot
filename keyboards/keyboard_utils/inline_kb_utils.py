@@ -7,6 +7,7 @@ from factory.callback_factory.pet_factory import (
     PaginationCallback,
     PetsCallback,
     EditPetCallback,
+    DeletePetCallback,
 )
 from lexicon.lexicon import LEXICON_RU
 
@@ -119,7 +120,7 @@ async def show_companies_page_inline_kb(companies: list, page: int = 0,
     return builder.as_markup()
 
 
-async def get_edit_pet_inline_kb(pet_id: int):
+async def get_edit_pet_inline_kb(pet_id: int, pet_name: str = None):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='Изменить имя',
@@ -158,12 +159,26 @@ async def get_edit_pet_inline_kb(pet_id: int):
         callback_data=EditPetCallback(field='purchase', pet_id=pet_id).pack()
     )
     builder.button(
-        text='Удалить питомца',
-        callback_data=EditPetCallback(field='delete', pet_id=pet_id).pack()
+        text='Удалить питомца ❌',
+        callback_data=DeletePetCallback(action='menu', pet_id=pet_id, pet_name=pet_name).pack()
     )
     builder.button(
         text='Назад',
         callback_data='back_to_all_pets'
     )
     builder.adjust(2)  # По 2 кнопки в строке
+    return builder.as_markup()
+
+
+async def get_delete_pet_inline_kb(pet_id: int, pet_name: str):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✅ ДА',
+        callback_data=DeletePetCallback(action='delete', pet_id=pet_id, pet_name=pet_name).pack()
+    )
+    builder.button(
+        text='❌ НЕТ',
+        callback_data=DeletePetCallback(action='cancel', pet_id=pet_id, pet_name=pet_name).pack()
+    )
+    builder.adjust(2)
     return builder.as_markup()
