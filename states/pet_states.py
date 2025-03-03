@@ -10,46 +10,42 @@ class PetIdFSM(StatesGroup):
     pet_id = State()
 
 
-class PetEditNameFSM(PetIdFSM):
+class PetEditBaseFSM(PetIdFSM):
+    """Базовый для редактирования питомцев"""
+    company_id = State()
+    group_id = State()
+
+
+class PetEditNameFSM(PetEditBaseFSM):
     """Имя питомца"""
     pet_name = State()
 
 
-class PetEditMorphFSM(PetIdFSM):
+class PetEditMorphFSM(PetEditBaseFSM):
     """Морфа питомца"""
     pet_morph = State()
 
 
-class PetEditViewFSM(PetIdFSM):
+class PetEditViewFSM(PetEditBaseFSM):
     """Вид питомца"""
     pet_view = State()
 
 
-class PetEditGenderFSM(PetIdFSM):
-    """Пол питомца"""
-    pet_gender = State()
-
-
-class PetEditLengthFSM(PetIdFSM):
+class PetEditLengthFSM(PetEditBaseFSM):
     """Длина питомца"""
     pet_length = State()
 
 
-class PetEditMoltingFSM(PetIdFSM):
+class PetEditMoltingFSM(PetEditBaseFSM):
     """Линька питомца"""
     pet_ = State()
 
 
-class PetEditBirthFSM(PetIdFSM):
+class PetEditBirthFSM(PetEditBaseFSM):
     """Дата рождения"""
     pet_birth = State()
 
 
-class PetEditPurchaseFSM(PetIdFSM):
+class PetEditPurchaseFSM(PetEditBaseFSM):
     """Дата приобретения"""
     pet_purchase = State()
-
-
-class PetDeliteFSM(PetIdFSM):
-    """Удаление питомца"""
-    ...
