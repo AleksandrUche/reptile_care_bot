@@ -27,7 +27,7 @@ from services.pet_services import (
     edit_pet_value,
     delete_pet,
 )
-from states.pet_states import PetAddFSM, PetEditNameFSM, PetEditMorphFSM
+from states.pet_states import PetAddFSM, PetEditNameFSM, PetEditMorphFSM, PetEditViewFSM
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -280,6 +280,48 @@ async def process_edit_pet_morph(
     await state.clear()
 
 
+@router.callback_query(EditPetCallback.filter(F.field == 'view'))
+async def edit_pet_view_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для изменения вида питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Изменение вида питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите вид питомца:</b>',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(pet_id=callback_data.pet_id)
+    await state.set_state(PetEditViewFSM.pet_view)
+
+
+@router.message(StateFilter(PetEditViewFSM.pet_view))
+async def process_edit_pet_view(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Изменение вида питомца."""
+    await state.update_data(pet_view=message.text)
+    state_data = await state.get_data()
+
+    edit_pet = await edit_pet_value(
+        state_data['pet_id'], 'view', state_data['pet_view'], session
+    )
+    if edit_pet:
+        await message.answer(
+            f"Теперь вид питомца: \"{state_data['pet_view']}\".",
+            reply_markup=inline_keyboards.main_menu_pets,
+        )
+    else:
+        await message.answer(
+            'Произошла ошибка при изменении вида питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    await state.clear()
+
+
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
 async def delete_pet_handler(callback: CallbackQuery, callback_data: DeletePetCallback):
     """Обработчик для удаления питомца."""
@@ -302,7 +344,7 @@ async def process_delete_confirm_pet(
 
     if del_pet:
         await callback.message.edit_text(
-            f"Питомец \"{callback_data.pet_name}\" был удален ✔",
+            f"Питомец \"{callback_data.pet_name}\" был удален ✅",
             reply_markup=inline_keyboards.main_menu_pets,
         )
     else:
