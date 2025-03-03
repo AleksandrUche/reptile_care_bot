@@ -66,17 +66,18 @@ async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
         return True
 
 
-async def edit_pet_value(pet_id: int, name_field: str, pet_morph: str,
-                         session: AsyncSession):
+async def edit_pet_value(
+    pet_id: int, name_field: str, value: str, session: AsyncSession
+):
     """
     Изменяет значения указанного поля.
     :param pet_id: ID питомца.
     :param name_field: Имя поля, которое нужно обновить (например, "name").
-    :param pet_morph: Новое значение для поля.
+    :param value: Новое значение для поля.
     :param session: Сессия.
     :return: True, если обновление прошло успешно, иначе False.
     """
-    update_data = {name_field: pet_morph}
+    update_data = {name_field: value}
     stmt = update(PetOrm).filter(PetOrm.id == pet_id).values(**update_data)
 
     try:
