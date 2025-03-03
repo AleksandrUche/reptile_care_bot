@@ -1,4 +1,6 @@
 import logging
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -34,6 +36,7 @@ from states.pet_states import (
     PetEditNameFSM,
     PetEditMorphFSM,
     PetEditViewFSM,
+    PetEditBirthFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -179,6 +182,17 @@ async def detail_pets_handler(
     inline_kb = await get_edit_pet_inline_kb(
         pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
     )
+    timezone = ZoneInfo("Europe/Moscow")  # TODO определение тайм зон пользователя
+    try:
+        date_birth = pet["pet"].date_birth.astimezone(timezone).strftime('%d.%m.%Y')
+    except AttributeError:
+        date_birth = '---'
+
+    try:
+        date_purchase = pet["pet"].date_purchase.astimezone(timezone).strftime(
+            '%d.%m.%Y')
+    except AttributeError:
+        date_purchase = '---'
 
     await callback.message.edit_text(
         text=f'Имя питомца: {pet["pet"].name}\n\n'
@@ -190,8 +204,8 @@ async def detail_pets_handler(
              f'Линька: {pet["latest_molting_date"]}\n'
              f'Компания: {pet["company_name"]}\n'
              f'Группа: {pet["group_name"]}\n'
-             f'Дата рождения: {pet["pet"].date_birth}\n'
-             f'Дата приобретения: {pet["pet"].date_purchase}\n',
+             f'Дата рождения: {date_birth}\n'
+             f'Дата приобретения: {date_purchase}\n',
         reply_markup=inline_kb
     )
 
@@ -373,7 +387,9 @@ async def edit_pet_gender_handler(
 
 @router.callback_query(GenderSelectionCallback.filter())
 async def process_edit_pet_gender(
-    callback: CallbackQuery, callback_data: GenderSelectionCallback, session: AsyncSession
+    callback: CallbackQuery,
+    callback_data: GenderSelectionCallback,
+    session: AsyncSession,
 ):
     """Изменение пола питомца."""
     edit_pet = await edit_pet_value(
@@ -394,12 +410,71 @@ async def process_edit_pet_gender(
         )
 
 
+@router.callback_query(EditPetCallback.filter(F.field == 'birth'))
+async def edit_pet_birth_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для изменения даты рождения питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Изменение даты рождения питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату рождения питомца в формате ДД.ММ.ГГГГ:</b>',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
+    await state.set_state(PetEditBirthFSM.pet_birth)
+
+
+@router.message(StateFilter(PetEditBirthFSM.pet_birth))
+async def process_edit_pet_birth(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Изменение даты рождения питомца."""
+    try:
+        date_birth = datetime.strptime(message.text, '%d.%m.%Y')
+        await state.update_data(pet_birth=date_birth)
+    except ValueError:
+        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
+    else:
+        state_data = await state.get_data()
+
+        edit_pet = await edit_pet_value(
+            state_data['pet_id'], 'date_birth', state_data['pet_birth'], session
+        )
+        inline_back_kb = await get_return_detail_view_pet_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+
+        timezone = ZoneInfo("Europe/Moscow")  # TODO Определить автоматически, взять из БД
+        if edit_pet:
+            await message.answer(
+                "Теперь дата рождения питомца: "
+                f"\"{date_birth.astimezone(timezone).strftime('%d.%m.%Y')}\".",
+                reply_markup=inline_back_kb,
+            )
+        else:
+            await message.answer(
+                'Произошла ошибка при изменении даты рождения питомца!\n'
+                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            )
+        await state.clear()
+
+
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
 async def delete_pet_handler(callback: CallbackQuery, callback_data: DeletePetCallback):
     """Обработчик для удаления питомца."""
     await callback.answer()
 
-    inline_kb = await get_delete_pet_inline_kb(callback_data.pet_id, callback_data.pet_name)
+    inline_kb = await get_delete_pet_inline_kb(
+        callback_data.pet_id, callback_data.pet_name
+    )
 
     await callback.message.edit_text(
         f"<b>Вы уверены, что хотите удалить питомца \"{callback_data.pet_name}\"?</b>\n",
