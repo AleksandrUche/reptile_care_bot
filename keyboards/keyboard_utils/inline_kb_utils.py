@@ -2,12 +2,14 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from enums.pets_enum import GenderRole
 from factory.callback_factory.company_factory import CompanyCallback
 from factory.callback_factory.pet_factory import (
     PaginationCallback,
     PetsCallback,
     EditPetCallback,
     DeletePetCallback,
+    GenderSelectionCallback,
 )
 from lexicon.lexicon import LEXICON_RU
 
@@ -58,7 +60,7 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
         builder.button(
             text=pet.name,
             callback_data=PetsCallback(
-                id=pet.id, company_id=pet.company_id, group_id=pet.group_id
+                pet_id=pet.id, company_id=pet.company_id, group_id=pet.group_id
             )
         )
 
@@ -79,8 +81,9 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
     return builder.as_markup()
 
 
-async def show_companies_page_inline_kb(companies: list, page: int = 0,
-                                        per_page: int = 6):
+async def show_companies_page_inline_kb(
+    companies: list, page: int = 0, per_page: int = 6
+):
     """
     Отображает компании на странице с пагинацией.
     :param company: Список всех компаний.
@@ -120,47 +123,53 @@ async def show_companies_page_inline_kb(companies: list, page: int = 0,
     return builder.as_markup()
 
 
-async def get_edit_pet_inline_kb(pet_id: int, pet_name: str = None):
+async def get_edit_pet_inline_kb(
+    pet_id: int, pet_name: str, company_id: int, group_id: int
+):
     builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
     builder.button(
         text='Изменить имя',
-        callback_data=EditPetCallback(field='name', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='name', **data).pack()
     )
     builder.button(
         text='Изменить морфу',
-        callback_data=EditPetCallback(field='morph', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='morph', **data).pack()
     )
     builder.button(
         text='Изменить вид',
-        callback_data=EditPetCallback(field='view', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='view', **data).pack()
     )
     builder.button(
         text='Изменить пол',
-        callback_data=EditPetCallback(field='gender', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='gender', **data).pack()
     )
     builder.button(
         text='Добавить вес',
-        callback_data=EditPetCallback(field='weight', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='weight', **data).pack()
     )
     builder.button(
         text='Добавить длину',
-        callback_data=EditPetCallback(field='length', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='length', **data).pack()
     )
     builder.button(
         text='Добавить дату линьки',
-        callback_data=EditPetCallback(field='molting', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='molting', **data).pack()
     )
     builder.button(
         text='Изменить дату рождения',
-        callback_data=EditPetCallback(field='birth', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='birth', **data).pack()
     )
     builder.button(
         text='Изменить дату приобретения',
-        callback_data=EditPetCallback(field='purchase', pet_id=pet_id).pack()
+        callback_data=EditPetCallback(field='purchase', **data).pack()
     )
     builder.button(
         text='Удалить питомца ❌',
-        callback_data=DeletePetCallback(action='menu', pet_id=pet_id, pet_name=pet_name).pack()
+        callback_data=DeletePetCallback(
+            action='menu', pet_id=pet_id, pet_name=pet_name
+        ).pack()
     )
     builder.button(
         text='Назад',
@@ -174,11 +183,51 @@ async def get_delete_pet_inline_kb(pet_id: int, pet_name: str):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✅ ДА',
-        callback_data=DeletePetCallback(action='delete', pet_id=pet_id, pet_name=pet_name).pack()
+        callback_data=DeletePetCallback(action='delete', pet_id=pet_id,
+                                        pet_name=pet_name).pack()
     )
     builder.button(
         text='❌ НЕТ',
-        callback_data=DeletePetCallback(action='cancel', pet_id=pet_id, pet_name=pet_name).pack()
+        callback_data=DeletePetCallback(action='cancel', pet_id=pet_id,
+                                        pet_name=pet_name).pack()
     )
     builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_gender_select_pet_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+    builder.button(
+        text='♂ Мальчик',
+        callback_data=GenderSelectionCallback(action=GenderRole.BOY, **data).pack()
+    )
+    builder.button(
+        text='♀ Девочка',
+        callback_data=GenderSelectionCallback(action=GenderRole.GIRL, **data).pack()
+    )
+    builder.button(
+        text='🤷‍♂️ Не определен',
+        callback_data=GenderSelectionCallback(action=GenderRole.NOT_DEFINED,
+                                              **data).pack()
+    )
+    builder.button(
+        text='Назад', callback_data=PetsCallback(**data).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_return_detail_view_pet_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='⬅ Вернуться к питомцу', callback_data=PetsCallback(
+            pet_id=pet_id, company_id=company_id, group_id=group_id
+        ).pack()
+    )
+    builder.adjust(1)
     return builder.as_markup()
