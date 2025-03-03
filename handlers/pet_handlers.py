@@ -312,12 +312,15 @@ async def process_delete_confirm_pet(
         )
 
 
-@router.callback_query(DeletePetCallback.filter(F.action == 'cencel'))
+@router.callback_query(DeletePetCallback.filter(F.action == 'cancel'))
 async def process_undo_delete_pet(
     callback: CallbackQuery, callback_data: DeletePetCallback
 ):
     """Отмена удаления питомца"""
-    ...
+    await callback.message.edit_text(
+        f"Удаление питомца \"{callback_data.pet_name}\" отменено.",
+        reply_markup=inline_keyboards.main_menu_pets,
+    )
 
 
 @router.callback_query(F.data == 'cancel_state', ~StateFilter(default_state))
