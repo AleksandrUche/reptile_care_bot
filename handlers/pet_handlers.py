@@ -12,6 +12,7 @@ from factory.callback_factory.pet_factory import (
     PetsCallback,
     EditPetCallback,
     DeletePetCallback,
+    GenderSelectionCallback,
 )
 from filters.pet_filters import is_alnum_with_spaces
 from keyboards.inline_keyboards import inline_keyboards
@@ -19,6 +20,7 @@ from keyboards.keyboard_utils.inline_kb_utils import (
     show_pets_page_inline_kb,
     get_edit_pet_inline_kb,
     get_delete_pet_inline_kb,
+    get_gender_select_pet_inline_kb, get_return_detail_view_pet_inline_kb,
 )
 from services.pet_services import (
     add_pet,
@@ -27,7 +29,12 @@ from services.pet_services import (
     edit_pet_value,
     delete_pet,
 )
-from states.pet_states import PetAddFSM, PetEditNameFSM, PetEditMorphFSM, PetEditViewFSM
+from states.pet_states import (
+    PetAddFSM,
+    PetEditNameFSM,
+    PetEditMorphFSM,
+    PetEditViewFSM,
+)
 
 logger = logging.getLogger(__name__)
 router = Router()
@@ -163,13 +170,15 @@ async def detail_pets_handler(
     await callback.answer()
 
     pet = await get_pet(
-        callback_data.id,
+        callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
         session
     )
 
-    inline_kb = await get_edit_pet_inline_kb(pet['pet'].id, pet['pet'].name)
+    inline_kb = await get_edit_pet_inline_kb(
+        pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
+    )
 
     await callback.message.edit_text(
         text=f'Имя питомца: {pet["pet"].name}\n\n'
@@ -199,7 +208,11 @@ async def edit_pet_name_handler(
              '<b>Введите новое имя питомца:</b>',
         reply_markup=inline_keyboards.menu_add_pet,
     )
-    await state.update_data(pet_id=callback_data.pet_id)
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
     await state.set_state(PetEditNameFSM.pet_name)
 
 
@@ -214,10 +227,13 @@ async def process_edit_pet_name(
     edit_pet = await edit_pet_value(
         state_data['pet_id'], 'name', state_data['pet_name'], session
     )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+    )
     if edit_pet:
         await message.answer(
             f"Имя питомца изменено на \"{state_data['pet_name']}\".",
-            reply_markup=inline_keyboards.main_menu_pets,
+            reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
@@ -252,7 +268,11 @@ async def edit_pet_morph_handler(
              '<b>Введите морфу питомца:</b>',
         reply_markup=inline_keyboards.menu_add_pet,
     )
-    await state.update_data(pet_id=callback_data.pet_id)
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
     await state.set_state(PetEditMorphFSM.pet_morph)
 
 
@@ -267,10 +287,13 @@ async def process_edit_pet_morph(
     edit_pet = await edit_pet_value(
         state_data['pet_id'], 'morph', state_data['pet_morph'], session
     )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+    )
     if edit_pet:
         await message.answer(
             f"Теперь морфа питомца: \"{state_data['pet_morph']}\".",
-            reply_markup=inline_keyboards.main_menu_pets,
+            reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
@@ -294,7 +317,11 @@ async def edit_pet_view_handler(
              '<b>Введите вид питомца:</b>',
         reply_markup=inline_keyboards.menu_add_pet,
     )
-    await state.update_data(pet_id=callback_data.pet_id)
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
     await state.set_state(PetEditViewFSM.pet_view)
 
 
@@ -309,10 +336,13 @@ async def process_edit_pet_view(
     edit_pet = await edit_pet_value(
         state_data['pet_id'], 'view', state_data['pet_view'], session
     )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+    )
     if edit_pet:
         await message.answer(
             f"Теперь вид питомца: \"{state_data['pet_view']}\".",
-            reply_markup=inline_keyboards.main_menu_pets,
+            reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
@@ -320,6 +350,48 @@ async def process_edit_pet_view(
             'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'gender'))
+async def edit_pet_gender_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+):
+    """Обработчик для изменения пола питомца."""
+    await callback.answer()
+
+    inline_kb = await get_gender_select_pet_inline_kb(
+        callback_data.pet_id, callback_data.company_id, callback_data.group_id
+    )
+    await  callback.message.edit_text(
+        text='🦎Изменение пола питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Выберите пол питомца:</b>',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(GenderSelectionCallback.filter())
+async def process_edit_pet_gender(
+    callback: CallbackQuery, callback_data: GenderSelectionCallback, session: AsyncSession
+):
+    """Изменение пола питомца."""
+    edit_pet = await edit_pet_value(
+        callback_data.pet_id, 'gender', callback_data.action.name, session
+    )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        callback_data.pet_id, callback_data.company_id, callback_data.group_id
+    )
+    if edit_pet:
+        await callback.message.edit_text(
+            f"Теперь пол питомца: \"{callback_data.action.value}\".",
+            reply_markup=inline_back_kb,
+        )
+    else:
+        await callback.message.answer(
+            'Произошла ошибка при изменении пола питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
 
 
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
