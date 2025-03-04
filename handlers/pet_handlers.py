@@ -37,6 +37,7 @@ from states.pet_states import (
     PetEditMorphFSM,
     PetEditViewFSM,
     PetEditBirthFSM,
+    PetEditPurchaseFSM,
 )
 
 logger = logging.getLogger(__name__)
