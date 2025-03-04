@@ -31,6 +31,11 @@ class PetEditViewFSM(PetEditBaseFSM):
     pet_view = State()
 
 
+class PetEditWeightFSM(PetEditBaseFSM):
+    """Вес питомца"""
+    pet_weight = State()
+
+
 class PetEditLengthFSM(PetEditBaseFSM):
     """Длина питомца"""
     pet_length = State()
