@@ -1,4 +1,5 @@
 import logging
+from datetime import datetime, timezone
 
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -180,3 +181,23 @@ async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSes
         'latest_length': row.latest_length,
         'latest_molting_date': row.latest_molting_date,
     }
+
+
+async def add_weight_pet(pet_id: int, weight: float, session: AsyncSession):
+    """
+    Добавляет вес для определенного питомца,
+    """
+    current_date = datetime.now().replace(tzinfo=timezone.utc)
+    stmt = WeightPetOrm(
+        weight=weight,
+        pet_id=pet_id,
+        date_measure=current_date,
+    )
+    session.add(stmt)
+    try:
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при добавлении веса: {e}', exc_info=True)
+        return False
+    else:
+        return True
