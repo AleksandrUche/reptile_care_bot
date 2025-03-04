@@ -1,6 +1,5 @@
 import logging
 from datetime import datetime
-from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -9,6 +8,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from config_data.config import TIME_ZONE
 from factory.callback_factory.pet_factory import (
     PaginationCallback,
     PetsCallback,
@@ -465,6 +465,63 @@ async def process_edit_pet_birth(
                 'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
             )
         await state.clear()
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'purchase'))
+async def edit_pet_purchase_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для изменения даты приобретения питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Изменение даты приобретения питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату приобретения питомца в формате ДД.ММ.ГГГГ:</b>\n',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
+    await state.set_state(PetEditPurchaseFSM.pet_purchase)
+
+
+@router.message(StateFilter(PetEditPurchaseFSM.pet_purchase))
+async def process_edit_purchase_birth(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Изменение даты приобретения питомца."""
+    try:
+        date_purchase = datetime.strptime(message.text, '%d.%m.%Y')
+        await state.update_data(pet_purchase=date_purchase)
+    except ValueError:
+        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
+    else:
+        state_data = await state.get_data()
+
+        edit_pet = await edit_pet_value(
+            state_data['pet_id'], 'date_purchase', state_data['pet_purchase'], session
+        )
+        inline_back_kb = await get_return_detail_view_pet_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+
+        if edit_pet:
+            await message.answer(
+                "Теперь дата приобретения питомца: "
+                f"\"{date_purchase.astimezone(TIME_ZONE).strftime('%d.%m.%Y')}\".",
+                reply_markup=inline_back_kb,
+            )
+        else:
+            await message.answer(
+                'Произошла ошибка при изменении даты приобретения питомца!\n'
+                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            )
+        await state.clear()
+
 
 
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
