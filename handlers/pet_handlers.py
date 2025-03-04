@@ -22,7 +22,8 @@ from keyboards.keyboard_utils.inline_kb_utils import (
     show_pets_page_inline_kb,
     get_edit_pet_inline_kb,
     get_delete_pet_inline_kb,
-    get_gender_select_pet_inline_kb, get_return_detail_view_pet_inline_kb,
+    get_gender_select_pet_inline_kb,
+    get_return_detail_view_pet_inline_kb,
 )
 from services.pet_services import (
     add_pet,
@@ -30,6 +31,7 @@ from services.pet_services import (
     get_pet,
     edit_pet_value,
     delete_pet,
+    add_weight_pet,
 )
 from states.pet_states import (
     PetAddFSM,
@@ -38,6 +40,7 @@ from states.pet_states import (
     PetEditViewFSM,
     PetEditBirthFSM,
     PetEditPurchaseFSM,
+    PetEditWeightFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -410,6 +413,72 @@ async def process_edit_pet_gender(
         )
 
 
+@router.callback_query(EditPetCallback.filter(F.field == 'weight'))
+async def add_pet_weight_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для добавления веса питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Вес питомца\n'
+             '<b>Введите вес питомца:</b>',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
+    await state.set_state(PetEditWeightFSM.pet_weight)
+
+
+@router.message(StateFilter(PetEditWeightFSM.pet_weight), ~F.text.isalpha())
+async def process_add_weight(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Добавление веса питомца."""
+    await state.update_data(pet_weight=message.text)
+    state_data = await state.get_data()
+    try:
+        weight = float(state_data['pet_weight'].replace(',', '.'))
+    except ValueError:
+        await message.answer(
+            'Масса может состоять из цифр и знаков разделения❗\n'
+            'Например: 25,7'
+        )
+
+    add_weight = await add_weight_pet(
+        state_data['pet_id'], weight, session
+    )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+    )
+    if add_weight:
+        await message.answer(
+            f"Масса питомца \"{state_data['pet_weight']}\" добавлена ✅.",
+            reply_markup=inline_back_kb,
+        )
+    else:
+        await message.answer(
+            'Произошла ошибка при добавлении массы питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    await state.clear()
+
+
+@router.message(StateFilter(PetEditWeightFSM.pet_weight))
+async def warning_incorrect_weight(message: Message):
+    """Сработает при некорректном вводе массы питомца"""
+    await message.answer(
+        text='То, что Вы отправили не похоже на массу\n'
+             'Пожалуйста, введите массу еще раз\n'
+             'Масса может состоять из цифр❗'
+
+    )
+
+
 @router.callback_query(EditPetCallback.filter(F.field == 'birth'))
 async def edit_pet_birth_handler(
     callback: CallbackQuery,
@@ -520,7 +589,6 @@ async def process_edit_purchase_birth(
                 'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
             )
         await state.clear()
-
 
 
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
