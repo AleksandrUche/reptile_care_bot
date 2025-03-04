@@ -1,4 +1,5 @@
 import os
+from zoneinfo import ZoneInfo
 
 from dotenv import load_dotenv
 
@@ -22,3 +23,5 @@ DATABASE_URL = SQLITE_URL if DATABASE_ENV == "sqlite" else POSTGRES_URL
 
 # TOKEN
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
+
+TIME_ZONE = ZoneInfo("Europe/Moscow")
