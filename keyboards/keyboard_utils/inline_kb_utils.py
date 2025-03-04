@@ -130,43 +130,43 @@ async def get_edit_pet_inline_kb(
     data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
     builder.button(
-        text='Изменить имя',
+        text='✏ Имя',
         callback_data=EditPetCallback(field='name', **data).pack()
     )
     builder.button(
-        text='Изменить морфу',
+        text='✏ Морфу',
         callback_data=EditPetCallback(field='morph', **data).pack()
     )
     builder.button(
-        text='Изменить вид',
+        text='✏ Вид',
         callback_data=EditPetCallback(field='view', **data).pack()
     )
     builder.button(
-        text='Изменить пол',
+        text='✏ Пол',
         callback_data=EditPetCallback(field='gender', **data).pack()
     )
     builder.button(
-        text='Добавить вес',
-        callback_data=EditPetCallback(field='weight', **data).pack()
-    )
-    builder.button(
-        text='Добавить длину',
-        callback_data=EditPetCallback(field='length', **data).pack()
-    )
-    builder.button(
-        text='Добавить дату линьки',
-        callback_data=EditPetCallback(field='molting', **data).pack()
-    )
-    builder.button(
-        text='📝 дату рождения',
+        text='✏ Дата рождения',
         callback_data=EditPetCallback(field='birth', **data).pack()
     )
     builder.button(
-        text='📝 дату приобретения',
+        text='✏ Дата приобретения',
         callback_data=EditPetCallback(field='purchase', **data).pack()
     )
     builder.button(
-        text='Удалить питомца ❌',
+        text='⚖️ Добавить вес',
+        callback_data=EditPetCallback(field='weight', **data).pack()
+    )
+    builder.button(
+        text='📐 Добавить длину',
+        callback_data=EditPetCallback(field='length', **data).pack()
+    )
+    builder.button(
+        text='🐍 Добавить линьку',
+        callback_data=EditPetCallback(field='molting', **data).pack()
+    )
+    builder.button(
+        text='❌ Удалить питомца ',
         callback_data=DeletePetCallback(
             action='menu', pet_id=pet_id, pet_name=pet_name
         ).pack()
