@@ -183,14 +183,13 @@ async def detail_pets_handler(
     inline_kb = await get_edit_pet_inline_kb(
         pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
     )
-    timezone = ZoneInfo("Europe/Moscow")  # TODO определение тайм зон пользователя
     try:
-        date_birth = pet["pet"].date_birth.astimezone(timezone).strftime('%d.%m.%Y')
+        date_birth = pet["pet"].date_birth.astimezone(TIME_ZONE).strftime('%d.%m.%Y')
     except AttributeError:
         date_birth = '---'
 
     try:
-        date_purchase = pet["pet"].date_purchase.astimezone(timezone).strftime(
+        date_purchase = pet["pet"].date_purchase.astimezone(TIME_ZONE).strftime(
             '%d.%m.%Y')
     except AttributeError:
         date_purchase = '---'
@@ -453,11 +452,10 @@ async def process_edit_pet_birth(
             state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
 
-        timezone = ZoneInfo("Europe/Moscow")  # TODO Определить автоматически, взять из БД
         if edit_pet:
             await message.answer(
                 "Теперь дата рождения питомца: "
-                f"\"{date_birth.astimezone(timezone).strftime('%d.%m.%Y')}\".",
+                f"\"{date_birth.astimezone(TIME_ZONE).strftime('%d.%m.%Y')}\".",
                 reply_markup=inline_back_kb,
             )
         else:
