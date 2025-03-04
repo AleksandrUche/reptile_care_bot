@@ -158,11 +158,11 @@ async def get_edit_pet_inline_kb(
         callback_data=EditPetCallback(field='molting', **data).pack()
     )
     builder.button(
-        text='Изменить дату рождения',
+        text='📝 дату рождения',
         callback_data=EditPetCallback(field='birth', **data).pack()
     )
     builder.button(
-        text='Изменить дату приобретения',
+        text='📝 дату приобретения',
         callback_data=EditPetCallback(field='purchase', **data).pack()
     )
     builder.button(
