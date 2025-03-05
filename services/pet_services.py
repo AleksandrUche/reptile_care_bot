@@ -1,6 +1,7 @@
 import logging
 from datetime import datetime, timezone
 
+from sqlalchemy import DateTime
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload, aliased, selectinload
@@ -218,6 +219,24 @@ async def add_length_pet(pet_id: int, length: float, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении длины: {e}', exc_info=True)
+        return False
+    else:
+        return True
+
+
+async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSession):
+    """
+    Добавляет дату линьку для определенного питомца.
+    """
+    stmt = MoltingPetOrm(
+        pet_id=pet_id,
+        date_measure=date_molting,
+    )
+    session.add(stmt)
+    try:
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при добавлении даты линьки: {e}', exc_info=True)
         return False
     else:
         return True
