@@ -32,6 +32,7 @@ from services.pet_services import (
     edit_pet_value,
     delete_pet,
     add_weight_pet,
+    add_length_pet,
 )
 from states.pet_states import (
     PetAddFSM,
@@ -41,6 +42,7 @@ from states.pet_states import (
     PetEditBirthFSM,
     PetEditPurchaseFSM,
     PetEditWeightFSM,
+    PetEditLengthFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -476,6 +478,71 @@ async def warning_incorrect_weight(message: Message):
              'Пожалуйста, введите массу еще раз\n'
              'Масса может состоять из цифр❗'
 
+    )
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'length'))
+async def add_pet_length_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для добавления длины питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Длина питомца\n'
+             '<b>Введите длину питомца:</b>',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
+    await state.set_state(PetEditLengthFSM.pet_length)
+
+
+@router.message(StateFilter(PetEditLengthFSM.pet_length), ~F.text.isalpha())
+async def process_add_length(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Добавление длины питомца."""
+    await state.update_data(pet_length=message.text)
+    state_data = await state.get_data()
+    try:
+        length = float(state_data['pet_length'].replace(',', '.'))
+    except ValueError:
+        await message.answer(
+            'Длина может состоять из цифр и знаков разделения❗\n'
+            'Например: 25,7'
+        )
+
+    add_length = await add_length_pet(
+        state_data['pet_id'], length, session
+    )
+    inline_back_kb = await get_return_detail_view_pet_inline_kb(
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+    )
+    if add_length:
+        await message.answer(
+            f"Длина питомца \"{state_data['pet_length']}\" добавлена ✅.",
+            reply_markup=inline_back_kb,
+        )
+    else:
+        await message.answer(
+            'Произошла ошибка при добавлении длины питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    await state.clear()
+
+
+@router.message(StateFilter(PetEditLengthFSM.pet_length))
+async def warning_incorrect_length(message: Message):
+    """Сработает при некорректном вводе длины питомца"""
+    await message.answer(
+        text='То, что Вы отправили не похоже на длину\n'
+             'Пожалуйста, введите длину еще раз\n'
+             'Масса может состоять из цифр❗'
     )
 
 
