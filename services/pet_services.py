@@ -185,7 +185,7 @@ async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSes
 
 async def add_weight_pet(pet_id: int, weight: float, session: AsyncSession):
     """
-    Добавляет вес для определенного питомца,
+    Добавляет вес для определенного питомца.
     """
     current_date = datetime.now().replace(tzinfo=timezone.utc)
     stmt = WeightPetOrm(
@@ -198,6 +198,26 @@ async def add_weight_pet(pet_id: int, weight: float, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении веса: {e}', exc_info=True)
+        return False
+    else:
+        return True
+
+
+async def add_length_pet(pet_id: int, length: float, session: AsyncSession):
+    """
+    Добавляет длину для определенного питомца.
+    """
+    current_date = datetime.now().replace(tzinfo=timezone.utc)
+    stmt = LengthPetOrm(
+        length=length,
+        pet_id=pet_id,
+        date_measure=current_date,
+    )
+    session.add(stmt)
+    try:
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при добавлении длины: {e}', exc_info=True)
         return False
     else:
         return True
