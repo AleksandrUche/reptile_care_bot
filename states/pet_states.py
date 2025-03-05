@@ -43,7 +43,7 @@ class PetEditLengthFSM(PetEditBaseFSM):
 
 class PetEditMoltingFSM(PetEditBaseFSM):
     """Линька питомца"""
-    pet_ = State()
+    pet_molting = State()
 
 
 class PetEditBirthFSM(PetEditBaseFSM):
