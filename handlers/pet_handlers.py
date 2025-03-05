@@ -188,16 +188,10 @@ async def detail_pets_handler(
     inline_kb = await get_edit_pet_inline_kb(
         pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
     )
-    try:
-        date_birth = pet["pet"].date_birth.astimezone(TIME_ZONE).strftime('%d.%m.%Y')
-    except AttributeError:
-        date_birth = '---'
 
-    try:
-        date_purchase = pet["pet"].date_purchase.astimezone(TIME_ZONE).strftime(
-            '%d.%m.%Y')
-    except AttributeError:
-        date_purchase = '---'
+    date_birth = edit_date_format(pet["pet"].date_birth)
+    date_purchase = edit_date_format(pet["pet"].date_purchase)
+    latest_molting_date = edit_date_format(pet["latest_molting_date"])
 
     await callback.message.edit_text(
         text=f'Имя питомца: {pet["pet"].name}\n\n'
@@ -206,7 +200,7 @@ async def detail_pets_handler(
              f'Пол: {pet["pet"].gender.value}\n'
              f'Вес: {pet["latest_weight"]}\n'
              f'Длина: {pet["latest_length"]}\n'
-             f'Линька: {pet["latest_molting_date"]}\n'
+             f'Линька: {latest_molting_date}\n'
              f'Компания: {pet["company_name"]}\n'
              f'Группа: {pet["group_name"]}\n'
              f'Дата рождения: {date_birth}\n'
