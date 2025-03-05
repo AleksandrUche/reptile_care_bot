@@ -33,7 +33,9 @@ from services.pet_services import (
     delete_pet,
     add_weight_pet,
     add_length_pet,
+    add_molting_pet,
 )
+from services.utils import edit_date_format
 from states.pet_states import (
     PetAddFSM,
     PetEditNameFSM,
@@ -43,6 +45,7 @@ from states.pet_states import (
     PetEditPurchaseFSM,
     PetEditWeightFSM,
     PetEditLengthFSM,
+    PetEditMoltingFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -538,6 +541,62 @@ async def warning_incorrect_length(message: Message):
              'Пожалуйста, введите длину еще раз\n'
              'Масса может состоять из цифр❗'
     )
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'molting'))
+async def add_pet_molting_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
+):
+    """Обработчик для добавления даты линьки питомца."""
+    await callback.answer()
+    await  callback.message.edit_text(
+        text='🦎Добавление даты линьки питомца\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату линьки питомца в формате ДД.ММ.ГГГГ:</b>\n',
+        reply_markup=inline_keyboards.menu_add_pet,
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id
+    )
+    await state.set_state(PetEditMoltingFSM.pet_molting)
+
+
+@router.message(StateFilter(PetEditMoltingFSM.pet_molting))
+async def process_add_molting_pet(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Добавление даты линьки питомца."""
+    try:
+        date_molting = datetime.strptime(message.text, '%d.%m.%Y')
+        await state.update_data(date_molting=date_molting)
+    except ValueError:
+        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
+    else:
+        state_data = await state.get_data()
+
+        edit_pet = await add_molting_pet(
+            state_data['pet_id'], state_data['date_molting'], session
+        )
+        inline_back_kb = await get_return_detail_view_pet_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+
+        if edit_pet:
+            await message.answer(
+                "Добавлена дата линьки питомца: "
+                f"\"{date_molting.astimezone(TIME_ZONE).strftime('%d.%m.%Y')}\".",
+                reply_markup=inline_back_kb,
+            )
+        else:
+            await message.answer(
+                'Произошла ошибка при добавлении даты линьки питомца!\n'
+                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            )
+        await state.clear()
 
 
 @router.callback_query(EditPetCallback.filter(F.field == 'birth'))
