@@ -4,7 +4,7 @@ from sqlalchemy import ForeignKey, DateTime, func, Enum
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.engine import Base
-from enums.pets_enum import GenderRole
+from enums.pets_enum import GenderRole, MeasureUnitFood
 
 
 class CompanyOrm(Base):
@@ -89,6 +89,8 @@ class PetOrm(Base):
                                                          back_populates='pet')
     molting: Mapped[list['MoltingPetOrm']] = relationship('MoltingPetOrm',
                                                           back_populates='pet')
+    feeding: Mapped[list['FeedingPetOrm']] = relationship('FeedingPetOrm',
+                                                          back_populates='pet')
 
 
 class WeightPetOrm(Base):
@@ -147,3 +149,23 @@ class MoltingPetOrm(Base):
     )
     pet: Mapped['PetOrm'] = relationship('PetOrm', back_populates='molting')
 
+
+class FeedingPetOrm(Base):
+    __tablename__ = 'feeding_pet'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    pet_id: Mapped[int] = mapped_column(ForeignKey('pet.id'), nullable=False)
+    date_feed: Mapped[DateTime] = mapped_column(
+        'Дата кормления', DateTime(timezone=True), nullable=False
+    )
+    amount_food: Mapped[float] = mapped_column(nullable=True)
+    measure_unit: Mapped[MeasureUnitFood] = mapped_column(
+        'Единица измерения', Enum(MeasureUnitFood), default=MeasureUnitFood.MISS)
+    description: Mapped[str] = mapped_column(nullable=True)
+    date = mapped_column(
+        'Дата обновления',
+        DateTime(timezone=True),
+        server_default=func.now(),
+        onupdate=func.now(),
+    )
+    pet: Mapped['PetOrm'] = relationship('PetOrm', back_populates='feeding')
