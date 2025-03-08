@@ -160,7 +160,8 @@ class FeedingPetOrm(Base):
     )
     amount_food: Mapped[float] = mapped_column(nullable=True)
     measure_unit: Mapped[MeasureUnitFood] = mapped_column(
-        'Единица измерения', Enum(MeasureUnitFood), default=MeasureUnitFood.MISS)
+        'Единица измерения', Enum(MeasureUnitFood), default=MeasureUnitFood.MISS
+    )
     description: Mapped[str] = mapped_column(nullable=True)
     date = mapped_column(
         'Дата обновления',
