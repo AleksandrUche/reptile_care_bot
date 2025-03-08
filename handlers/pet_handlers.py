@@ -34,6 +34,7 @@ from services.pet_services import (
     add_weight_pet,
     add_length_pet,
     add_molting_pet,
+    add_feeding_pet_date,
 )
 from services.utils import edit_date_format
 from states.pet_states import (
@@ -709,6 +710,27 @@ async def process_edit_purchase_birth(
                 'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
             )
         await state.clear()
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'add_feeding'))
+async def add_pet_feeding_handler(
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    session: AsyncSession
+):
+    """Обработчик для добавления даты кормления питомца."""
+    await callback.answer()
+    feed = await add_feeding_pet_date(callback_data.pet_id, session)
+    if feed:
+        await callback.message.answer(
+            text='🦎 Питомец покормлен, дата была добавлена в историю.\n'
+            # 'Дополнительную информацию можно добавить при детальном '
+            # 'просмотре истории кормлений',
+        )
+    else:
+        await callback.message.answer(
+            'Произошла ошибка при добавлении кормления'
+        )
 
 
 @router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
