@@ -13,6 +13,7 @@ from database.models.pets_models import (
     LengthPetOrm,
     MoltingPetOrm,
     GroupOrm,
+    FeedingPetOrm,
 )
 from database.models.user_models import UserOrm
 
@@ -240,3 +241,23 @@ async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSes
         return False
     else:
         return True
+
+
+async def add_feeding_pet_date(pet_id: int, session: AsyncSession):
+    """
+    Добавляет дату кормления питомца.
+    """
+    current_date = datetime.now().replace(tzinfo=timezone.utc)
+    stmt = FeedingPetOrm(
+        pet_id=pet_id,
+        date_feed=current_date,
+    )
+    session.add(stmt)
+    try:
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при добавлении кормления: {e}', exc_info=True)
+        return False
+    else:
+        return True
+
