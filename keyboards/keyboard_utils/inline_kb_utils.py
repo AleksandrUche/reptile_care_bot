@@ -82,7 +82,7 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
 
 
 async def show_companies_page_inline_kb(
-    companies: list, page: int = 0, per_page: int = 6
+        companies: list, page: int = 0, per_page: int = 6
 ):
     """
     Отображает компании на странице с пагинацией.
@@ -124,7 +124,7 @@ async def show_companies_page_inline_kb(
 
 
 async def get_edit_pet_inline_kb(
-    pet_id: int, pet_name: str, company_id: int, group_id: int
+        pet_id: int, pet_name: str, company_id: int, group_id: int
 ):
     builder = InlineKeyboardBuilder()
     data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
@@ -166,6 +166,10 @@ async def get_edit_pet_inline_kb(
         callback_data=EditPetCallback(field='molting', **data).pack()
     )
     builder.button(
+        text='🥗 Покормить',
+        callback_data=EditPetCallback(field='add_feeding', **data).pack()
+    )
+    builder.button(
         text='❌ Удалить питомца ',
         callback_data=DeletePetCallback(
             action='menu', pet_id=pet_id, pet_name=pet_name
@@ -196,7 +200,7 @@ async def get_delete_pet_inline_kb(pet_id: int, pet_name: str):
 
 
 async def get_gender_select_pet_inline_kb(
-    pet_id: int, company_id: int, group_id: int
+        pet_id: int, company_id: int, group_id: int
 ):
     builder = InlineKeyboardBuilder()
     data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
@@ -221,7 +225,7 @@ async def get_gender_select_pet_inline_kb(
 
 
 async def get_return_detail_view_pet_inline_kb(
-    pet_id: int, company_id: int, group_id: int
+        pet_id: int, company_id: int, group_id: int
 ):
     builder = InlineKeyboardBuilder()
     builder.button(
