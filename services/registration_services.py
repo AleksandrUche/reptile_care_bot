@@ -28,6 +28,10 @@ async def user_registration(message: Message, session: AsyncSession):
     """
     user_exist = await user_exists(message.from_user.id, session)
     keyboard = inline_keyboards.main_menu_inline
+
+    language_user = message.from_user.language_code
+    language = language_user if language_user else 'en'
+
     if user_exist:
         await message.answer(
             text=f'Рады вас видеть снова {user_exist.first_name}😊\n'
@@ -40,6 +44,7 @@ async def user_registration(message: Message, session: AsyncSession):
             username=message.from_user.username,
             first_name=message.from_user.first_name,
             last_name=message.from_user.last_name,
+            language=language,
         )
         session.add(user)
         await session.flush()
