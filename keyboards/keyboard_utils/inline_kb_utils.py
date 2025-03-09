@@ -166,6 +166,10 @@ async def get_edit_pet_inline_kb(
         callback_data=EditPetCallback(field='molting', **data).pack()
     )
     builder.button(
+        text='🥗 Покормить',
+        callback_data=EditPetCallback(field='add_feeding', **data).pack()
+    )
+    builder.button(
         text='❌ Удалить питомца ',
         callback_data=DeletePetCallback(
             action='menu', pet_id=pet_id, pet_name=pet_name
