@@ -2,6 +2,7 @@ from aiogram.types import InlineKeyboardButton
 from aiogram.types import InlineKeyboardMarkup
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
+from enums.enum_role import Language
 from enums.pets_enum import GenderRole
 from factory.callback_factory.company_factory import CompanyCallback
 from factory.callback_factory.pet_factory import (
@@ -10,6 +11,10 @@ from factory.callback_factory.pet_factory import (
     EditPetCallback,
     DeletePetCallback,
     GenderSelectionCallback,
+)
+from factory.callback_factory.user_factory import (
+    EditMyProfileCallback,
+    LanguageSelectionCallback,
 )
 from lexicon.lexicon import LEXICON_RU
 
@@ -232,6 +237,47 @@ async def get_return_detail_view_pet_inline_kb(
         text='⬅ Вернуться к питомцу', callback_data=PetsCallback(
             pet_id=pet_id, company_id=company_id, group_id=group_id
         ).pack()
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_edit_profile_inline_kb(user_tg_id: int):
+    """Редактирование пользователя."""
+    builder = InlineKeyboardBuilder()
+
+    builder.button(
+        text='✏ Язык',
+        callback_data=EditMyProfileCallback(action='language',
+                                            user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='✏ Часовой пояс',
+        callback_data=EditMyProfileCallback(action='edit_time_zone',
+                                            user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='Назад', callback_data='back_to_my_profile'
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_language_select_inline_kb(user_tg_id: int):
+    """Выбор языка пользователя."""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Русский',
+        callback_data=LanguageSelectionCallback(language=Language.RU,
+                                                user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='English',
+        callback_data=LanguageSelectionCallback(language=Language.EN,
+                                                user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='Назад', callback_data='back_to_edit_my_profile'
     )
     builder.adjust(1)
     return builder.as_markup()
