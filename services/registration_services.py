@@ -17,8 +17,14 @@ async def user_exists(telegram_id: int, session: AsyncSession) -> UserOrm | None
     Возвращает True, если пользователь найден, иначе False.
     """
     stmt = select(UserOrm).filter(UserOrm.telegram_id == telegram_id)
-    res = await session.execute(stmt)
-    return res.scalar()
+    try:
+        res = await session.execute(stmt)
+        return res.scalar()
+    except Exception as e:
+        logger.info(
+            f'Профиля пользователя c id {telegram_id} - нет: {e}',
+            exc_info=True
+        )
 
 
 async def user_registration(message: Message, session: AsyncSession):
