@@ -382,8 +382,7 @@ async def edit_pet_gender_handler(
     )
     await  callback.message.edit_text(
         text='🦎Изменение пола питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Выберите пол питомца:</b>',
+             '<b>Выберите пол питомца</b> 👇',
         reply_markup=inline_kb,
     )
 
