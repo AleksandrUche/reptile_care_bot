@@ -22,6 +22,11 @@ class UserOrm(Base):
         'Роль пользователя', Enum(UserRole), default=UserRole.USER
     )
     is_active: Mapped[bool] = mapped_column('Активный?', Boolean, default=True)
+    tz_region: Mapped[str] = mapped_column('Регион', nullable=True)
+    tz_offset: Mapped[str] = mapped_column('Cмещение пояса', nullable=True)
+    longitude: Mapped[float] = mapped_column('Долгота',nullable=True)
+    latitude: Mapped[float] = mapped_column('Широта', nullable=True)
+    language: Mapped[str] = mapped_column(nullable=True)
     blocked: Mapped[bool] = mapped_column('Заблокирован?', Boolean, default=False)
     created_date = mapped_column(
         'Дата регистрации', DateTime(timezone=True), server_default=func.now()
