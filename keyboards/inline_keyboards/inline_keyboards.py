@@ -4,7 +4,13 @@ my_profile = create_inline_kb(
     1,
     about_subscription='Подписка',
     payment_history='История пополнений',
+    edit_my_profile='✏ Редактировать',
     back_to_main_menu='⬅ Назад',
+)
+
+back_edit_my_profile = create_inline_kb(
+    1,
+    back_to_edit_my_profile='⬅ Вернуться к редактированию',
 )
 
 main_menu_inline = create_inline_kb(
