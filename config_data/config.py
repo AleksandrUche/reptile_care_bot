@@ -24,4 +24,8 @@ DATABASE_URL = SQLITE_URL if DATABASE_ENV == "sqlite" else POSTGRES_URL
 # TOKEN
 BOT_TOKEN = os.environ.get('BOT_TOKEN')
 
+# TIME ZONE
 TIME_ZONE = ZoneInfo("Europe/Moscow")
+
+URL_API_GEO = os.environ.get('URL_API_GEO')
+API_KEY_GEO = os.environ.get('API_KEY_GEO')
