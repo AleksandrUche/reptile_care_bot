@@ -13,6 +13,11 @@ back_edit_my_profile = create_inline_kb(
     back_to_edit_my_profile='⬅ Вернуться к редактированию',
 )
 
+back_edit_time_zone = create_inline_kb(
+    1,
+    back_to_edit_time_zone='⬅ Назад'
+)
+
 main_menu_inline = create_inline_kb(
     2,
     pets_menu='Питомцы',

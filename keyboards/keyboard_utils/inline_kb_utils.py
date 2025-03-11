@@ -15,6 +15,8 @@ from factory.callback_factory.pet_factory import (
 from factory.callback_factory.user_factory import (
     EditMyProfileCallback,
     LanguageSelectionCallback,
+    EditTimeZoneSelectCallback,
+    ApproveTimeZoneCallback,
 )
 from lexicon.lexicon import LEXICON_RU
 
@@ -257,7 +259,7 @@ async def get_edit_profile_inline_kb(user_tg_id: int):
                                             user_tg_id=user_tg_id).pack()
     )
     builder.button(
-        text='Назад', callback_data='back_to_my_profile'
+        text='⬅ Назад', callback_data='back_to_my_profile'
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -280,4 +282,61 @@ async def get_language_select_inline_kb(user_tg_id: int):
         text='Назад', callback_data='back_to_edit_my_profile'
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_timezone_select_inline_kb(user_tg_id: int):
+    """Редактирование тайм зоны"""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Ввести свой город',
+        callback_data=EditTimeZoneSelectCallback(action='search_city',
+                                                 user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='Геопозиция',
+        callback_data=EditTimeZoneSelectCallback(action='geolocation',
+                                                 user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='⬅ Назад', callback_data='back_to_edit_my_profile'
+    )
+    builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_approve_time_zone_inline_kb(
+    user_tg_id: int, time_zone: str, offset: int, lng: float, lat: float,
+):
+    """Подтверждение тайм зоны"""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✅ ДА',
+        callback_data=ApproveTimeZoneCallback(
+            user_tg_id=user_tg_id,
+            time_zone=time_zone,
+            offset=offset,
+            lng=lng,
+            lat=lat,
+        ).pack()
+    )
+    builder.button(
+        text='❌ НЕТ',
+        callback_data=EditTimeZoneSelectCallback(action='search_city',
+                                                 user_tg_id=user_tg_id).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_back_select_time_zone_inline_kb(user_tg_id: int):
+    builder = InlineKeyboardBuilder()
+    builder.button(text='Отмена', callback_data='cancel_state')
+    builder.button(
+        text='⬅ Назад',
+        callback_data=EditMyProfileCallback(
+            action='edit_time_zone',
+            user_tg_id=user_tg_id).pack()
+    )
+    builder.adjust(2)
     return builder.as_markup()

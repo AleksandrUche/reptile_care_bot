@@ -39,7 +39,7 @@ class GeoAPIClient:
                     f"города {city_name} ошибка: {e}", exc_info=True
                 )
 
-    async def get_timezone_by_coord(self, coord: dict) -> dict | None:
+    async def get_time_zone_by_coord(self, coord: dict) -> dict | None:
         """
         Получение тайм зоны по координатам
         :param coord: Принимает словарь {'lng': float, 'lat': float}
@@ -58,9 +58,15 @@ class GeoAPIClient:
             data = response.json()
 
             try:
-                return {'timezone': data["timezoneId"], 'offset': data['gmtOffset']}
+                return {'time_zone': data["timezoneId"], 'offset': data['gmtOffset']}
             except Exception as e:
                 logger.error(
                     f"Не удалось определить часовой пояс и смещение по {coord} ошибка: {e}",
                     exc_info=True
                 )
+
+    async def get_search_time_zone_by_city(self, city_name: str) -> dict | None:
+        coord = await self.get_coord_by_city(city_name)
+        if coord:
+            time_zone = await self.get_time_zone_by_coord(coord)
+            return time_zone | coord
