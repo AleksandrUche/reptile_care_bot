@@ -2,16 +2,30 @@ import logging
 
 from aiogram import F
 from aiogram import Router
-from aiogram.types import CallbackQuery
+from aiogram.filters import StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.user_factory import (
     EditMyProfileCallback,
     LanguageSelectionCallback,
+    EditTimeZoneSelectCallback,
+    ApproveTimeZoneCallback,
 )
+from integrations.timezone_service import GeoAPIClient
 from keyboards.inline_keyboards import inline_keyboards
 from keyboards.keyboard_utils import inline_kb_utils
-from services.user_services import get_user_profile, edit_user_profile_value
+from keyboards.keyboard_utils.inline_kb_utils import (
+    get_approve_time_zone_inline_kb,
+    get_back_select_time_zone_inline_kb,
+)
+from services.user_services import (
+    get_user_profile,
+    edit_user_profile_value,
+    edit_user_time_zone,
+)
+from states.user_states import SearchTimeZoneByCityFSM
 
 router = Router()
 logger = logging.getLogger(__name__)
@@ -72,5 +86,105 @@ async def process_language_select(
     else:
         await callback.message.answer(
             'Произошла ошибка при изменении языка!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+
+
+@router.callback_query(EditMyProfileCallback.filter(F.action == 'edit_time_zone'))
+async def edit_profile_timezone(
+    callback: CallbackQuery, callback_data: EditMyProfileCallback
+):
+    """Обработчик для изменения таймзоны пользователя"""
+    await callback.answer()
+    inline_kb = await inline_kb_utils.get_timezone_select_inline_kb(
+        callback_data.user_tg_id
+    )
+
+    await  callback.message.edit_text(
+        text='🕛 Часовой пояс\n'
+             '<b>Выберите способ добавления</b> 👇',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(EditTimeZoneSelectCallback.filter(F.action == 'search_city'))
+async def process_edit_time_zone_by_search_city(
+    callback: CallbackQuery,
+    state: FSMContext,
+):
+    """Изменение часового пояса по городу."""
+    await  callback.answer()
+
+    inline_back_kb = await get_back_select_time_zone_inline_kb(
+        callback.message.from_user.id
+    )
+
+    await callback.message.edit_text(
+        'Поиск часового пояса по вашему городу\n'
+        '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+        'Город можно ввести с уточнением области\n'
+        '<b>Введите город:</b>\n',
+        reply_markup=inline_back_kb,
+    )
+    await state.set_state(SearchTimeZoneByCityFSM.city)
+
+
+@router.message(StateFilter(SearchTimeZoneByCityFSM.city))
+async def process_edit_time_zone_by_city(message: Message, state: FSMContext):
+    """Изменение часового пояса по поиску города пользователя."""
+    await state.update_data(city=message.text)
+    city = await state.get_value('city')
+
+    api_client = GeoAPIClient()
+    timezone = await api_client.get_search_time_zone_by_city(city)
+
+    inline_approve_kb = await get_approve_time_zone_inline_kb(
+        message.from_user.id,
+        timezone['time_zone'],
+        timezone['offset'],
+        timezone['lng'],
+        timezone['lat'],
+    )
+    gmt = '+' if timezone['offset'] > 0 else ''
+
+    if timezone:
+        await message.answer(
+            f"Ваш часовой пояс \"GMT {gmt}{timezone['offset']}\"?\n"
+            f"{timezone['time_zone']}",
+            reply_markup=inline_approve_kb,
+        )
+    else:
+        await message.answer(
+            'Произошла ошибка при поиске часового пояса!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    await state.clear()
+
+
+@router.callback_query(ApproveTimeZoneCallback.filter())
+async def process_edit_pet_gender(
+    callback: CallbackQuery,
+    callback_data: ApproveTimeZoneCallback,
+    session: AsyncSession,
+):
+    """Добавление часового пояса в БД."""
+
+    add_time_zone = await edit_user_time_zone(
+        callback_data.user_tg_id,
+        callback_data.time_zone,
+        callback_data.offset,
+        callback_data.lng,
+        callback_data.lat,
+        session
+    )
+
+    if add_time_zone:
+        await callback.message.answer(
+            f"Часовой пояс \"{callback_data.time_zone}\" добавлен",
+            reply_markup=inline_keyboards.back_edit_my_profile,
+        )
+    else:
+        await callback.message.answer(
+            'Произошла ошибка при добавлении часового пояса!\n'
             'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
