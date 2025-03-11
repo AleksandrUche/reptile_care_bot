@@ -1,6 +1,7 @@
 import logging
-from sqlalchemy import update
+
 from aiogram.types import CallbackQuery
+from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.user_models import UserOrm
@@ -26,10 +27,11 @@ async def get_user_profile(
                  'Попробуйте еще раз, в случае неудачи обратитесь в поддержку.'
         )
     else:
+        gmt = '+' if user.tz_offset > 0 else ''
         await callback.message.edit_text(
             text=f'Ваше имя: {user.first_name}\n'
                  f'Язык: {user.language}\n'
-                 f'Часовой пояс: {user.tz_offset}\n',
+                 f'Часовой пояс: \"GMT {gmt}{user.tz_offset}\"',
             reply_markup=keyboard,
         )
 
@@ -56,5 +58,43 @@ async def edit_user_profile_value(
     except Exception as e:
         logger.error(f'Ошибка при изменении \"{name_field}\" пользователя: {e}',
                      exc_info=True)
+    else:
+        return True
+
+
+async def edit_user_time_zone(
+    user_tg_id: int,
+    tz_region: str,
+    tz_offset: int,
+    longitude: float,
+    latitude: float,
+    session: AsyncSession,
+):
+    """
+    Изменяет данные связанные с таймзоной пользователя
+    :param user_tg_id: ID пользователя в телеграм.
+    :param tz_region: Регион пользователя ("Europe/Moscow")
+    :param tz_offset: Смещение пояса от UTC.
+    :param longitude: Долгота.
+    :param latitude: Широта.
+    :param session: Сессия.
+    :return: True, если обновление прошло успешно, иначе False.
+    """
+
+    stmt = update(UserOrm).filter(UserOrm.telegram_id == user_tg_id).values(
+        tz_region=tz_region,
+        tz_offset=tz_offset,
+        longitude=longitude,
+        latitude=latitude,
+    )
+
+    try:
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при изменении таймзоны пользователя с id \"{user_tg_id}\": {e}',
+            exc_info=True
+        )
     else:
         return True
