@@ -305,10 +305,10 @@ async def get_timezone_select_inline_kb(user_tg_id: int):
     return builder.as_markup()
 
 
-async def get_approve_time_zone_inline_kb(
+async def get_approve_tz_by_city_inline_kb(
     user_tg_id: int, time_zone: str, offset: int, lng: float, lat: float,
 ):
-    """Подтверждение тайм зоны"""
+    """Подтверждение тайм зоны по городу"""
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✅ ДА',
@@ -323,6 +323,30 @@ async def get_approve_time_zone_inline_kb(
     builder.button(
         text='❌ НЕТ',
         callback_data=EditTimeZoneSelectCallback(action='search_city',
+                                                 user_tg_id=user_tg_id).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_approve_tz_by_location_inline_kb(
+    user_tg_id: int, time_zone: str, offset: int, lng: float, lat: float,
+):
+    """Подтверждение тайм зоны по геопозиции"""
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='✅ ДА',
+        callback_data=ApproveTimeZoneCallback(
+            user_tg_id=user_tg_id,
+            time_zone=time_zone,
+            offset=offset,
+            lng=lng,
+            lat=lat,
+        ).pack()
+    )
+    builder.button(
+        text='❌ НЕТ',
+        callback_data=EditTimeZoneSelectCallback(action='geolocation',
                                                  user_tg_id=user_tg_id).pack()
     )
     builder.adjust(2)
