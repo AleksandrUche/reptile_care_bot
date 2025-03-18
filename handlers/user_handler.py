@@ -212,7 +212,7 @@ async def process_edit_time_zone_by_geolocation(
     await state.set_state(SearchTimeZoneByGeoPositionFSM.location)
 
 
-@router.message(StateFilter(SearchTimeZoneByGeoPositionFSM.location))
+@router.message(StateFilter(SearchTimeZoneByGeoPositionFSM.location), F.location)
 async def process_edit_time_zone_by_location(message: Message, state: FSMContext):
     """Изменение часового пояса по геопозиции пользователя."""
 
@@ -241,3 +241,12 @@ async def process_edit_time_zone_by_location(message: Message, state: FSMContext
             'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
+
+
+@router.message(StateFilter(SearchTimeZoneByGeoPositionFSM.location))
+async def warning_incorrect_geo_location(message: Message):
+    """Сработает при некорректной отправки геопозиции"""
+    await message.answer(
+        text='То, что Вы отправили не похоже на вашу геопозицию 🚩\n'
+             'Пожалуйста, отправьте геопозицию еще раз\n'
+    )
