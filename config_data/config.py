@@ -29,3 +29,7 @@ TIME_ZONE = ZoneInfo("Europe/Moscow")
 
 URL_API_GEO = os.environ.get('URL_API_GEO')
 API_KEY_GEO = os.environ.get('API_KEY_GEO')
+
+# REDIS
+
+REDIS_URL = os.environ.get('REDIS_URL')
