@@ -11,6 +11,7 @@ from factory.callback_factory.pet_factory import (
     EditPetCallback,
     DeletePetCallback,
     GenderSelectionCallback,
+    AddSheduleFeedingsCallback,
 )
 from factory.callback_factory.user_factory import (
     EditMyProfileCallback,
