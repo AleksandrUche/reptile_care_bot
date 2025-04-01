@@ -1,6 +1,8 @@
 import logging
-from datetime import datetime, timezone
-
+from datetime import datetime, timezone, timedelta
+import itertools
+from aiogram.fsm.context import FSMContext
+from aiogram.types import Message
 from sqlalchemy import DateTime
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -14,8 +16,10 @@ from database.models.pets_models import (
     MoltingPetOrm,
     GroupOrm,
     FeedingPetOrm,
+    FeedingScheduleOrm,
 )
 from database.models.user_models import UserOrm
+from keyboards.keyboard_utils.inline_kb_utils import no_time_zone_inline_kb
 
 logger = logging.getLogger(__name__)
 
@@ -261,3 +265,103 @@ async def add_feeding_pet_date(pet_id: int, session: AsyncSession):
     else:
         return True
 
+
+async def add_feeding_shedule(
+    pet_id: int, date: datetime, session: AsyncSession
+):
+    """
+    Добавляет дату запланированного кормления питомца.
+    """
+    stmt = FeedingScheduleOrm(
+        pet_id=pet_id,
+        scheduled_time=date.astimezone(timezone.utc)
+    )
+    session.add(stmt)
+    try:
+        await session.commit()
+    except Exception as e:
+        logger.error(f'Ошибка при добавлении даты запланированного кормления: {e}', exc_info=True)
+    else:
+        return True
+
+
+async def add_group_feeding_shedule(
+    pet_id: int, date: datetime, offset: int, repeat: int, session: AsyncSession,
+):
+    """
+    Добавляет график кормления питомца.
+    """
+    schedules = []
+    date_insertion = date.astimezone(timezone.utc)
+    for _ in range(repeat):
+        stmt = FeedingScheduleOrm(
+            pet_id=pet_id,
+            scheduled_time=date_insertion,
+        )
+        schedules.append(stmt)
+        date_insertion += timedelta(days=offset)
+    try:
+        session.add_all(schedules)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при добавлении группы запланированных кормлений: {e}', exc_info=True
+        )
+
+
+async def add_group_feeding_and_description_shedule(
+    pet_id: int,
+    date: datetime,
+    offset: int,
+    repeat: int,
+    description_1: str,
+    repeat_description_1: int,
+    description_2: str,
+    repeat_description_2: int,
+    session: AsyncSession,
+):
+    """
+    Добавляет график кормления питомца и описание к напоминанию.
+    """
+    description_schema = []
+    for _ in range(repeat_description_1):
+        description_schema.append(description_1)
+    for _ in range(repeat_description_2):
+        description_schema.append(description_2)
+    description = itertools.cycle(description_schema)
+
+    schedules = []
+    date_insertion = date.astimezone(timezone.utc)
+    for _ in range(repeat):
+        stmt = FeedingScheduleOrm(
+            pet_id=pet_id,
+            description=next(description),
+            scheduled_time=date_insertion,
+        )
+        schedules.append(stmt)
+        date_insertion += timedelta(days=offset)
+    try:
+        session.add_all(schedules)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при добавлении группы запланированных кормлений c описаниями: {e}',
+            exc_info=True
+        )
+
+
+async def time_zone_is_not_set(message: Message, state: FSMContext):
+    """Отправляет в чат сообщение с инлайн клавой для установки таймзоны"""
+    state_data = await state.get_data()
+    inline_kb = await no_time_zone_inline_kb(
+        message.from_user.id,
+        state_data['pet_id'],
+        state_data['company_id'],
+        state_data['group_id']
+    )
+    await message.answer(
+        text='Временная зона не установлена.\n'
+             'Пожалуйста, укажите её в настройках профиля.',
+        reply_markup=inline_kb,
+    )
+    await state.clear()
