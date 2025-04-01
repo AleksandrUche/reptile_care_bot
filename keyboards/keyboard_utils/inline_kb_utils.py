@@ -173,6 +173,10 @@ async def get_edit_pet_inline_kb(
         callback_data=EditPetCallback(field='molting', **data).pack()
     )
     builder.button(
+        text='🥗 График кормлений',
+        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
+    )
+    builder.button(
         text='🥗 Покормить',
         callback_data=EditPetCallback(field='add_feeding', **data).pack()
     )
@@ -187,6 +191,74 @@ async def get_edit_pet_inline_kb(
         callback_data='back_to_all_pets'
     )
     builder.adjust(2)  # По 2 кнопки в строке
+    return builder.as_markup()
+
+
+async def get_add_shedule_feedings_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    """Клавиатура для выбора режима добавления графика кормления"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
+    builder.button(
+        text='1 вариант',
+        callback_data=AddSheduleFeedingsCallback(
+            action='single_addition', **data
+        ).pack()
+    )
+    builder.button(
+        text='2 вариант',
+        callback_data=AddSheduleFeedingsCallback(action='group_addition', **data).pack()
+    )
+    builder.button(
+        text='3 вариант',
+        callback_data=AddSheduleFeedingsCallback(
+            action='group_addition_and_description', **data).pack()
+    )
+    builder.button(
+        text='4 вариант',
+        callback_data=AddSheduleFeedingsCallback(action='every_day', **data).pack()
+    )
+    builder.button(
+        text='⬅ Вернуться к питомцу',
+        callback_data=PetsCallback(**data).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_select_shedule_feedings_clear_state_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    """Возврат к меню выбора добавления графиков кормления с очисткой машины состояний"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
+    builder.button(
+        text='Отмена',
+        callback_data='cancel_state'
+    )
+    builder.button(
+        text='⬅ Назад',
+        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_select_shedule_feedings_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    """Возврат к меню выбора добавления графиков кормления"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
+    builder.button(
+        text='⬅ Назад',
+        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
+    )
+    builder.adjust(1)
     return builder.as_markup()
 
 
