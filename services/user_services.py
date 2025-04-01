@@ -5,7 +5,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.user_models import UserOrm
-from services.registration_services import user_exists
+from services.registration_services import get_user
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def get_user_profile(
     session: AsyncSession
 ):
     try:
-        user = await user_exists(callback.from_user.id, session)
+        user = await get_user(callback.from_user.id, session)
     except Exception as e:
         logger.error(
             f'Ошибка при открытии профиля пользователя c id = {callback.from_user.id}: {e}',
