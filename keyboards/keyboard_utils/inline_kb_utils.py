@@ -267,13 +267,15 @@ async def get_delete_pet_inline_kb(pet_id: int, pet_name: str):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✅ ДА',
-        callback_data=DeletePetCallback(action='delete', pet_id=pet_id,
-                                        pet_name=pet_name).pack()
+        callback_data=DeletePetCallback(
+            action='delete', pet_id=pet_id, pet_name=pet_name
+        ).pack()
     )
     builder.button(
         text='❌ НЕТ',
-        callback_data=DeletePetCallback(action='cancel', pet_id=pet_id,
-                                        pet_name=pet_name).pack()
+        callback_data=DeletePetCallback(
+            action='cancel', pet_id=pet_id, pet_name=pet_name
+        ).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -290,12 +292,15 @@ async def get_gender_select_pet_inline_kb(
     )
     builder.button(
         text='♀ Девочка',
-        callback_data=GenderSelectionCallback(action=GenderRole.GIRL, **data).pack()
+        callback_data=GenderSelectionCallback(
+            action=GenderRole.GIRL, **data
+        ).pack()
     )
     builder.button(
         text='🤷‍♂️ Не определен',
-        callback_data=GenderSelectionCallback(action=GenderRole.NOT_DEFINED,
-                                              **data).pack()
+        callback_data=GenderSelectionCallback(
+            action=GenderRole.NOT_DEFINED, **data
+        ).pack()
     )
     builder.button(
         text='Назад', callback_data=PetsCallback(**data).pack()
@@ -309,7 +314,8 @@ async def get_return_detail_view_pet_inline_kb(
 ):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text='⬅ Вернуться к питомцу', callback_data=PetsCallback(
+        text='⬅ Вернуться к питомцу',
+        callback_data=PetsCallback(
             pet_id=pet_id, company_id=company_id, group_id=group_id
         ).pack()
     )
@@ -323,13 +329,15 @@ async def get_edit_profile_inline_kb(user_tg_id: int):
 
     builder.button(
         text='✏ Язык',
-        callback_data=EditMyProfileCallback(action='language',
-                                            user_tg_id=user_tg_id).pack()
+        callback_data=EditMyProfileCallback(
+            action='language', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='✏ Часовой пояс',
-        callback_data=EditMyProfileCallback(action='edit_time_zone',
-                                            user_tg_id=user_tg_id).pack()
+        callback_data=EditMyProfileCallback(
+            action='edit_time_zone', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='⬅ Назад', callback_data='back_to_my_profile'
@@ -343,13 +351,15 @@ async def get_language_select_inline_kb(user_tg_id: int):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='Русский',
-        callback_data=LanguageSelectionCallback(language=Language.RU,
-                                                user_tg_id=user_tg_id).pack()
+        callback_data=LanguageSelectionCallback(
+            language=Language.RU, user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='English',
-        callback_data=LanguageSelectionCallback(language=Language.EN,
-                                                user_tg_id=user_tg_id).pack()
+        callback_data=LanguageSelectionCallback(
+            language=Language.EN, user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='Назад', callback_data='back_to_edit_my_profile'
@@ -363,13 +373,15 @@ async def get_timezone_select_inline_kb(user_tg_id: int):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='Ввести свой город',
-        callback_data=EditTimeZoneSelectCallback(action='search_city',
-                                                 user_tg_id=user_tg_id).pack()
+        callback_data=EditTimeZoneSelectCallback(
+            action='search_city', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='Геопозиция',
-        callback_data=EditTimeZoneSelectCallback(action='geolocation',
-                                                 user_tg_id=user_tg_id).pack()
+        callback_data=EditTimeZoneSelectCallback(
+            action='geolocation', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.button(
         text='⬅ Назад', callback_data='back_to_edit_my_profile'
@@ -395,8 +407,9 @@ async def get_approve_tz_by_city_inline_kb(
     )
     builder.button(
         text='❌ НЕТ',
-        callback_data=EditTimeZoneSelectCallback(action='search_city',
-                                                 user_tg_id=user_tg_id).pack()
+        callback_data=EditTimeZoneSelectCallback(
+            action='search_city', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -419,8 +432,9 @@ async def get_approve_tz_by_location_inline_kb(
     )
     builder.button(
         text='❌ НЕТ',
-        callback_data=EditTimeZoneSelectCallback(action='geolocation',
-                                                 user_tg_id=user_tg_id).pack()
+        callback_data=EditTimeZoneSelectCallback(
+            action='geolocation', user_tg_id=user_tg_id
+        ).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -436,4 +450,27 @@ async def get_back_select_time_zone_inline_kb(user_tg_id: int):
             user_tg_id=user_tg_id).pack()
     )
     builder.adjust(2)
+    return builder.as_markup()
+
+
+async def no_time_zone_inline_kb(
+    user_tg_id: int, pet_id: int, company_id: int, group_id: int
+):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Указать таймзону',
+        callback_data=EditMyProfileCallback(
+            action='edit_time_zone',
+            user_tg_id=user_tg_id).pack()
+    )
+    builder.button(
+        text='Назад',
+        callback_data=AddSheduleFeedingsCallback(
+            action='menu',
+            pet_id=pet_id,
+            company_id=company_id,
+            group_id=group_id,
+        )
+    )
+    builder.adjust(1)
     return builder.as_markup()
