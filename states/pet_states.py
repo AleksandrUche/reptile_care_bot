@@ -54,3 +54,29 @@ class PetEditBirthFSM(PetEditBaseFSM):
 class PetEditPurchaseFSM(PetEditBaseFSM):
     """Дата приобретения"""
     pet_purchase = State()
+
+
+class FeedingSingleFSM(PetEditBaseFSM):
+    """Для одиночного добавления даты кормления """
+    date = State()
+    time = State()
+
+
+class FeedingGroupFSM(PetEditBaseFSM):
+    """Для добавления графика кормления"""
+    date = State()
+    time = State()
+    offset = State()
+    repeat = State()
+
+
+class FeedingGroupAndDescriptionFSM(PetEditBaseFSM):
+    """Для добавления графика кормления с описанием"""
+    date = State()
+    time = State()
+    offset = State()
+    repeat = State()
+    description_1 = State()
+    repeat_description_1 = State()
+    description_2 = State()
+    repeat_description_2 = State()
