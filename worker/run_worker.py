@@ -18,11 +18,11 @@ worker_settings = SettingsDict(
     cron_jobs=[
         CronJob(
             function=run_check_feeding_events,
-            cron="* * * * */5", # каждые 5 минут
+            cron="* * * * * */300", # каждые 5 минуту
         ),
         CronJob(
             function=run_reminder_of_feedings,
-            cron="* * * */1", # каждый час
+            cron="* * * * * */3600", # каждый час
         ),
     ],
 )
