@@ -12,6 +12,7 @@ from factory.callback_factory.pet_factory import (
     DeletePetCallback,
     GenderSelectionCallback,
     AddSheduleFeedingsCallback,
+    ConfirmFeedingEventsCallback,
 )
 from factory.callback_factory.user_factory import (
     EditMyProfileCallback,
@@ -447,7 +448,8 @@ async def get_back_select_time_zone_inline_kb(user_tg_id: int):
         text='⬅ Назад',
         callback_data=EditMyProfileCallback(
             action='edit_time_zone',
-            user_tg_id=user_tg_id).pack()
+            user_tg_id=user_tg_id
+        ).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -456,6 +458,10 @@ async def get_back_select_time_zone_inline_kb(user_tg_id: int):
 async def no_time_zone_inline_kb(
     user_tg_id: int, pet_id: int, company_id: int, group_id: int
 ):
+    """
+    Клавиатура возникающая в процессе добавлений графиков кормлений если у
+    пользователя не определена таймзона
+    """
     builder = InlineKeyboardBuilder()
     builder.button(
         text='Указать таймзону',
@@ -470,7 +476,42 @@ async def no_time_zone_inline_kb(
             pet_id=pet_id,
             company_id=company_id,
             group_id=group_id,
-        )
+        ).pack()
     )
     builder.adjust(1)
+    return builder.as_markup()
+
+
+async def get_shedule_feeding_approve_inline_kb(
+    event_feeding_id: int, pet_id: int, pet_name: str
+):
+    builder = InlineKeyboardBuilder()
+    builder.button(
+        text='Покормил(а) ✅',
+        callback_data=ConfirmFeedingEventsCallback(
+            action='approve',
+            event_feeding_id=event_feeding_id,
+            pet_id=pet_id,
+            pet_name=pet_name,
+        ).pack()
+    )
+    builder.button(
+        text='Напомнить ⏱',
+        callback_data=ConfirmFeedingEventsCallback(
+            action='remind',
+            event_feeding_id=event_feeding_id,
+            pet_id=pet_id,
+            pet_name=pet_name,
+        ).pack()
+    )
+    builder.button(
+        text='Не напоминать ❌',
+        callback_data=ConfirmFeedingEventsCallback(
+            action='cancel',
+            event_feeding_id=event_feeding_id,
+            pet_id=pet_id,
+            pet_name=pet_name,
+        ).pack()
+    )
+    builder.adjust(2)
     return builder.as_markup()
