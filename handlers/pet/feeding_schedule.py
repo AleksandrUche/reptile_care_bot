@@ -1,5 +1,6 @@
 import logging
-from datetime import datetime, tzinfo
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from aiogram import F, Router
 from aiogram.filters import StateFilter
@@ -9,6 +10,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import (
     AddSheduleFeedingsCallback,
+    ConfirmFeedingEventsCallback,
 )
 from keyboards.keyboard_utils.inline_kb_utils import (
     get_add_shedule_feedings_inline_kb,
@@ -20,6 +22,9 @@ from services.pet_services import (
     time_zone_is_not_set,
     add_group_feeding_shedule,
     add_group_feeding_and_description_shedule,
+    add_feeding_pet_date,
+    change_reminder_feeding_shedule,
+    get_feeding_shedule,
 )
 from services.registration_services import get_user
 from services.utils import parse_date, parse_time
@@ -59,14 +64,22 @@ async def add_single_feeding_schedule_handler(
     callback: CallbackQuery,
     callback_data: AddSheduleFeedingsCallback,
     state: FSMContext,
+    session: AsyncSession,
 ):
     """Обработчик для добавления одной даты кормления"""
     await callback.answer()
+    # Проверка тайм зоны пользователя
+    user = await get_user(callback.from_user.id, session)
+    if not user.tz_region:
+        await time_zone_is_not_set(callback, callback_data)
+        return
+    user_timezone = ZoneInfo(user.tz_region)
+
     await state.set_state(FeedingSingleFSM.date)
     inline_kb = await get_select_shedule_feedings_clear_state_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
-    await  callback.message.edit_text(
+    await callback.message.edit_text(
         text='Добавление одного запланированного дня кормления\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
@@ -76,32 +89,24 @@ async def add_single_feeding_schedule_handler(
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
+        user_timezone=user_timezone,
     )
 
 
 @router.message(StateFilter(FeedingSingleFSM.date))
-async def process_add_single_date_feeding(
-    message: Message, state: FSMContext, session: AsyncSession
-):
+async def process_add_single_date_feeding(message: Message, state: FSMContext):
     """Добавление даты кормления."""
-    user = await get_user(message.from_user.id, session)
-    user_timezone = tzinfo(user.tz_region)
-
-    if not user_timezone:
-        await time_zone_is_not_set(message, state)
-        return
-
     try:
+        state_data = await state.get_data()
         date = parse_date(message.text)
-        date_feeding = date.replace(tzinfo=user_timezone).date()
+        date_feeding = date.replace(tzinfo=state_data['user_timezone']).date()
         await state.update_data(date=date_feeding)
     except ValueError:
         await message.answer(
             'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
         )
     else:
-        state_data = await state.get_data()
         inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
             state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
@@ -146,7 +151,7 @@ async def process_add_single_time_feeding(
                 'Произошла ошибка при добавлении даты запланированного кормления питомца!\n'
                 'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
             )
-        await state.clear()
+            await state.clear()
     await state.clear()
 
 
@@ -155,12 +160,20 @@ async def add_group_feedings_schedule_handler(
     callback: CallbackQuery,
     callback_data: AddSheduleFeedingsCallback,
     state: FSMContext,
+    session: AsyncSession,
 ):
     """
     Обработчик для добавления группы дат кормлений
     Принимает date, time, offset, repeat
     """
     await callback.answer()
+    # Проверка тайм зоны пользователя
+    user = await get_user(callback.from_user.id, session)
+    if not user.tz_region:
+        await time_zone_is_not_set(callback, callback_data)
+        return
+    user_timezone = ZoneInfo(user.tz_region)
+
     inline_kb = await get_select_shedule_feedings_clear_state_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
@@ -174,33 +187,25 @@ async def add_group_feedings_schedule_handler(
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
+        user_timezone=user_timezone,
     )
     await state.set_state(FeedingGroupFSM.date)
 
 
 @router.message(StateFilter(FeedingGroupFSM.date))
-async def process_add_group_feeding_start_date(
-    message: Message, state: FSMContext, session: AsyncSession
-):
+async def process_add_group_feeding_start_date(message: Message, state: FSMContext):
     """Добавление даты кормлений для добавления группы кормлений."""
-    user = await get_user(message.from_user.id, session)
-    user_timezone = tzinfo(user.tz_region)
-
-    if not user_timezone:
-        await time_zone_is_not_set(message, state)
-        return
-
     try:
+        state_data = await state.get_data()
         date = parse_date(message.text)
-        date_feeding = date.replace(tzinfo=user_timezone).date()
+        date_feeding = date.replace(tzinfo=state_data['user_timezone']).date()
         await state.update_data(date=date_feeding)
     except ValueError:
         await message.answer(
             'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
         )
     else:
-        state_data = await state.get_data()
         inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
             state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
@@ -312,11 +317,19 @@ async def add_group_feedings_schedule_with_description_handler(
     callback: CallbackQuery,
     callback_data: AddSheduleFeedingsCallback,
     state: FSMContext,
+    session: AsyncSession,
 ):
     """
     Обработчик для добавления группы дат кормлений
     Принимает date, time, offset, repeat,
     """
+    # Проверка тайм зоны пользователя
+    user = await get_user(callback.from_user.id, session)
+    if not user.tz_region:
+        await time_zone_is_not_set(callback, callback_data)
+        return
+    user_timezone = ZoneInfo(user.tz_region)
+
     await callback.answer()
     inline_kb = await get_select_shedule_feedings_clear_state_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
@@ -331,33 +344,27 @@ async def add_group_feedings_schedule_with_description_handler(
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
+        user_timezone=user_timezone,
     )
     await state.set_state(FeedingGroupAndDescriptionFSM.date)
 
 
 @router.message(StateFilter(FeedingGroupAndDescriptionFSM.date))
 async def process_add_start_date_group_feeding_with_description(
-    message: Message, state: FSMContext, session: AsyncSession
+    message: Message, state: FSMContext
 ):
     """Добавление даты кормлений для добавления группы кормлений с описаниями."""
-    user = await get_user(message.from_user.id, session)
-    user_timezone = tzinfo(user.tz_region)
-
-    if not user_timezone:
-        await time_zone_is_not_set(message, state)
-        return
-
     try:
+        state_data = await state.get_data()
         date = parse_date(message.text)
-        date_feeding = date.replace(tzinfo=user_timezone).date()
+        date_feeding = date.replace(tzinfo=state_data['user_timezone']).date()
         await state.update_data(date=date_feeding)
     except ValueError:
         await message.answer(
             'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
         )
     else:
-        state_data = await state.get_data()
         inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
             state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
