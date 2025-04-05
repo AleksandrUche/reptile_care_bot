@@ -601,3 +601,93 @@ async def warning_incorrect_repeat_description_2_group_feeding_with_description(
         text='То, что Вы отправили не похоже на количество повторений второго описания.\n'
              'Пожалуйста, повторите еще раз, допускаются только цифры❗'
     )
+
+
+@router.callback_query(ConfirmFeedingEventsCallback.filter(F.action == 'approve'))
+async def confirmation_feeding_event_handler(
+    callback: CallbackQuery,
+    callback_data: ConfirmFeedingEventsCallback,
+    session: AsyncSession,
+):
+    """
+    Обработчик для подтверждения кормления по графику из уведомления
+    """
+    try:
+        feeding_event = await get_feeding_shedule(
+            callback_data.event_feeding_id, session
+        )
+        await add_feeding_pet_date(
+            callback_data.pet_id, session, feeding_event.description)
+        await change_reminder_feeding_shedule(
+            callback_data.event_feeding_id, callback_data.pet_id, False, session,
+        )
+    except Exception as e:
+        logger.error(f'Не удалось подтвердить кормление из уведомления: {e}',
+                     exc_info=True)
+        await callback.answer(
+            text=f'Не удалось подтвердить кормление «{callback_data.pet_name}»❗\n'
+                 f'Попробуйте еще раз.',
+            show_alert=True,
+        )
+    else:
+        await callback.answer(
+            text=f'Питомец «{callback_data.pet_name}» покормлен ✅\n'
+                 'Кормление добавлено в историю',
+            show_alert=True,
+        )
+
+
+@router.callback_query(ConfirmFeedingEventsCallback.filter(F.action == 'remind'))
+async def remind_feeding_event_handler(
+    callback: CallbackQuery,
+    callback_data: ConfirmFeedingEventsCallback,
+    session: AsyncSession
+):
+    """
+    Обработчик для подтверждения "повторного" напоминания кормления из графика
+    """
+    try:
+        await change_reminder_feeding_shedule(
+            callback_data.event_feeding_id, callback_data.pet_id, True, session,
+        )
+    except Exception as e:
+        logger.error(f'Не удалось запланировать повторное уведомление кормления: {e}',
+                     exc_info=True)
+        await callback.answer(
+            text=f'Не удалось запланировать повторное уведомление кормления для «{callback_data.pet_name}»❗\n'
+                 f'Попробуйте еще раз.',
+            show_alert=True,
+        )
+    else:
+        await callback.answer(
+            text='Запланировано повторное напоминание о кормлении '
+                 f'«{callback_data.pet_name}», уведомление придет через 1 час ✅',
+            show_alert=True,
+        )
+
+
+@router.callback_query(ConfirmFeedingEventsCallback.filter(F.action == 'cancel'))
+async def cancel_remind_feeding_event_handler(
+    callback: CallbackQuery,
+    callback_data: ConfirmFeedingEventsCallback,
+    session: AsyncSession,
+):
+    """
+    Обработчик для отмены повторного уведомления о кормлении bp
+    """
+    try:
+        await change_reminder_feeding_shedule(
+            callback_data.event_feeding_id, callback_data.pet_id, False, session,
+        )
+    except Exception as e:
+        logger.error(f'Не удалось отменить повторное уведомление: {e}', exc_info=True)
+        await callback.answer(
+            text='Не удалось отменить повторное напоминание о '
+                 f'кормлении «{callback_data.pet_name}»!',
+            show_alert=True,
+        )
+    else:
+        await callback.answer(
+            text=f'Повторное напоминание для «{callback_data.pet_name}» отменено❗',
+            show_alert=True,
+        )
