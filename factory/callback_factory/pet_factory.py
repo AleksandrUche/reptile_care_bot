@@ -43,3 +43,15 @@ class AddSheduleFeedingsCallback(CallbackData, prefix='add_shedule_feeding'):
     pet_id: int
     company_id: int # для возврата к детальному просмотру питомца
     group_id: int
+
+
+class ConfirmFeedingEventsCallback(CallbackData, prefix='confirm_feeding_events'):
+    """
+    Фабрика для обработки напоминаний кормления (для подтверждения, отмены или
+    повторного напоминания уведомления.)
+    action: approve, cancel, remind
+    """
+    action: str
+    event_feeding_id: int
+    pet_id: int
+    pet_name: str
