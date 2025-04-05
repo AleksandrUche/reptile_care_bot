@@ -187,7 +187,7 @@ class FeedingScheduleOrm(Base):
         'Дата кормления', DateTime(timezone=True), nullable=False, index=True
     )
     is_active: Mapped[bool] = mapped_column('Активен?', default=True)
-    remind: Mapped[bool] = mapped_column('Напомнить?', default=True)
+    remind: Mapped[bool] = mapped_column('Напомнить?', nullable=True)
     created_at: Mapped[DateTime] = mapped_column(
         'Дата добавления', DateTime(timezone=True), server_default=func.now()
     )
