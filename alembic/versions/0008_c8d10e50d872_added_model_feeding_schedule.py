@@ -26,7 +26,7 @@ def upgrade() -> None:
                     sa.Column('Дата кормления', sa.DateTime(timezone=True),
                               nullable=False),
                     sa.Column('Активен?', sa.Boolean(), nullable=False),
-                    sa.Column('Напомнить?', sa.Boolean(), nullable=False),
+                    sa.Column('Напомнить?', sa.Boolean(), nullable=True),
                     sa.Column('Дата добавления', sa.DateTime(timezone=True),
                               server_default=sa.text('now()'), nullable=False),
                     sa.ForeignKeyConstraint(['pet_id'], ['pet.id'], ),
