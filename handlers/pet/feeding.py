@@ -19,14 +19,16 @@ async def add_pet_feeding_handler(
 ):
     """Обработчик для добавления даты кормления питомца."""
     await callback.answer()
-    feed = await add_feeding_pet_date(callback_data.pet_id, session)
-    if feed:
+    try:
+        await add_feeding_pet_date(callback_data.pet_id, session)
+    except Exception as e:
+        logger.error(f'Не удалось добавить дату кормления: {e}', exc_info=True)
+        await callback.message.answer(
+            'Произошла ошибка при добавлении кормления'
+        )
+    else:
         await callback.message.answer(
             text='🦎 Питомец покормлен, дата была добавлена в историю.\n'
                  'Дополнительную информацию можно добавить при детальном '
                  'просмотре истории кормлений',
-        )
-    else:
-        await callback.message.answer(
-            'Произошла ошибка при добавлении кормления'
         )
