@@ -60,9 +60,3 @@ back_to_all_company = create_inline_kb(
     1, back_to_all_company='⬅ Назад'
 )
 
-shedule_feeding_approve = create_inline_kb(
-    2,
-    aa='Покормил(а) ✅',
-    bb='Напомнить ⏱',
-    cc='Не напоминать ❌',
-)
