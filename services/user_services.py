@@ -27,11 +27,16 @@ async def get_user_profile(
                  'Попробуйте еще раз, в случае неудачи обратитесь в поддержку.'
         )
     else:
-        gmt = '+' if user.tz_offset > 0 else ''
+        if user.tz_region:
+            gmt = '+' if user.tz_offset > 0 else ''
+            user_tz = f'GMT "{gmt}{user.tz_offset}"'
+        else:
+            user_tz = 'Не указан'
+
         await callback.message.edit_text(
             text=f'Ваше имя: {user.first_name}\n'
                  f'Язык: {user.language}\n'
-                 f'Часовой пояс: \"GMT {gmt}{user.tz_offset}\"',
+                 f'Часовой пояс: {user_tz}',
             reply_markup=keyboard,
         )
 
