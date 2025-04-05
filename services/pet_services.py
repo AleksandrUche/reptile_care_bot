@@ -1,8 +1,7 @@
 import logging
 from datetime import datetime, timezone, timedelta
 import itertools
-from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import CallbackQuery
 from sqlalchemy import DateTime
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,6 +18,7 @@ from database.models.pets_models import (
     FeedingScheduleOrm,
 )
 from database.models.user_models import UserOrm
+from factory.callback_factory.pet_factory import AddSheduleFeedingsCallback
 from keyboards.keyboard_utils.inline_kb_utils import no_time_zone_inline_kb
 
 logger = logging.getLogger(__name__)
@@ -247,23 +247,24 @@ async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSes
         return True
 
 
-async def add_feeding_pet_date(pet_id: int, session: AsyncSession):
+async def add_feeding_pet_date(
+    pet_id: int, session: AsyncSession, description: str = None
+):
     """
     Добавляет дату кормления питомца.
     """
-    current_date = datetime.now().replace(tzinfo=timezone.utc)
-    stmt = FeedingPetOrm(
-        pet_id=pet_id,
-        date_feed=current_date,
-    )
-    session.add(stmt)
     try:
+        current_date = datetime.now().replace(tzinfo=timezone.utc)
+        stmt = FeedingPetOrm(
+            pet_id=pet_id,
+            date_feed=current_date,
+            description=description,
+        )
+        session.add(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении кормления: {e}', exc_info=True)
-        return False
-    else:
-        return True
+        raise
 
 
 async def add_feeding_shedule(
@@ -350,18 +351,44 @@ async def add_group_feeding_and_description_shedule(
         )
 
 
-async def time_zone_is_not_set(message: Message, state: FSMContext):
+async def time_zone_is_not_set(
+    callback: CallbackQuery, callback_data: AddSheduleFeedingsCallback
+):
     """Отправляет в чат сообщение с инлайн клавой для установки таймзоны"""
-    state_data = await state.get_data()
     inline_kb = await no_time_zone_inline_kb(
-        message.from_user.id,
-        state_data['pet_id'],
-        state_data['company_id'],
-        state_data['group_id']
+        callback.from_user.id,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
     )
-    await message.answer(
+    await callback.message.answer(
         text='Временная зона не установлена.\n'
              'Пожалуйста, укажите её в настройках профиля.',
         reply_markup=inline_kb,
     )
-    await state.clear()
+
+
+async def change_reminder_feeding_shedule(
+    event_feeding_id: int, pet_id: int, remind: bool, session: AsyncSession
+):
+    """Отменяет повторное уведомление кормления питомца"""
+    try:
+        stmt = update(FeedingScheduleOrm).filter(
+            FeedingScheduleOrm.id == event_feeding_id,
+            FeedingScheduleOrm.pet_id == pet_id,
+        ).values(remind=remind)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при изменении статуса "напоминания" кормления питомца: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_feeding_shedule(feeding_id: int, session: AsyncSession):
+    """Возвращает информацию о запланированном кормлении по id"""
+    return await session.scalar(
+        select(FeedingScheduleOrm)
+        .filter(FeedingScheduleOrm.id == feeding_id)
+    )
