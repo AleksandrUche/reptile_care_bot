@@ -603,6 +603,129 @@ async def warning_incorrect_repeat_description_2_group_feeding_with_description(
     )
 
 
+@router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'every_day'))
+async def add_group_feedings_every_day_schedule_handler(
+    callback: CallbackQuery,
+    callback_data: AddSheduleFeedingsCallback,
+    state: FSMContext,
+    session: AsyncSession,
+):
+    """
+    Обработчик для добавления графика кормлений на каждый день
+    Принимает date, time, repeat
+    """
+    await callback.answer()
+    # Проверка тайм зоны пользователя
+    user = await get_user(callback.from_user.id, session)
+    if not user.tz_region:
+        await time_zone_is_not_set(callback, callback_data)
+        return
+    user_timezone = ZoneInfo(user.tz_region)
+
+    inline_kb = await get_select_shedule_feedings_clear_state_inline_kb(
+        callback_data.pet_id, callback_data.company_id, callback_data.group_id
+    )
+    await  callback.message.edit_text(
+        text='Добавление графика кормлений.\n\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n'
+             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.</b>\n'
+             'Разделитель может быть: ".", ",", "пробел" и "/".\n',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        user_timezone=user_timezone,
+    )
+    await state.set_state(FeedingEveryDayFSM.date)
+
+
+@router.message(StateFilter(FeedingEveryDayFSM.date))
+async def process_add_start_date_group_feeding_every_day(message: Message,
+                                                         state: FSMContext):
+    """Добавление начальной даты кормлений для добавления кормлений на каждый день."""
+    try:
+        state_data = await state.get_data()
+        date = parse_date(message.text)
+        date_feeding = date.replace(tzinfo=state_data['user_timezone']).date()
+        await state.update_data(date=date_feeding)
+    except ValueError:
+        await message.answer(
+            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+        )
+    else:
+        inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+        await message.answer(
+            text='Введите время в формате ЧЧ:ММ.\n'
+                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+                 'Разделитель может быть: ":", ".", ",", "пробел" и "/".',
+            reply_markup=inline_back_kb
+        )
+        await state.set_state(FeedingEveryDayFSM.time)
+
+
+@router.message(StateFilter(FeedingEveryDayFSM.time))
+async def process_add_time_group_feeding_every_day(message: Message, state: FSMContext):
+    """Добавление времени кормления."""
+    try:
+        time_feeding = parse_time(message.text)
+        await state.update_data(time=time_feeding)
+    except ValueError:
+        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+    else:
+        state_data = await state.get_data()
+        inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+        await message.answer(
+            text='Введите количество повторений.\n\n'
+                 'В расписание будет внесено указанное количество дат \n'
+                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
+            reply_markup=inline_back_kb,
+        )
+        await state.set_state(FeedingEveryDayFSM.repeat)
+
+
+@router.message(StateFilter(FeedingEveryDayFSM.repeat), F.text.isdigit())
+async def process_add_repeat_group_feeding_every_day(
+    message: Message, state: FSMContext, session: AsyncSession):
+    """Добавление повторения кормлений для кормлений на каждый день."""
+    try:
+        await state.update_data(repeat=message.text)
+        state_data = await state.get_data()
+        date_time = datetime.combine(state_data['date'], state_data['time'])
+        await add_group_feeding_shedule(
+            state_data['pet_id'],
+            date_time,
+            1,
+            int(state_data['repeat']),
+            session,
+        )
+    except ValueError:
+        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+    else:
+        inline_back_kb = await get_select_shedule_feedings_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
+        await message.answer(
+            text='График кормлений успешно добавлен ✅',
+            reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.message(StateFilter(FeedingEveryDayFSM.repeat))
+async def warning_incorrect_repeat_feeding_every_day(message: Message):
+    """Сработает при некорректном вводе повторений"""
+    await message.answer(
+        text='То, что Вы отправили не похоже на количество повторений кормления.\n'
+             'Пожалуйста, повторите еще раз, допускаются только цифры❗',
+    )
+
+
 @router.callback_query(ConfirmFeedingEventsCallback.filter(F.action == 'approve'))
 async def confirmation_feeding_event_handler(
     callback: CallbackQuery,
