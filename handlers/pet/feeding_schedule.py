@@ -32,6 +32,7 @@ from states.pet_states import (
     FeedingSingleFSM,
     FeedingGroupFSM,
     FeedingGroupAndDescriptionFSM,
+    FeedingEveryDayFSM,
 )
 
 logger = logging.getLogger(__name__)
