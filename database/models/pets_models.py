@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, DateTime, func, Enum
+from sqlalchemy import ForeignKey, DateTime, func, Enum, String
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.engine import Base
@@ -91,6 +91,11 @@ class PetOrm(Base):
                                                           back_populates='pet')
     feeding: Mapped[list['FeedingPetOrm']] = relationship('FeedingPetOrm',
                                                           back_populates='pet')
+    feeding_schedules: Mapped[list['FeedingScheduleOrm']] = relationship(
+        'FeedingScheduleOrm',
+        back_populates='pet',
+        cascade='all, delete-orphan'
+    )
 
 
 class WeightPetOrm(Base):
@@ -170,3 +175,21 @@ class FeedingPetOrm(Base):
         onupdate=func.now(),
     )
     pet: Mapped['PetOrm'] = relationship('PetOrm', back_populates='feeding')
+
+
+class FeedingScheduleOrm(Base):
+    __tablename__ = 'feeding_schedules'
+
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    pet_id: Mapped[int] = mapped_column(ForeignKey('pet.id'), nullable=False)
+    description: Mapped[str] = mapped_column(String(100), nullable=True)
+    scheduled_time: Mapped[DateTime] = mapped_column(
+        'Дата кормления', DateTime(timezone=True), nullable=False, index=True
+    )
+    is_active: Mapped[bool] = mapped_column('Активен?', default=True)
+    remind: Mapped[bool] = mapped_column('Напомнить?', nullable=True)
+    created_at: Mapped[DateTime] = mapped_column(
+        'Дата добавления', DateTime(timezone=True), server_default=func.now()
+    )
+
+    pet: Mapped['PetOrm'] = relationship('PetOrm', back_populates='feeding_schedules')

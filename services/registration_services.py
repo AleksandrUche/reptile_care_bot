@@ -11,10 +11,10 @@ from keyboards.inline_keyboards import inline_keyboards
 logger = logging.getLogger(__name__)
 
 
-async def user_exists(telegram_id: int, session: AsyncSession) -> UserOrm | None:
+async def get_user(telegram_id: int, session: AsyncSession) -> UserOrm | None:
     """
     Проверяет, существует ли пользователь с указанным telegram_id.
-    Возвращает True, если пользователь найден, иначе False.
+    Возвращает объект пользователя.
     """
     stmt = select(UserOrm).filter(UserOrm.telegram_id == telegram_id)
     try:
@@ -32,7 +32,7 @@ async def user_registration(message: Message, session: AsyncSession):
     Проверяет на наличие пользователя в системе, если пользователя нет в БД,
     регистрирует его и создает компанию и группу по умолчанию.
     """
-    user_exist = await user_exists(message.from_user.id, session)
+    user_exist = await get_user(message.from_user.id, session)
     keyboard = inline_keyboards.main_menu_inline
 
     language_user = message.from_user.language_code

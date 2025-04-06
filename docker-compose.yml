@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   redis:
     image: redis:latest
@@ -24,6 +22,34 @@ services:
       - "${DB_LOCAL_PORT}:${DB_PORT}"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - app_network
+
+  default_worker:
+    build:
+      context: .
+    container_name: worker
+    restart: always
+    depends_on:
+      - redis
+      - postgres
+    env_file: .env
+    command: poetry run saq worker.run_worker.worker_settings --web
+    networks:
+      - app_network
+    ports:
+      - "8080:8080"
+
+  bot:
+    build: .
+    container_name: bot
+    restart: always
+    command: poetry run python main.py
+    depends_on:
+      - redis
+      - postgres
+    env_file:
+      - .dev.env
     networks:
       - app_network
 

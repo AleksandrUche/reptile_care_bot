@@ -5,7 +5,7 @@ from sqlalchemy import update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.user_models import UserOrm
-from services.registration_services import user_exists
+from services.registration_services import get_user
 
 logger = logging.getLogger(__name__)
 
@@ -16,7 +16,7 @@ async def get_user_profile(
     session: AsyncSession
 ):
     try:
-        user = await user_exists(callback.from_user.id, session)
+        user = await get_user(callback.from_user.id, session)
     except Exception as e:
         logger.error(
             f'Ошибка при открытии профиля пользователя c id = {callback.from_user.id}: {e}',
@@ -27,11 +27,16 @@ async def get_user_profile(
                  'Попробуйте еще раз, в случае неудачи обратитесь в поддержку.'
         )
     else:
-        gmt = '+' if user.tz_offset > 0 else ''
+        if user.tz_region:
+            gmt = '+' if user.tz_offset > 0 else ''
+            user_tz = f'GMT "{gmt}{user.tz_offset}"'
+        else:
+            user_tz = 'Не указан'
+
         await callback.message.edit_text(
             text=f'Ваше имя: {user.first_name}\n'
                  f'Язык: {user.language}\n'
-                 f'Часовой пояс: \"GMT {gmt}{user.tz_offset}\"',
+                 f'Часовой пояс: {user_tz}',
             reply_markup=keyboard,
         )
 

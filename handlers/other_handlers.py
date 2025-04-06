@@ -1,5 +1,7 @@
 from aiogram import F, Router
-from aiogram.filters import Command, CommandStart
+from aiogram.filters import Command, CommandStart, StateFilter
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -87,3 +89,9 @@ async def process_buttons_press(callback: CallbackQuery):
         reply_markup=inline_keyboards.back_to_main_menu,
     )
     await callback.answer()
+
+@router.callback_query(F.data == 'cancel_state', ~StateFilter(default_state))
+async def cancel_state_handler(message: Message, state: FSMContext):
+    """Выходит из машины состояния"""
+    await state.clear()
+    await message.answer("Действие отменено.")

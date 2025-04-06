@@ -138,7 +138,8 @@ async def process_edit_time_zone_by_city(message: Message, state: FSMContext):
 
     api_client = GeoAPIClient()
     timezone = await api_client.get_search_time_zone_by_city(city)
-
+    if not timezone:
+        await message.answer('Возможно, Вы допустили ошибку, повторите еще раз.')
     inline_approve_kb = await get_approve_tz_by_city_inline_kb(
         message.from_user.id,
         timezone['time_zone'],

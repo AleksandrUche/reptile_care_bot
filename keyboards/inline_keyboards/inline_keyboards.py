@@ -59,3 +59,4 @@ menu_company = create_inline_kb(
 back_to_all_company = create_inline_kb(
     1, back_to_all_company='⬅ Назад'
 )
+
