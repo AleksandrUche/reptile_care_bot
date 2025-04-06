@@ -60,6 +60,7 @@ class FeedingSingleFSM(PetEditBaseFSM):
     """Для одиночного добавления даты кормления """
     date = State()
     time = State()
+    description = State()
 
 
 class FeedingGroupFSM(PetEditBaseFSM):
