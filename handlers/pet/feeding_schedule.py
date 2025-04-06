@@ -96,21 +96,22 @@ async def add_single_feeding_schedule_handler(
 
 
 @router.message(StateFilter(FeedingSingleFSM.date))
-async def process_add_single_date_feeding(message: Message, state: FSMContext):
+async def process_add_date_single_feeding(message: Message, state: FSMContext):
     """Добавление даты кормления."""
     try:
         state_data = await state.get_data()
         date = parse_date(message.text)
         date_feeding = date.replace(tzinfo=state_data['user_timezone']).date()
         await state.update_data(date=date_feeding)
+
+        inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
     except ValueError:
         await message.answer(
             'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
         )
     else:
-        inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
-            state_data['pet_id'], state_data['company_id'], state_data['group_id']
-        )
         await message.answer(
             text='Введите время в формате ЧЧ:ММ.\n'
                  '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
@@ -121,39 +122,55 @@ async def process_add_single_date_feeding(message: Message, state: FSMContext):
 
 
 @router.message(StateFilter(FeedingSingleFSM.time))
-async def process_add_single_time_feeding(
+async def process_add_time_single_feeding(
     message: Message, state: FSMContext, session: AsyncSession
 ):
     """Добавление времени кормления."""
     try:
         time_feeding = parse_time(message.text)
         await state.update_data(time=time_feeding)
+
+        state_data = await state.get_data()
+        inline_back_kb = await get_select_shedule_feedings_clear_state_inline_kb(
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        )
     except ValueError:
         await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
     else:
+        await message.answer(
+            'Заполните описание\n\n'
+            'Если в этом нет необходимости, можно пропустить этот шаг, отправив любой '
+            'символ.',
+            reply_markup=inline_back_kb,
+        )
+        await state.set_state(FeedingSingleFSM.description)
+
+
+@router.message(StateFilter(FeedingSingleFSM.description))
+async def process_add_description_single_feeding(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Добавление описания кормления при одиночном добавлении."""
+    try:
+        await state.update_data(description=message.text)
         state_data = await state.get_data()
         date_time = datetime.combine(state_data['date'], state_data['time'])
-
-        add_feeding = await add_feeding_shedule(
-            state_data['pet_id'], date_time, session,
+        await add_feeding_shedule(
+            state_data['pet_id'], date_time, session, state_data['description']
         )
+    except ValueError:
+        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+    else:
         inline_back_kb = await get_select_shedule_feedings_inline_kb(
             state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
-        if add_feeding:
-            await message.answer(
-                "Запланированное кормление добавлено\n"
-                f"\"{date_time.strftime('%d.%m.%Y %H:%M')}\".\n"
-                'Вам придет уведомление в указанное время.',
-                reply_markup=inline_back_kb,
-            )
-        else:
-            await message.answer(
-                'Произошла ошибка при добавлении даты запланированного кормления питомца!\n'
-                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
-            )
-            await state.clear()
-    await state.clear()
+        await message.answer(
+            "Запланированное кормление добавлено ✅\n"
+            f"\"{date_time.strftime('%d.%m.%Y %H:%M')}\".\n"
+            'Вам придет уведомление в указанное время.',
+            reply_markup=inline_back_kb,
+        )
+        await state.clear()
 
 
 @router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'group_addition'))
@@ -244,7 +261,7 @@ async def process_add_group_time_feeding(message: Message, state: FSMContext):
 
 
 @router.message(StateFilter(FeedingGroupFSM.offset), F.text.isdigit())
-async def process_add_group_feeding_offset(message: Message, state: FSMContext):
+async def process_add_offset_group_feeding(message: Message, state: FSMContext):
     """Добавление интервала кормлений при групповом добавлении."""
     try:
         await state.update_data(offset=message.text)
@@ -266,7 +283,7 @@ async def process_add_group_feeding_offset(message: Message, state: FSMContext):
 
 
 @router.message(StateFilter(FeedingGroupFSM.offset))
-async def warning_incorrect_group_offset_feeding(message: Message):
+async def warning_incorrect_offset_group_feeding(message: Message):
     """Сработает при некорректном вводе интервала кормления"""
     await message.answer(
         text='То, что Вы отправили не похоже на интервал кормлений.\n'
@@ -275,7 +292,7 @@ async def warning_incorrect_group_offset_feeding(message: Message):
 
 
 @router.message(StateFilter(FeedingGroupFSM.repeat), F.text.isdigit())
-async def process_add_group_feeding_repeat(
+async def process_add_repeat_group_feeding(
     message: Message, state: FSMContext, session: AsyncSession):
     """Добавление повторения кормлений при групповом добавлении."""
     try:
@@ -303,7 +320,7 @@ async def process_add_group_feeding_repeat(
 
 
 @router.message(StateFilter(FeedingGroupFSM.repeat))
-async def warning_incorrect_group_repeat_feeding(message: Message):
+async def warning_incorrect_repeat_group_feeding(message: Message):
     """Сработает при некорректном вводе повторений кормлений"""
     await message.answer(
         text='То, что Вы отправили не похоже на количество повторений кормления.\n'
