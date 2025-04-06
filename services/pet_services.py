@@ -268,22 +268,22 @@ async def add_feeding_pet_date(
 
 
 async def add_feeding_shedule(
-    pet_id: int, date: datetime, session: AsyncSession
+    pet_id: int, date: datetime, session: AsyncSession, description: str = None
 ):
     """
     Добавляет дату запланированного кормления питомца.
     """
-    stmt = FeedingScheduleOrm(
-        pet_id=pet_id,
-        scheduled_time=date.astimezone(timezone.utc)
-    )
-    session.add(stmt)
     try:
+        stmt = FeedingScheduleOrm(
+            pet_id=pet_id,
+            description=description,
+            scheduled_time=date.astimezone(timezone.utc),
+        )
+        session.add(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении даты запланированного кормления: {e}', exc_info=True)
-    else:
-        return True
+        raise
 
 
 async def add_group_feeding_shedule(
