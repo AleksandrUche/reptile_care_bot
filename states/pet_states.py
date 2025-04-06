@@ -81,3 +81,10 @@ class FeedingGroupAndDescriptionFSM(PetEditBaseFSM):
     repeat_description_1 = State()
     description_2 = State()
     repeat_description_2 = State()
+
+
+class FeedingEveryDayFSM(PetEditBaseFSM):
+    """Для добавления графика кормления на каждый день"""
+    date = State()
+    time = State()
+    repeat = State()
