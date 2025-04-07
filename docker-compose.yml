@@ -49,7 +49,7 @@ services:
       - redis
       - postgres
     env_file:
-      - .dev.env
+      - .env
     networks:
       - app_network
 

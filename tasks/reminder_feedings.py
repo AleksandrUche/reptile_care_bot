@@ -1,11 +1,12 @@
 import asyncio
-import logging
-from datetime import time, datetime, timezone
+import time
+from datetime import datetime, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
 
 from aiogram import Bot
 from aiogram.exceptions import TelegramAPIError
+from loguru import logger
 from saq.types import Context
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -18,8 +19,6 @@ from database.models.user_models import UserOrm
 from keyboards.keyboard_utils.inline_kb_utils import (
     get_shedule_feeding_approve_inline_kb,
 )
-
-logger = logging.getLogger(__name__)
 
 
 async def _get_feedings_reminder(session: AsyncSession) -> Optional[list]:
@@ -82,7 +81,7 @@ async def _send_notification_safe(bot, feeding: FeedingScheduleOrm):
             if "retry after" in str(e):
                 wait_time = int(str(e).split()[-1])
                 logger.warning(f"Флуд-контроль, ждем {wait_time} секунд")
-                await asyncio.sleep(wait_time + 1)
+                time.sleep(wait_time + 1)
             else:
                 raise
     raise TelegramAPIError("Не удалось отправить сообщение после 2 попыток")
@@ -97,13 +96,20 @@ async def run_reminder_of_feedings(ctx: Context):
     async with async_session() as session:
         try:
             feedings = await _get_feedings_reminder(session)
-
+            logger.info(f'Повторных напоминаний найдено - {len(feedings)}')
             if not feedings:
                 return None
 
             bot = Bot(token=BOT_TOKEN)
+            count = 1
             for feeding in feedings:
                 try:
+                    logger.info(
+                        f'Отправка повторного напоминания № {count} пользователю id '
+                        f'{feeding.pet.company.user.telegram_id} -> питомец '
+                        f'«{feeding.pet.name}» id {feeding.pet.id}'
+                    )
+                    count += 1
                     await _send_notification_safe(bot, feeding)
                     time.sleep(0.05)
                 except Exception as e:
@@ -117,6 +123,7 @@ async def run_reminder_of_feedings(ctx: Context):
             logger.info(
                 f'Не удалось найти запланированные кормления: {e}', exc_info=True
             )
+
 
 if __name__ == '__main__':
     # Тестовый запуск TODO убрать, добавить в тестирование

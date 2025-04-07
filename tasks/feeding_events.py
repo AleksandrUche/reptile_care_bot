@@ -1,6 +1,7 @@
 import asyncio
-import logging
-from datetime import time, datetime, timezone
+from loguru import logger
+import time
+from datetime import datetime, timezone
 from typing import Optional
 from zoneinfo import ZoneInfo
 
@@ -19,7 +20,6 @@ from saq.types import Context
 from keyboards.keyboard_utils.inline_kb_utils import (
     get_shedule_feeding_approve_inline_kb,
 )
-logger = logging.getLogger(__name__)
 
 
 async def _get_feeding_schedule(session: AsyncSession) -> Optional[list]:
@@ -82,7 +82,7 @@ async def _send_notification_safe(
             if "retry after" in str(e):
                 wait_time = int(str(e).split()[-1])
                 logger.warning(f"Флуд-контроль, ждем {wait_time} секунд")
-                await asyncio.sleep(wait_time + 1)
+                time.sleep(wait_time + 1)
             else:
                 raise
     raise TelegramAPIError("Не удалось отправить сообщение после 2 попыток")
@@ -90,17 +90,24 @@ async def _send_notification_safe(
 
 async def run_check_feeding_events(ctx: Context):
     """Проверяет расписание кормлений и отправляет уведомления"""
-    logger.info("Проверяю события кормления...")
+    logger.info("Проверяю события запланированных кормлений...")
     async with async_session() as session:
         try:
             feedings = await _get_feeding_schedule(session)
-
+            logger.info(f'Запланированных кормлений найдено - {len(feedings)}')
             if not feedings:
                 return None
 
             bot = Bot(token=BOT_TOKEN)
+            count = 1
             for feeding in feedings:
                 try:
+                    logger.info(
+                        f'Отправка напоминания № {count} пользователю id '
+                        f'{feeding.pet.company.user.telegram_id} -> питомец '
+                        f'«{feeding.pet.name}» id {feeding.pet.id}'
+                    )
+                    count += 1
                     await _send_notification_safe(bot, feeding, session)
                     time.sleep(0.05)
                 except Exception as e:
