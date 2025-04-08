@@ -18,7 +18,7 @@ from database.models.pets_models import (
     FeedingScheduleOrm,
 )
 from database.models.user_models import UserOrm
-from factory.callback_factory.pet_factory import AddSheduleFeedingsCallback
+from factory.callback_factory.pet_factory import SheduleFeedingsCallback
 from keyboards.keyboard_utils.inline_kb_utils import no_time_zone_inline_kb
 
 logger = logging.getLogger(__name__)
@@ -99,15 +99,13 @@ async def edit_pet_value(
 
 async def delete_pet(pet_id: int, session: AsyncSession):
     """Удаление питомца по id"""
-    stmt = delete(PetOrm).filter(PetOrm.id == pet_id)
-
     try:
+        stmt = delete(PetOrm).filter(PetOrm.id == pet_id)
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при удалении питомца с ID-{pet_id}: {e}', exc_info=True)
-    else:
-        return True
+        raise
 
 
 async def get_my_companies_and_pets(user_id: int, session: AsyncSession):
@@ -121,6 +119,17 @@ async def get_my_companies_and_pets(user_id: int, session: AsyncSession):
 
 
 async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSession):
+    return await session.scalar(
+        select(PetOrm)
+        .filter(
+            PetOrm.id == pet_id,
+            PetOrm.company_id == company_id,
+            PetOrm.group_id == group_id,
+        )
+    )
+
+
+async def get_pet_all_information(pet_id: int, company_id: int, group_id: int, session: AsyncSession):
     """
     Возвращает объект питомца, название компании и группы, а также последние
     измерения длины, веса и последнюю дату линьки.
@@ -352,7 +361,7 @@ async def add_group_feeding_and_description_shedule(
 
 
 async def time_zone_is_not_set(
-    callback: CallbackQuery, callback_data: AddSheduleFeedingsCallback
+    callback: CallbackQuery, callback_data: SheduleFeedingsCallback
 ):
     """Отправляет в чат сообщение с инлайн клавой для установки таймзоны"""
     inline_kb = await no_time_zone_inline_kb(
