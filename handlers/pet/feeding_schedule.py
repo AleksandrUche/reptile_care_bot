@@ -9,13 +9,14 @@ from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import (
-    AddSheduleFeedingsCallback,
+    SheduleFeedingsCallback,
     ConfirmFeedingEventsCallback,
 )
 from keyboards.keyboard_utils.inline_kb_utils import (
     get_add_shedule_feedings_inline_kb,
     get_select_shedule_feedings_clear_state_inline_kb,
     get_select_shedule_feedings_inline_kb,
+    get_menu_shedule_feedings_inline_kb,
 )
 from services.pet_services import (
     add_feeding_shedule,
@@ -39,16 +40,31 @@ logger = logging.getLogger(__name__)
 router = Router(name='feeding_shedule_pet')
 
 
-@router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'menu'))
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'menu'))
 async def menu_feeding_schedule_handler(
-    callback: CallbackQuery, callback_data: AddSheduleFeedingsCallback,
+    callback: CallbackQuery, callback_data: SheduleFeedingsCallback,
 ):
+    """Главное меню взаимодействия с графиками"""
     await callback.answer()
+    inline_kb = await get_menu_shedule_feedings_inline_kb(
+        callback_data.pet_id, callback_data.company_id, callback_data.group_id
+    )
+    await callback.message.edit_text(
+        text='Меню взаимодействия с графиками кормлений\n',
+        reply_markup=inline_kb,
+    )
 
+
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'add_shedule'))
+async def choice_feeding_schedule_handler(
+    callback: CallbackQuery, callback_data: SheduleFeedingsCallback,
+):
+    """Выбор вариантов добавления графика"""
+    await callback.answer()
     inline_kb = await get_add_shedule_feedings_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
-    await  callback.message.edit_text(
+    await callback.message.edit_text(
         text='Добавление графика кормлений\n'
              'Варианты добавления кормлений:\n\n'
              '<b>1 вариант</b> — одиночное добавление, добавляется одно запланированное кормление.\n\n'
@@ -60,10 +76,10 @@ async def menu_feeding_schedule_handler(
     )
 
 
-@router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'single_addition'))
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'single_addition'))
 async def add_single_feeding_schedule_handler(
     callback: CallbackQuery,
-    callback_data: AddSheduleFeedingsCallback,
+    callback_data: SheduleFeedingsCallback,
     state: FSMContext,
     session: AsyncSession,
 ):
@@ -173,10 +189,10 @@ async def process_add_description_single_feeding(
         await state.clear()
 
 
-@router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'group_addition'))
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'group_addition'))
 async def add_group_feedings_schedule_handler(
     callback: CallbackQuery,
-    callback_data: AddSheduleFeedingsCallback,
+    callback_data: SheduleFeedingsCallback,
     state: FSMContext,
     session: AsyncSession,
 ):
@@ -328,12 +344,12 @@ async def warning_incorrect_repeat_group_feeding(message: Message):
     )
 
 
-@router.callback_query(AddSheduleFeedingsCallback.filter(
+@router.callback_query(SheduleFeedingsCallback.filter(
     F.action == 'group_addition_and_description')
 )
 async def add_group_feedings_schedule_with_description_handler(
     callback: CallbackQuery,
-    callback_data: AddSheduleFeedingsCallback,
+    callback_data: SheduleFeedingsCallback,
     state: FSMContext,
     session: AsyncSession,
 ):
@@ -621,10 +637,10 @@ async def warning_incorrect_repeat_description_2_group_feeding_with_description(
     )
 
 
-@router.callback_query(AddSheduleFeedingsCallback.filter(F.action == 'every_day'))
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'every_day'))
 async def add_group_feedings_every_day_schedule_handler(
     callback: CallbackQuery,
-    callback_data: AddSheduleFeedingsCallback,
+    callback_data: SheduleFeedingsCallback,
     state: FSMContext,
     session: AsyncSession,
 ):
