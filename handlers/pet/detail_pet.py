@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import PetsCallback
 from keyboards.keyboard_utils.inline_kb_utils import get_interaction_pet_inline_kb
-from services.pet_services import get_pet
+from services.pet_services import get_pet_all_information
 from services.utils import edit_date_format
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,7 @@ async def detail_pets_handler(
     """Обработчик для детального просмотра питомца"""
     await callback.answer()
 
-    pet = await get_pet(
+    pet = await get_pet_all_information(
         callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
@@ -28,7 +28,7 @@ async def detail_pets_handler(
     )
 
     inline_kb = await get_interaction_pet_inline_kb(
-        pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
+        pet['pet'].id, pet['pet'].company_id, pet['pet'].group_id
     )
 
     date_birth = edit_date_format(pet["pet"].date_birth)
