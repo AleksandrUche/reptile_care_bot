@@ -22,7 +22,14 @@ class EditPetCallback(CallbackData, prefix='edit_pet'):
 
 
 class DeletePetCallback(CallbackData, prefix='delete_pet'):
-    action: str # menu, delete, cancel
+    """Для удаления питомца"""
+    action: str # menu,
+    pet_id: int
+
+
+class ChoiceDeletePet(CallbackData, prefix='choice_delete_pet'):
+    """Для подтверждения удаления питомца"""
+    action: str  # delete, cancel
     pet_id: int
     pet_name: str
 
@@ -34,10 +41,11 @@ class GenderSelectionCallback(CallbackData, prefix='gender_pet'):
     group_id: int
 
 
-class AddSheduleFeedingsCallback(CallbackData, prefix='add_shedule_feeding'):
+class SheduleFeedingsCallback(CallbackData, prefix='shedule_feeding'):
     """
     Фабрика для добавления графика кормлений
-    action: single_addition, group_addition, group_addition_and_description, every_day
+    action: menu, add_shedule, single_addition, group_addition,
+    group_addition_and_description, every_day
     """
     action: str
     pet_id: int
