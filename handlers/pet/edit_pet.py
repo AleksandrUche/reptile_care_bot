@@ -15,6 +15,7 @@ from factory.callback_factory.pet_factory import (
 from filters.pet_filters import is_alnum_with_spaces
 from keyboards.inline_keyboards import inline_keyboards
 from keyboards.keyboard_utils.inline_kb_utils import (
+    get_edit_pet_inline_kb,
     get_gender_select_pet_inline_kb,
     get_return_detail_view_pet_inline_kb,
 )
@@ -29,6 +30,20 @@ from states.pet_states import (
 
 logger = logging.getLogger(__name__)
 router = Router(name='edit_pet')
+
+
+@router.callback_query(EditPetCallback.filter(F.field == 'all_editing_tools'))
+async def detailed_editing_pet_handler(
+    callback: CallbackQuery, callback_data: EditPetCallback
+):
+    """Обработчик для детального просмотра питомца"""
+    await callback.answer()
+    inline_kb = await get_edit_pet_inline_kb(
+        callback_data.pet_id, callback_data.company_id, callback_data.group_id
+    )
+    await callback.message.edit_reply_markup(
+        reply_markup=inline_kb,
+    )
 
 
 @router.callback_query(EditPetCallback.filter(F.field == 'name'))
