@@ -36,7 +36,7 @@ router = Router(name='edit_pet')
 async def detailed_editing_pet_handler(
     callback: CallbackQuery, callback_data: EditPetCallback
 ):
-    """Обработчик для детального просмотра питомца"""
+    """Обработчик для отображения меню редактирования питомца"""
     await callback.answer()
     inline_kb = await get_edit_pet_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
