@@ -11,8 +11,9 @@ from factory.callback_factory.pet_factory import (
     EditPetCallback,
     DeletePetCallback,
     GenderSelectionCallback,
-    AddSheduleFeedingsCallback,
+    SheduleFeedingsCallback,
     ConfirmFeedingEventsCallback,
+    ChoiceDeletePet,
 )
 from factory.callback_factory.user_factory import (
     EditMyProfileCallback,
@@ -132,17 +133,23 @@ async def show_companies_page_inline_kb(
     return builder.as_markup()
 
 
-async def get_interaction_pet_inline_kb(
-    pet_id: int, pet_name: str, company_id: int, group_id: int
-):
+async def get_interaction_pet_inline_kb(pet_id: int, company_id: int, group_id: int):
     builder = InlineKeyboardBuilder()
     data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
     builder.button(
-        text='⚖️ Добавить вес',
+        text='📝 График кормлений',
+        callback_data=SheduleFeedingsCallback(action='menu', **data).pack()
+    )
+    builder.button(
+        text='🍼 Покормить',
+        callback_data=EditPetCallback(field='add_feeding', **data).pack()
+    )
+    builder.button(
+        text='⚖️ Взвесить',
         callback_data=EditPetCallback(field='weight', **data).pack()
     )
     builder.button(
-        text='📐 Добавить длину',
+        text='📐 Измерить',
         callback_data=EditPetCallback(field='length', **data).pack()
     )
     builder.button(
@@ -151,21 +158,15 @@ async def get_interaction_pet_inline_kb(
     )
     builder.button(
         text='✏ Редактировать',
-        callback_data=EditPetCallback(field='all_editing_tools')
+        callback_data=EditPetCallback(field='all_editing_tools', **data).pack()
     )
     builder.button(
-        text='🥗 График кормлений',
-        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
-    )
-    builder.button(
-        text='🥗 Покормить',
-        callback_data=EditPetCallback(field='add_feeding', **data).pack()
+        text='📜 История',
+        callback_data=EditPetCallback(field='', **data).pack()
     )
     builder.button(
         text='❌ Удалить питомца ',
-        callback_data=DeletePetCallback(
-            action='menu', pet_id=pet_id, pet_name=pet_name
-        ).pack()
+        callback_data=DeletePetCallback(action='menu', pet_id=pet_id).pack()
     )
     builder.button(
         text='⬅ Назад',
@@ -175,9 +176,7 @@ async def get_interaction_pet_inline_kb(
     return builder.as_markup()
 
 
-async def get_edit_pet_inline_kb(
-    pet_id: int, company_id: int, group_id: int
-):
+async def get_edit_pet_inline_kb(pet_id: int, company_id: int, group_id: int):
     """Клавиатура для отображения инлайн меню редактирования питомца"""
     builder = InlineKeyboardBuilder()
     data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
@@ -208,9 +207,31 @@ async def get_edit_pet_inline_kb(
     )
     builder.button(
         text='⬅ Назад',
-        callback_data=PetsCallback(**data).pack()
+        callback_data=EditPetCallback(field='back_interaction_pet', **data).pack()
     )
     builder.adjust(2)  # По 2 кнопки в строке
+    return builder.as_markup()
+
+
+async def get_menu_shedule_feedings_inline_kb(
+    pet_id: int, company_id: int, group_id: int
+):
+    """Меню графика кормления"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+    builder.button(
+        text='Добавить график',
+        callback_data=SheduleFeedingsCallback(action='add_shedule', **data).pack()
+    )
+    builder.button(
+        text='Запланированные',
+        callback_data=SheduleFeedingsCallback(action='planned_shedule', **data).pack()
+    )
+    builder.button(
+        text='⬅ Вернуться к питомцу',
+        callback_data=PetsCallback(**data).pack()
+    )
+    builder.adjust(1)
     return builder.as_markup()
 
 
@@ -223,26 +244,26 @@ async def get_add_shedule_feedings_inline_kb(
 
     builder.button(
         text='1 вариант',
-        callback_data=AddSheduleFeedingsCallback(
+        callback_data=SheduleFeedingsCallback(
             action='single_addition', **data
         ).pack()
     )
     builder.button(
         text='2 вариант',
-        callback_data=AddSheduleFeedingsCallback(action='group_addition', **data).pack()
+        callback_data=SheduleFeedingsCallback(action='group_addition', **data).pack()
     )
     builder.button(
         text='3 вариант',
-        callback_data=AddSheduleFeedingsCallback(
+        callback_data=SheduleFeedingsCallback(
             action='group_addition_and_description', **data).pack()
     )
     builder.button(
         text='4 вариант',
-        callback_data=AddSheduleFeedingsCallback(action='every_day', **data).pack()
+        callback_data=SheduleFeedingsCallback(action='every_day', **data).pack()
     )
     builder.button(
-        text='⬅ Вернуться к питомцу',
-        callback_data=PetsCallback(**data).pack()
+        text='⬅ Назад',
+        callback_data=SheduleFeedingsCallback(action='menu', **data).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -261,7 +282,7 @@ async def get_select_shedule_feedings_clear_state_inline_kb(
     )
     builder.button(
         text='⬅ Назад',
-        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
+        callback_data=SheduleFeedingsCallback(action='menu', **data).pack()
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -276,7 +297,7 @@ async def get_select_shedule_feedings_inline_kb(
 
     builder.button(
         text='⬅ Назад',
-        callback_data=AddSheduleFeedingsCallback(action='menu', **data).pack()
+        callback_data=SheduleFeedingsCallback(action='menu', **data).pack()
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -286,13 +307,13 @@ async def get_delete_pet_inline_kb(pet_id: int, pet_name: str):
     builder = InlineKeyboardBuilder()
     builder.button(
         text='✅ ДА',
-        callback_data=DeletePetCallback(
+        callback_data=ChoiceDeletePet(
             action='delete', pet_id=pet_id, pet_name=pet_name
         ).pack()
     )
     builder.button(
         text='❌ НЕТ',
-        callback_data=DeletePetCallback(
+        callback_data=ChoiceDeletePet(
             action='cancel', pet_id=pet_id, pet_name=pet_name
         ).pack()
     )
@@ -489,7 +510,7 @@ async def no_time_zone_inline_kb(
     )
     builder.button(
         text='Назад',
-        callback_data=AddSheduleFeedingsCallback(
+        callback_data=SheduleFeedingsCallback(
             action='menu',
             pet_id=pet_id,
             company_id=company_id,
