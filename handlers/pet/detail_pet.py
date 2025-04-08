@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import PetsCallback
-from keyboards.keyboard_utils.inline_kb_utils import get_edit_pet_inline_kb
+from keyboards.keyboard_utils.inline_kb_utils import get_interaction_pet_inline_kb
 from services.pet_services import get_pet
 from services.utils import edit_date_format
 
@@ -27,7 +27,7 @@ async def detail_pets_handler(
         session
     )
 
-    inline_kb = await get_edit_pet_inline_kb(
+    inline_kb = await get_interaction_pet_inline_kb(
         pet['pet'].id, pet['pet'].name, pet['pet'].company_id, pet['pet'].group_id
     )
 
