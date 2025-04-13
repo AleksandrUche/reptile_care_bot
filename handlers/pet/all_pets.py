@@ -6,7 +6,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from factory.callback_factory.pet_factory import PaginationCallback
+from factory.callback_factory.pet_factory import AllPetPaginationCallback
 from keyboards.inline_keyboards import inline_keyboards
 from keyboards.keyboard_utils.inline_kb_utils import show_pets_page_inline_kb
 from services.pet_services import get_my_companies_and_pets
@@ -46,10 +46,10 @@ async def get_all_pets_handler(callback: CallbackQuery, session: AsyncSession):
     )
 
 
-@router.callback_query(PaginationCallback.filter(F.action == 'next'))
+@router.callback_query(AllPetPaginationCallback.filter(F.action == 'next'))
 async def next_page_my_pets_handler(
     callback: CallbackQuery,
-    callback_data: PaginationCallback,
+    callback_data: AllPetPaginationCallback,
     session: AsyncSession
 ):
     """Обработчик для кнопки 'Вперед'"""
@@ -70,10 +70,10 @@ async def next_page_my_pets_handler(
     )
 
 
-@router.callback_query(PaginationCallback.filter(F.action == 'prev'))
+@router.callback_query(AllPetPaginationCallback.filter(F.action == 'prev'))
 async def prev_page_my_pets_handler(
     callback: CallbackQuery,
-    callback_data: PaginationCallback,
+    callback_data: AllPetPaginationCallback,
     session: AsyncSession,
 ):
     """Обработчик для кнопки 'Назад'"""
