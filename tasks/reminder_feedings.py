@@ -16,7 +16,7 @@ from config_data.config import BOT_TOKEN
 from database.engine import async_session
 from database.models.pets_models import CompanyOrm, PetOrm, FeedingScheduleOrm
 from database.models.user_models import UserOrm
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.feeding_schedule_kb import (
     get_shedule_feeding_approve_inline_kb,
 )
 

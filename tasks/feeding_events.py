@@ -17,7 +17,7 @@ from database.models.pets_models import CompanyOrm, PetOrm, FeedingScheduleOrm
 from database.models.user_models import UserOrm
 from saq.types import Context
 
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.feeding_schedule_kb import (
     get_shedule_feeding_approve_inline_kb,
 )
 
