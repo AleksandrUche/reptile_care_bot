@@ -3,7 +3,7 @@ from aiogram.filters.callback_data import CallbackData
 from enums.pets_enum import GenderRole
 
 
-class PaginationCallback(CallbackData, prefix='paginate'):
+class AllPetPaginationCallback(CallbackData, prefix='pet_all_paginate'):
     action: str  # Действие: 'prev' или 'next'
     page: int
 
@@ -39,7 +39,7 @@ class ChoiceDeletePet(CallbackData, prefix='choice_delete_pet'):
 class GenderSelectionCallback(CallbackData, prefix='gender_pet'):
     action: GenderRole
     pet_id: int
-    company_id: int # для возврата к детальному просмотру питомца
+    company_id: int  # для возврата к детальному просмотру питомца
     group_id: int
 
 
@@ -52,7 +52,7 @@ class SheduleFeedingsCallback(CallbackData, prefix='shedule_feeding'):
     """
     action: str
     pet_id: int
-    company_id: int # для возврата к детальному просмотру питомца
+    company_id: int  # для возврата к детальному просмотру питомца
     group_id: int
 
 
