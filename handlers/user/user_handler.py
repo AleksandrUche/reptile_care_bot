@@ -14,12 +14,14 @@ from factory.callback_factory.user_factory import (
     ApproveTimeZoneCallback,
 )
 from integrations.timezone_service import GeoAPIClient
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils import inline_kb_utils
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.user.user_kb import (
+    my_profile,
+    back_edit_my_profile,
     get_approve_tz_by_city_inline_kb,
-    get_back_select_time_zone_inline_kb,
     get_approve_tz_by_location_inline_kb,
+    get_back_select_time_zone_inline_kb,
+    get_edit_profile_inline_kb,
+    get_language_select_inline_kb, get_timezone_select_inline_kb,
 )
 from services.user_services import (
     get_user_profile,
@@ -28,16 +30,16 @@ from services.user_services import (
 )
 from states.user_states import SearchTimeZoneByCityFSM, SearchTimeZoneByGeoPositionFSM
 
-router = Router()
+router = Router(name='user')
 logger = logging.getLogger(__name__)
 
 
 @router.callback_query(F.data == 'profile')
 @router.callback_query(F.data == 'back_to_my_profile')
-async def my_profile(callback: CallbackQuery, session: AsyncSession):
+async def show_my_profile(callback: CallbackQuery, session: AsyncSession):
     """Обработчик для отображения профиль пользователя"""
     await callback.answer()
-    await get_user_profile(callback, inline_keyboards.my_profile, session)
+    await get_user_profile(callback, my_profile, session)
 
 
 @router.callback_query(F.data == 'edit_my_profile')
@@ -45,7 +47,7 @@ async def my_profile(callback: CallbackQuery, session: AsyncSession):
 async def edit_my_profile(callback: CallbackQuery, session: AsyncSession):
     """Обработчик для отображения меню редактирования пользователя"""
     await callback.answer()
-    keyboard = await inline_kb_utils.get_edit_profile_inline_kb(callback.from_user.id)
+    keyboard = await get_edit_profile_inline_kb(callback.from_user.id)
     await get_user_profile(
         callback, keyboard, session
     )
@@ -57,7 +59,7 @@ async def edit_profile_language(
 ):
     """Обработчик для изменения языка пользователя"""
     await callback.answer()
-    inline_kb = await inline_kb_utils.get_language_select_inline_kb(
+    inline_kb = await get_language_select_inline_kb(
         callback_data.user_tg_id
     )
 
@@ -82,7 +84,7 @@ async def process_language_select(
     if edit_pet:
         await callback.message.edit_text(
             f"Теперь язык: \"{callback_data.language.value}\".",
-            reply_markup=inline_keyboards.back_edit_my_profile,
+            reply_markup=back_edit_my_profile,
         )
     else:
         await callback.message.answer(
@@ -97,7 +99,7 @@ async def edit_profile_timezone(
 ):
     """Обработчик для изменения таймзоны пользователя"""
     await callback.answer()
-    inline_kb = await inline_kb_utils.get_timezone_select_inline_kb(
+    inline_kb = await get_timezone_select_inline_kb(
         callback_data.user_tg_id
     )
 
@@ -183,7 +185,7 @@ async def process_approve_edit_time_zone_by_city(
     if add_time_zone:
         await callback.message.answer(
             f"Часовой пояс \"{callback_data.time_zone}\" добавлен",
-            reply_markup=inline_keyboards.back_edit_my_profile,
+            reply_markup=back_edit_my_profile,
         )
     else:
         await callback.message.answer(

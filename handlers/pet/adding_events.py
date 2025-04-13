@@ -7,10 +7,10 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from keyboards.inline_keyboards.pet import common_pet_kb
 from config_data.config import TIME_ZONE
 from factory.callback_factory.pet_factory import EditPetCallback
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.adding_events_kb import (
     get_return_detail_view_pet_inline_kb,
 )
 from services.pet_services import (
@@ -39,7 +39,7 @@ async def add_pet_weight_handler(
     await  callback.message.edit_text(
         text='🦎Вес питомца\n'
              '<b>Введите вес питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -105,7 +105,7 @@ async def add_pet_length_handler(
     await  callback.message.edit_text(
         text='🦎Длина питомца\n'
              '<b>Введите длину питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -171,7 +171,7 @@ async def add_pet_molting_handler(
         text='🦎Добавление даты линьки питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите дату линьки питомца в формате ДД.ММ.ГГГГ:</b>\n',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,

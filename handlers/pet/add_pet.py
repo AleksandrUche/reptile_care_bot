@@ -7,8 +7,8 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from keyboards.inline_keyboards.pet import common_pet_kb
 from filters.pet_filters import is_alnum_with_spaces
-from keyboards.inline_keyboards import inline_keyboards
 from services.pet_services import add_pet
 from states.pet_states import PetAddFSM
 
@@ -23,7 +23,7 @@ async def add_pet_handler(callback: CallbackQuery, state: FSMContext):
         text='🦎Добавление питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите имя питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.set_state(PetAddFSM.pet_name)
 
@@ -38,7 +38,7 @@ async def process_pet_name(message: Message, state: FSMContext, session: AsyncSe
     if added_pet:
         await message.answer(
             f"Питомец \"{state_data['pet_name']}\" успешно добавлен!",
-            reply_markup=inline_keyboards.main_menu_pets,
+            reply_markup=common_pet_kb.main_menu_pets,
         )
     else:
         await message.answer(

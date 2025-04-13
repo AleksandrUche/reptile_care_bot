@@ -2,7 +2,6 @@ import itertools
 import logging
 from datetime import datetime, timezone, timedelta
 
-from aiogram.types import CallbackQuery
 from sqlalchemy import DateTime
 from sqlalchemy import select, update, delete
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -19,8 +18,6 @@ from database.models.pets_models import (
     FeedingScheduleOrm,
 )
 from database.models.user_models import UserOrm
-from factory.callback_factory.pet_factory import SheduleFeedingsCallback
-from keyboards.keyboard_utils.inline_kb_utils import no_time_zone_inline_kb
 
 logger = logging.getLogger(__name__)
 
@@ -362,23 +359,6 @@ async def add_group_feeding_and_description_shedule(
             f'Ошибка при добавлении группы запланированных кормлений c описаниями: {e}',
             exc_info=True
         )
-
-
-async def time_zone_is_not_set(
-    callback: CallbackQuery, callback_data: SheduleFeedingsCallback
-):
-    """Отправляет в чат сообщение с инлайн клавой для установки таймзоны"""
-    inline_kb = await no_time_zone_inline_kb(
-        callback.from_user.id,
-        callback_data.pet_id,
-        callback_data.company_id,
-        callback_data.group_id,
-    )
-    await callback.message.answer(
-        text='Временная зона не установлена.\n'
-             'Пожалуйста, укажите её в настройках профиля.',
-        reply_markup=inline_kb,
-    )
 
 
 async def change_reminder_feeding_shedule(

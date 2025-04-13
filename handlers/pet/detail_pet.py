@@ -5,7 +5,7 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import PetsCallback
-from keyboards.keyboard_utils.inline_kb_utils import get_interaction_pet_inline_kb
+from keyboards.inline_keyboards.pet.detail_pet_kb import get_interaction_pet_inline_kb
 from services.pet_services import get_pet_all_information
 from services.utils import edit_date_format
 

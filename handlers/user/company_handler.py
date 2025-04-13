@@ -7,8 +7,9 @@ from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.company_factory import CompanyCallback
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.user.company_kb import (
+    menu_company,
+    back_to_all_company,
     show_companies_page_inline_kb,
 )
 from services.pet_services import (
@@ -17,7 +18,7 @@ from services.pet_services import (
 )
 
 logger = logging.getLogger(__name__)
-router = Router()
+router = Router(name='company')
 
 
 @router.callback_query(
@@ -27,7 +28,7 @@ async def company_main_menu(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
         text='Компании 🏢',
-        reply_markup=inline_keyboards.menu_company,
+        reply_markup=menu_company,
     )
 
 
@@ -61,6 +62,6 @@ async def detail_company_handler(
         text=f'Название компании: {company.name}\n\n'
              f'Описание: {company.description}\n'
              f'Питомцев в компании: ---\n',
-        reply_markup=inline_keyboards.back_to_all_company
+        reply_markup=back_to_all_company
 
     )

@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from database.models.pets_models import CompanyOrm, GroupOrm
 from database.models.user_models import UserOrm
-from keyboards.inline_keyboards import inline_keyboards
+from keyboards.inline_keyboards.other_kb import main_menu_inline
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ async def user_registration(message: Message, session: AsyncSession):
     регистрирует его и создает компанию и группу по умолчанию.
     """
     user_exist = await get_user(message.from_user.id, session)
-    keyboard = inline_keyboards.main_menu_inline
+    keyboard = main_menu_inline
 
     language_user = message.from_user.language_code
     language = language_user if language_user else 'en'

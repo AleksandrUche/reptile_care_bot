@@ -16,20 +16,20 @@ from factory.callback_factory.pet_factory import (
     FeedingSheduleDetailCallback,
     ChoiceDeleteFeedingShedule,
 )
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.feeding_schedule_kb import (
+    get_menu_shedule_feedings_inline_kb,
     get_add_shedule_feedings_inline_kb,
     get_select_shedule_feedings_clear_state_inline_kb,
     get_select_shedule_feedings_inline_kb,
-    get_menu_shedule_feedings_inline_kb,
     show_shedule_feedings_inline_kb,
     detail_shedule_feedings_inline_kb,
     get_edit_shedule_feedings_clear_state_inline_kb,
     get_successful_edit_shedule_feedings_inline_kb,
     get_delete_feeding_shedule_inline_kb,
+    no_time_zone_inline_kb,
 )
 from services.pet_services import (
     add_feeding_shedule,
-    time_zone_is_not_set,
     add_group_feeding_shedule,
     add_group_feeding_and_description_shedule,
     add_feeding_pet_date,
@@ -64,6 +64,23 @@ async def menu_feeding_schedule_handler(
     )
     await callback.message.edit_text(
         text='Меню взаимодействия с графиками кормлений\n',
+        reply_markup=inline_kb,
+    )
+
+
+async def time_zone_is_not_set(
+    callback: CallbackQuery, callback_data: SheduleFeedingsCallback
+):
+    """Отправляет в чат сообщение с инлайн клавой для установки таймзоны"""
+    inline_kb = await no_time_zone_inline_kb(
+        callback.from_user.id,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+    )
+    await callback.message.answer(
+        text='Временная зона не установлена.\n'
+             'Пожалуйста, укажите её в настройках профиля.',
         reply_markup=inline_kb,
     )
 
