@@ -23,8 +23,10 @@ class EditPetCallback(CallbackData, prefix='edit_pet'):
 
 class DeletePetCallback(CallbackData, prefix='delete_pet'):
     """Для удаления питомца"""
-    action: str # menu,
+    action: str  # menu
     pet_id: int
+    company_id: int  # для возврата к детальному просмотру питомца
+    group_id: int
 
 
 class ChoiceDeletePet(CallbackData, prefix='choice_delete_pet'):
