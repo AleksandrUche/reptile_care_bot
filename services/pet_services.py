@@ -1,6 +1,7 @@
+import itertools
 import logging
 from datetime import datetime, timezone, timedelta
-import itertools
+
 from aiogram.types import CallbackQuery
 from sqlalchemy import DateTime
 from sqlalchemy import select, update, delete
@@ -129,7 +130,8 @@ async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSes
     )
 
 
-async def get_pet_all_information(pet_id: int, company_id: int, group_id: int, session: AsyncSession):
+async def get_pet_all_information(pet_id: int, company_id: int, group_id: int,
+                                  session: AsyncSession):
     """
     Возвращает объект питомца, название компании и группы, а также последние
     измерения длины, веса и последнюю дату линьки.
@@ -291,7 +293,8 @@ async def add_feeding_shedule(
         session.add(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении даты запланированного кормления: {e}', exc_info=True)
+        logger.error(f'Ошибка при добавлении даты запланированного кормления: {e}',
+                     exc_info=True)
         raise
 
 
@@ -315,7 +318,8 @@ async def add_group_feeding_shedule(
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при добавлении группы запланированных кормлений: {e}', exc_info=True
+            f'Ошибка при добавлении группы запланированных кормлений: {e}',
+            exc_info=True
         )
 
 
@@ -390,7 +394,8 @@ async def change_reminder_feeding_shedule(
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при изменении статуса "напоминания" кормления питомца: {e}', exc_info=True
+            f'Ошибка при изменении статуса "напоминания" кормления питомца: {e}',
+            exc_info=True
         )
         raise
 
@@ -401,3 +406,52 @@ async def get_feeding_shedule(feeding_id: int, session: AsyncSession):
         select(FeedingScheduleOrm)
         .filter(FeedingScheduleOrm.id == feeding_id)
     )
+
+
+async def edit_feeding_shedule(
+    shedule_id: int, date: datetime, description: str, session: AsyncSession
+):
+    """Изменяет значения указанного поля."""
+    try:
+        stmt = update(FeedingScheduleOrm).filter(
+            FeedingScheduleOrm.id == shedule_id
+        ).values(scheduled_time=date.astimezone(timezone.utc), description=description)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании события кормления: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_planned_pet_feeding_schedule(pet_id: int, session: AsyncSession):
+    """Возвращает все запланированные кормления питомца"""
+    try:
+        result = await session.scalars(
+            select(FeedingScheduleOrm)
+            .filter(
+                FeedingScheduleOrm.pet_id == pet_id,
+                FeedingScheduleOrm.is_active == True,
+            ).order_by(FeedingScheduleOrm.scheduled_time)
+        )
+        return result.all()
+    except Exception as e:
+        logger.info(
+            f'У питомца c id {pet_id} нет запланированного графика кормлений. \n'
+            f'Ошибка: {e}', exc_info=True
+        )
+        raise
+
+
+async def delete_feeding_shedule(shedule_id: int, session: AsyncSession):
+    """Удаление запланированного кормления по id"""
+    try:
+        stmt = delete(FeedingScheduleOrm).filter(FeedingScheduleOrm.id == shedule_id)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при удалении запланированного кормления с ID-{shedule_id}: {e}',
+            exc_info=True)
+        raise

@@ -88,3 +88,10 @@ class FeedingEveryDayFSM(PetEditBaseFSM):
     date = State()
     time = State()
     repeat = State()
+
+
+class FeedingEditEventFSM(PetEditBaseFSM):
+    """Для редактирования запланированного кормления"""
+    date = State()
+    time = State()
+    description = State()

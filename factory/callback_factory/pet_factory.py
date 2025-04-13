@@ -3,7 +3,7 @@ from aiogram.filters.callback_data import CallbackData
 from enums.pets_enum import GenderRole
 
 
-class PaginationCallback(CallbackData, prefix='paginate'):
+class AllPetPaginationCallback(CallbackData, prefix='pet_all_paginate'):
     action: str  # Действие: 'prev' или 'next'
     page: int
 
@@ -23,8 +23,10 @@ class EditPetCallback(CallbackData, prefix='edit_pet'):
 
 class DeletePetCallback(CallbackData, prefix='delete_pet'):
     """Для удаления питомца"""
-    action: str # menu,
+    action: str  # menu
     pet_id: int
+    company_id: int  # для возврата к детальному просмотру питомца
+    group_id: int
 
 
 class ChoiceDeletePet(CallbackData, prefix='choice_delete_pet'):
@@ -37,19 +39,20 @@ class ChoiceDeletePet(CallbackData, prefix='choice_delete_pet'):
 class GenderSelectionCallback(CallbackData, prefix='gender_pet'):
     action: GenderRole
     pet_id: int
-    company_id: int # для возврата к детальному просмотру питомца
+    company_id: int  # для возврата к детальному просмотру питомца
     group_id: int
 
 
 class SheduleFeedingsCallback(CallbackData, prefix='shedule_feeding'):
     """
     Фабрика для добавления графика кормлений
-    action: menu, add_shedule, single_addition, group_addition,
-    group_addition_and_description, every_day
+    action:
+    menu, planned_shedule
+    add_shedule, single_addition, group_addition, group_addition_and_description, every_day,
     """
     action: str
     pet_id: int
-    company_id: int # для возврата к детальному просмотру питомца
+    company_id: int  # для возврата к детальному просмотру питомца
     group_id: int
 
 
@@ -63,3 +66,33 @@ class ConfirmFeedingEventsCallback(CallbackData, prefix='confirm_feeding_events'
     event_feeding_id: int
     pet_id: int
     pet_name: str
+
+
+class FeedingShedulePaginationCallback(CallbackData, prefix='shedule_paginate'):
+    action: str  # Действие: prev или next
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+
+
+class FeedingSheduleDetailCallback(CallbackData, prefix='shedule_detail'):
+    action: str  # Действия: detail, edit, delete
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    shedule_id: int
+
+
+class ChoiceDeleteFeedingShedule(CallbackData, prefix='choice_delete_feeding_shedule'):
+    """Для подтверждения удаления запланированного кормления"""
+    action: str  # delete, cancel
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    shedule_id: int

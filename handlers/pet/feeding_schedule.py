@@ -5,18 +5,27 @@ from zoneinfo import ZoneInfo
 from aiogram import F, Router
 from aiogram.filters import StateFilter
 from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from factory.callback_factory.pet_factory import (
     SheduleFeedingsCallback,
     ConfirmFeedingEventsCallback,
+    FeedingShedulePaginationCallback,
+    FeedingSheduleDetailCallback,
+    ChoiceDeleteFeedingShedule,
 )
 from keyboards.keyboard_utils.inline_kb_utils import (
     get_add_shedule_feedings_inline_kb,
     get_select_shedule_feedings_clear_state_inline_kb,
     get_select_shedule_feedings_inline_kb,
     get_menu_shedule_feedings_inline_kb,
+    show_shedule_feedings_inline_kb,
+    detail_shedule_feedings_inline_kb,
+    get_edit_shedule_feedings_clear_state_inline_kb,
+    get_successful_edit_shedule_feedings_inline_kb,
+    get_delete_feeding_shedule_inline_kb,
 )
 from services.pet_services import (
     add_feeding_shedule,
@@ -26,6 +35,9 @@ from services.pet_services import (
     add_feeding_pet_date,
     change_reminder_feeding_shedule,
     get_feeding_shedule,
+    get_planned_pet_feeding_schedule,
+    edit_feeding_shedule,
+    delete_feeding_shedule,
 )
 from services.registration_services import get_user
 from services.utils import parse_date, parse_time
@@ -34,6 +46,7 @@ from states.pet_states import (
     FeedingGroupFSM,
     FeedingGroupAndDescriptionFSM,
     FeedingEveryDayFSM,
+    FeedingEditEventFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -848,3 +861,377 @@ async def cancel_remind_feeding_event_handler(
             text=f'Повторное напоминание для «{callback_data.pet_name}» отменено❗',
             show_alert=True,
         )
+
+
+@router.callback_query(SheduleFeedingsCallback.filter(F.action == 'planned_shedule'))
+async def planned_feeding_shedule_handler(
+    callback: CallbackQuery,
+    callback_data: SheduleFeedingsCallback,
+    session: AsyncSession
+):
+    """Посмотреть запланированный график кормлений питомца"""
+    await callback.answer()
+    try:
+        user = await get_user(callback.from_user.id, session)
+        feeding_shedules = await get_planned_pet_feeding_schedule(
+            callback_data.pet_id, session
+        )
+        inline_kb = await show_shedule_feedings_inline_kb(
+            feeding_shedules,
+            user.tz_region,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+        )
+    except Exception as e:
+        logger.info(
+            f'У пользователя c id {callback.from_user.id} нет запланированного '
+            f'графика кормлений.\n Ошибка: {e}', exc_info=True
+        )
+        await callback.answer(
+            text='У Вас нет запланированных кормлений',
+            show_alert=True,
+        )
+
+    else:
+        date_next = feeding_shedules[0].scheduled_time.astimezone(
+            ZoneInfo(user.tz_region)
+        ).strftime('%d.%m.%Y, %H:%M')
+
+        date_last = feeding_shedules[-1].scheduled_time.astimezone(
+            ZoneInfo(user.tz_region)
+        ).strftime('%d.%m.%Y, %H:%M')
+
+        await callback.message.edit_text(
+            text='График кормления питомца\n\n'
+                 f'Запланировано кормлений: {len(feeding_shedules)}\n'
+                 f'Следующая дата: {date_next}\n'
+                 f'Последняя дата: {date_last}',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(FeedingShedulePaginationCallback.filter(F.action == 'next'))
+async def next_page_feeding_shedule_handler(
+    callback: CallbackQuery,
+    callback_data: FeedingShedulePaginationCallback,
+    session: AsyncSession
+):
+    """Обработчик для кнопки 'Вперед'. Пагинация для просмотра запланированного графика"""
+    await callback.answer()
+    page = callback_data.page + 1
+
+    feeding_shedules = await get_planned_pet_feeding_schedule(
+        callback_data.pet_id, session
+    )
+
+    inline_kb = await show_shedule_feedings_inline_kb(
+        feeding_shedules,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        page,
+    )
+
+    date_next = feeding_shedules[0].scheduled_time.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%Y, %H:%M')
+
+    date_last = feeding_shedules[-1].scheduled_time.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%Y, %H:%M')
+
+    await callback.message.edit_text(
+        text='График кормления питомца\n\n'
+             f'Запланировано кормлений: {len(feeding_shedules)}\n'
+             f'Следующая дата: {date_next}\n'
+             f'Последняя дата: {date_last}',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(FeedingShedulePaginationCallback.filter(F.action == 'prev'))
+async def prev_page_my_pets_handler(
+    callback: CallbackQuery,
+    callback_data: FeedingShedulePaginationCallback,
+    session: AsyncSession
+):
+    """Обработчик для кнопки 'Назад'. Пагинация для просмотра запланированного графика"""
+    await callback.answer()
+    page = callback_data.page - 1
+
+    feeding_shedules = await get_planned_pet_feeding_schedule(
+        callback_data.pet_id, session
+    )
+
+    inline_kb = await show_shedule_feedings_inline_kb(
+        feeding_shedules,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        page,
+    )
+    date_next = feeding_shedules[0].scheduled_time.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%Y, %H:%M')
+
+    date_last = feeding_shedules[-1].scheduled_time.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%Y, %H:%M')
+
+    await callback.message.edit_text(
+        text='График кормления питомца\n\n'
+             f'Запланировано кормлений: {len(feeding_shedules)}\n'
+             f'Следующая дата: {date_next}\n'
+             f'Последняя дата: {date_last}',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(
+    FeedingSheduleDetailCallback.filter(F.action == 'detail'),
+    StateFilter(default_state)
+)
+async def detail_feeding_shedule_handler(
+    callback: CallbackQuery,
+    callback_data: FeedingSheduleDetailCallback,
+    session: AsyncSession
+):
+    """Детальный просмотр даты из графика кормлений питомца"""
+    await callback.answer()
+    feeding_event = await get_feeding_shedule(callback_data.shedule_id, session)
+
+    inline_kb = await detail_shedule_feedings_inline_kb(
+        feeding_event.id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page
+    )
+
+    date_event = feeding_event.scheduled_time.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%Y, %H:%M')
+
+    await callback.message.edit_text(
+        text='Детальный просмотр кормления питомца\n\n'
+             f'Дата кормления: {date_event}\n'
+             f'Описание: {feeding_event.description}\n',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(FeedingSheduleDetailCallback.filter(F.action == 'edit'))
+async def edit_feeding_shedule_handler(
+    callback: CallbackQuery,
+    callback_data: FeedingSheduleDetailCallback,
+    state: FSMContext,
+):
+    """Редактирование запланированного кормления"""
+    await callback.answer()
+
+    await state.set_state(FeedingEditEventFSM.date)
+    inline_kb = await get_edit_shedule_feedings_clear_state_inline_kb(
+        callback_data.shedule_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Редактирование запланированного дня кормления\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
+             'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        page=callback_data.page,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        shedule_id=callback_data.shedule_id,
+    )
+
+
+@router.message(StateFilter(FeedingEditEventFSM.date))
+async def process_edit_date_feeding_shedule(message: Message, state: FSMContext):
+    """Редактирование даты кормления."""
+    try:
+        state_data = await state.get_data()
+        date = parse_date(message.text)
+
+        user_tz = ZoneInfo(state_data['user_tz'])
+        date_feeding = date.replace(tzinfo=user_tz).date()
+        await state.update_data(date=date_feeding)
+
+        inline_back_kb = await get_edit_shedule_feedings_clear_state_inline_kb(
+            state_data['shedule_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+
+    except ValueError:
+        await message.answer(
+            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+        )
+    else:
+        await message.answer(
+            text='Введите новое время в формате ЧЧ:ММ.\n'
+                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb
+        )
+        await state.set_state(FeedingEditEventFSM.time)
+
+
+@router.message(StateFilter(FeedingEditEventFSM.time))
+async def process_edit_time_feeding_shedule(message: Message, state: FSMContext):
+    """Добавление времени кормления."""
+    try:
+        time_feeding = parse_time(message.text)
+        await state.update_data(time=time_feeding)
+
+        state_data = await state.get_data()
+        inline_back_kb = await get_edit_shedule_feedings_clear_state_inline_kb(
+            state_data['shedule_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+    except ValueError:
+        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+    else:
+        await message.answer(
+            'Введите новое описание\n\n'
+            'Если в этом нет необходимости, можно пропустить этот шаг, отправив любой '
+            'символ.',
+            reply_markup=inline_back_kb,
+        )
+        await state.set_state(FeedingEditEventFSM.description)
+
+
+@router.message(StateFilter(FeedingEditEventFSM.description))
+async def process_edit_description_feeding_shedule(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Ввод нового описания при редактировании запланированного кормления и сохранение в БД."""
+    try:
+        await state.update_data(description=message.text)
+        state_data = await state.get_data()
+        date_time = datetime.combine(state_data['date'], state_data['time'])
+        await edit_feeding_shedule(
+            state_data['shedule_id'],
+            date_time,
+            state_data['description'],
+            session,
+        )
+    except ValueError:
+        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+    else:
+        inline_back_kb = await get_successful_edit_shedule_feedings_inline_kb(
+            state_data['shedule_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+        await message.answer(
+            "Запланированное кормление отредактировано ✅\n",
+            reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.callback_query(FeedingSheduleDetailCallback.filter(F.action == 'delete'))
+async def delete_feeding_shedule_handler(
+    callback: CallbackQuery, callback_data: FeedingSheduleDetailCallback
+):
+    """Удаление запланированного кормления в детальном просмотре события"""
+    await callback.answer()
+    inline_kb = await get_delete_feeding_shedule_inline_kb(
+        callback_data.shedule_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Удаление запланированного кормления',
+        reply_markup=inline_kb
+    )
+
+
+@router.callback_query(ChoiceDeleteFeedingShedule.filter(F.action == 'delete'))
+async def process_delete_feeding_shedule(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteFeedingShedule,
+    session: AsyncSession
+):
+    """Подтверждение Удаления питомца."""
+    await callback.answer()
+    try:
+        await delete_feeding_shedule(callback_data.shedule_id, session)
+
+    except Exception as e:
+        logger.error(
+            f'Ошибка при удалении запланированного кормления: {e}',
+                     exc_info=True
+        )
+        await callback.message.answer(
+            'Произошла ошибка при удалении запланированного кормления !\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    else:
+        await callback.answer(
+            "Запланированное кормление\n было удалено ✅",
+            show_alert=True,
+        )
+        detail_callback_data = FeedingShedulePaginationCallback(
+            action='next',
+            page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
+            user_tz=callback_data.user_tz,
+            pet_id=callback_data.pet_id,
+            company_id=callback_data.company_id,
+            group_id=callback_data.group_id,
+        )
+        await next_page_feeding_shedule_handler(callback, detail_callback_data, session)
+
+
+@router.callback_query(ChoiceDeleteFeedingShedule.filter(F.action == 'cancel'))
+async def process_undo_feeding_shedule(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteFeedingShedule,
+    session: AsyncSession
+):
+    """Отмена удаления запланированного кормления"""
+    await callback.answer(
+        "Удаление запланированного кормления отменено.",
+        show_alert=True
+    )
+
+    detail_callback_data = FeedingSheduleDetailCallback(
+        action='detail',
+        shedule_id=callback_data.shedule_id,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        page=callback_data.page
+    )
+
+    await detail_feeding_shedule_handler(callback, detail_callback_data, session)
