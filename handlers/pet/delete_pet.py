@@ -4,9 +4,9 @@ from aiogram import F, Router
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from keyboards.inline_keyboards.pet import common_pet_kb
 from factory.callback_factory.pet_factory import DeletePetCallback, ChoiceDeletePet
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import get_delete_pet_inline_kb
+from keyboards.inline_keyboards.pet.delete_pet_kb import get_delete_pet_inline_kb
 from services.pet_services import delete_pet, get_pet
 
 logger = logging.getLogger(__name__)
@@ -53,7 +53,7 @@ async def process_delete_confirm_pet(
     else:
         await callback.message.edit_text(
             f"Питомец \"{callback_data.pet_name}\" был удален ✅",
-            reply_markup=inline_keyboards.main_menu_pets,
+            reply_markup=common_pet_kb.main_menu_pets,
         )
 
 
@@ -64,5 +64,5 @@ async def process_undo_delete_pet(
     """Отмена удаления питомца"""
     await callback.message.edit_text(
         f"Удаление питомца \"{callback_data.pet_name}\" отменено.",
-        reply_markup=inline_keyboards.main_menu_pets,
+        reply_markup=common_pet_kb.main_menu_pets,
     )

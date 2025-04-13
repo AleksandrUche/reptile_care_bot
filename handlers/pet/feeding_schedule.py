@@ -16,16 +16,17 @@ from factory.callback_factory.pet_factory import (
     FeedingSheduleDetailCallback,
     ChoiceDeleteFeedingShedule,
 )
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.feeding_schedule_kb import (
+    get_menu_shedule_feedings_inline_kb,
     get_add_shedule_feedings_inline_kb,
     get_select_shedule_feedings_clear_state_inline_kb,
     get_select_shedule_feedings_inline_kb,
-    get_menu_shedule_feedings_inline_kb,
     show_shedule_feedings_inline_kb,
     detail_shedule_feedings_inline_kb,
     get_edit_shedule_feedings_clear_state_inline_kb,
     get_successful_edit_shedule_feedings_inline_kb,
     get_delete_feeding_shedule_inline_kb,
+    no_time_zone_inline_kb,
 )
 from services.pet_services import (
     add_feeding_shedule,

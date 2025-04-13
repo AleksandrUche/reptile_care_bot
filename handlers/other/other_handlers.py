@@ -5,11 +5,11 @@ from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from keyboards.inline_keyboards import inline_keyboards
+from keyboards.inline_keyboards.other_kb import main_menu_inline, back_to_main_menu
 from lexicon.lexicon import LEXICON_RU
 from services.registration_services import user_registration
 
-router = Router()
+router = Router(name='other')
 
 
 @router.message(CommandStart())
@@ -22,7 +22,7 @@ async def get_main_menu(message: Message):
     """Срабатывает на команду /menu (возврат в меню)"""
     await message.answer(
         text='📋Главное меню📋',
-        reply_markup=inline_keyboards.main_menu_inline,
+        reply_markup=main_menu_inline,
     )
 
 
@@ -32,7 +32,7 @@ async def get_main_menu_callback(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
         text='📋Главное меню📋',
-        reply_markup=inline_keyboards.main_menu_inline,
+        reply_markup=main_menu_inline,
     )
 
 
@@ -63,7 +63,7 @@ async def process_buttons_press(callback: CallbackQuery):
              '...₽ - 90 дней\n'
              '...₽ - 183 дня\n'
              '...₽ - 365 дней\n',
-        reply_markup=inline_keyboards.back_to_main_menu
+        reply_markup=back_to_main_menu
     )
     await callback.answer()
 
@@ -86,9 +86,10 @@ async def process_buttons_press(callback: CallbackQuery):
              '✅ Простой интерфейс даже для новичков\n'
              '🚀 Начните сейчас — добавьте первого питомца!\n\n'
              'Для заводчиков и всех, кто заботится о животных профессионально.\n',
-        reply_markup=inline_keyboards.back_to_main_menu,
+        reply_markup=back_to_main_menu,
     )
     await callback.answer()
+
 
 @router.callback_query(F.data == 'cancel_state', ~StateFilter(default_state))
 async def cancel_state_handler(message: Message, state: FSMContext):

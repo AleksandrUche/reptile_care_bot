@@ -6,9 +6,9 @@ from aiogram.fsm.state import default_state
 from aiogram.types import CallbackQuery
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from keyboards.inline_keyboards.pet import common_pet_kb
 from factory.callback_factory.pet_factory import AllPetPaginationCallback
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import show_pets_page_inline_kb
+from keyboards.inline_keyboards.pet.all_pets_kb import show_pets_page_inline_kb
 from services.pet_services import get_my_companies_and_pets
 
 logger = logging.getLogger(__name__)
@@ -22,7 +22,7 @@ async def pets_menu(callback: CallbackQuery):
     await callback.answer()
     await  callback.message.edit_text(
         text='Питомцы',
-        reply_markup=inline_keyboards.main_menu_pets,
+        reply_markup=common_pet_kb.main_menu_pets,
     )
 
 

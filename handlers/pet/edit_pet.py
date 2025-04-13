@@ -7,18 +7,20 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message
 from sqlalchemy.ext.asyncio import AsyncSession
 
+import keyboards.inline_keyboards.pet.common_pet_kb
 from config_data.config import TIME_ZONE
 from factory.callback_factory.pet_factory import (
     EditPetCallback,
     GenderSelectionCallback,
 )
 from filters.pet_filters import is_alnum_with_spaces
-from keyboards.inline_keyboards import inline_keyboards
-from keyboards.keyboard_utils.inline_kb_utils import (
+from keyboards.inline_keyboards.pet.adding_events_kb import (
+    get_return_detail_view_pet_inline_kb,
+)
+from keyboards.inline_keyboards.pet.detail_pet_kb import get_interaction_pet_inline_kb
+from keyboards.inline_keyboards.pet.edit_pet_kb import (
     get_edit_pet_inline_kb,
     get_gender_select_pet_inline_kb,
-    get_return_detail_view_pet_inline_kb,
-    get_interaction_pet_inline_kb,
 )
 from services.pet_services import edit_pet_value
 from states.pet_states import (
@@ -72,7 +74,7 @@ async def edit_pet_name_handler(
         text='🦎Изменение имени питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите новое имя питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -132,7 +134,7 @@ async def edit_pet_morph_handler(
         text='🦎Изменение морфы питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите морфу питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -181,7 +183,7 @@ async def edit_pet_view_handler(
         text='🦎Изменение вида питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите вид питомца:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -273,7 +275,7 @@ async def edit_pet_birth_handler(
         text='🦎Изменение даты рождения питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите дату рождения питомца в формате ДД.ММ.ГГГГ:</b>',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
@@ -329,7 +331,7 @@ async def edit_pet_purchase_handler(
         text='🦎Изменение даты приобретения питомца\n'
              '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
              '<b>Введите дату приобретения питомца в формате ДД.ММ.ГГГГ:</b>\n',
-        reply_markup=inline_keyboards.menu_add_pet,
+        reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
