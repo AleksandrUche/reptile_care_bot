@@ -6,7 +6,7 @@ from enums.enum_role import Language
 from enums.pets_enum import GenderRole
 from factory.callback_factory.company_factory import CompanyCallback
 from factory.callback_factory.pet_factory import (
-    PaginationCallback,
+    AllPetPaginationCallback,
     PetsCallback,
     EditPetCallback,
     DeletePetCallback,
@@ -71,13 +71,13 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
             text=pet.name,
             callback_data=PetsCallback(
                 pet_id=pet.id, company_id=pet.company_id, group_id=pet.group_id
-            )
+            ).pack()
         )
 
     if page > 0:
         builder.button(
             text='⬅️ Назад',
-            callback_data=PaginationCallback(action='prev', page=page).pack()
+            callback_data=AllPetPaginationCallback(action='prev', page=page).pack()
         )
     if end_index < len(pets):
         builder.button(
@@ -113,18 +113,18 @@ async def show_companies_page_inline_kb(
             text=company.name,
             callback_data=CompanyCallback(
                 company_id=company.id, user_id=company.user_id
-            )
+            ).pack()
         )
 
     if page > 0:
         builder.button(
             text='⬅️ Назад',
-            callback_data=PaginationCallback(action='prev', page=page).pack()
+            callback_data=AllPetPaginationCallback(action='prev', page=page).pack()
         )
     if end_index < len(companies):
         builder.button(
             text='Вперед ➡️',
-            callback_data=PaginationCallback(action='next', page=page).pack()
+            callback_data=AllPetPaginationCallback(action='next', page=page).pack()
         )
 
     builder.button(text='🔙 Меню', callback_data='back_to_company_menu')
