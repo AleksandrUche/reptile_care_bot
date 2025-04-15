@@ -1,7 +1,11 @@
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
-from factory.callback_factory.pet_factory import SheduleFeedingsCallback, \
-    EditPetCallback, DeletePetCallback
+from factory.callback_factory.pet_factory import (
+    SheduleFeedingsCallback,
+    EditPetCallback,
+    DeletePetCallback,
+    HistoryPetCallback,
+)
 
 
 async def get_interaction_pet_inline_kb(pet_id: int, company_id: int, group_id: int):
@@ -33,7 +37,7 @@ async def get_interaction_pet_inline_kb(pet_id: int, company_id: int, group_id: 
     )
     builder.button(
         text='📜 История',
-        callback_data=EditPetCallback(field='', **data).pack()
+        callback_data=HistoryPetCallback(action='menu', **data).pack()
     )
     builder.button(
         text='❌ Удалить питомца ',
