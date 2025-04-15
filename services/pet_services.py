@@ -435,3 +435,73 @@ async def delete_feeding_shedule(shedule_id: int, session: AsyncSession):
             f'Ошибка при удалении запланированного кормления с ID-{shedule_id}: {e}',
             exc_info=True)
         raise
+
+
+async def get_all_pet_feeding(pet_id: int, session: AsyncSession):
+    """Возвращает все кормления питомца"""
+    try:
+        result = await session.scalars(
+            select(FeedingPetOrm)
+            .filter(FeedingPetOrm.pet_id == pet_id).order_by(FeedingPetOrm.date_feed)
+        )
+        return result.all()
+    except Exception as e:
+        logger.info(
+            f'У питомца c id {pet_id} нет истории кормлений. Ошибка: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_feeding(feeding_id: int, session: AsyncSession):
+    """Возвращает информацию о кормлении по id"""
+    return await session.scalar(
+        select(FeedingPetOrm)
+        .filter(FeedingPetOrm.id == feeding_id)
+    )
+
+
+async def edit_date_feeding_history(
+    feeding_id: int, date: datetime, session: AsyncSession
+):
+    """Изменяет дату кормления."""
+    try:
+        stmt = update(FeedingPetOrm).filter(
+            FeedingPetOrm.id == feeding_id
+        ).values(date_feed=date.astimezone(timezone.utc))
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании даты кормления: {e}', exc_info=True
+        )
+        raise
+
+
+async def edit_description_feeding_history(
+    feeding_id: int, description: str, session: AsyncSession
+):
+    """Изменяет описание кормления."""
+    try:
+        stmt = update(FeedingPetOrm).filter(
+            FeedingPetOrm.id == feeding_id
+        ).values(description=description)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании описания кормления: {e}', exc_info=True
+        )
+        raise
+
+
+async def delete_feeding(feeding_id: int, session: AsyncSession):
+    """Удаление запланированного кормления по id"""
+    try:
+        stmt = delete(FeedingPetOrm).filter(FeedingPetOrm.id == feeding_id)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при удалении кормления с ID-{feeding_id}: {e}', exc_info=True
+        )
+        raise
