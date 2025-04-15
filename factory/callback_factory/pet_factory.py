@@ -96,3 +96,44 @@ class ChoiceDeleteFeedingShedule(CallbackData, prefix='choice_delete_feeding_she
     company_id: int
     group_id: int
     shedule_id: int
+
+
+class HistoryPetCallback(CallbackData, prefix='history_pet'):
+    """
+    Фабрика для истории событий питомца
+    action: menu
+    """
+    action: str
+    pet_id: int
+    company_id: int
+    group_id: int
+
+
+class FeedingHistoryPaginationCallback(CallbackData, prefix='feeding_paginate'):
+    action: str  # Действие: prev или next
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+
+
+class FeedingHistoryDetailCallback(CallbackData, prefix='feeding_detail'):
+    action: str  # Действия: detail, edit, delete
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    feeding_id: int
+
+
+class ChoiceDeleteFeeding(CallbackData, prefix='choice_delete_feeding'):
+    """Для подтверждения удаления кормления"""
+    action: str  # delete, cancel
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    feeding_id: int

@@ -913,11 +913,11 @@ async def planned_feeding_shedule_handler(
     else:
         date_next = feeding_shedules[0].scheduled_time.astimezone(
             ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%Y, %H:%M')
+        ).strftime('%d.%m.%y, %H:%M')
 
         date_last = feeding_shedules[-1].scheduled_time.astimezone(
             ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%Y, %H:%M')
+        ).strftime('%d.%m.%y, %H:%M')
 
         await callback.message.edit_text(
             text='График кормления питомца\n\n'
@@ -953,11 +953,11 @@ async def next_page_feeding_shedule_handler(
 
     date_next = feeding_shedules[0].scheduled_time.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%Y, %H:%M')
+    ).strftime('%d.%m.%y, %H:%M')
 
     date_last = feeding_shedules[-1].scheduled_time.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%Y, %H:%M')
+    ).strftime('%d.%m.%y, %H:%M')
 
     await callback.message.edit_text(
         text='График кормления питомца\n\n'
@@ -992,11 +992,11 @@ async def prev_page_my_pets_handler(
     )
     date_next = feeding_shedules[0].scheduled_time.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%Y, %H:%M')
+    ).strftime('%d.%m.%y, %H:%M')
 
     date_last = feeding_shedules[-1].scheduled_time.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%Y, %H:%M')
+    ).strftime('%d.%m.%y, %H:%M')
 
     await callback.message.edit_text(
         text='График кормления питомца\n\n'
