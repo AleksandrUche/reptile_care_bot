@@ -495,7 +495,7 @@ async def edit_description_feeding_history(
 
 
 async def delete_feeding(feeding_id: int, session: AsyncSession):
-    """Удаление запланированного кормления по id"""
+    """Удаление события кормления по id"""
     try:
         stmt = delete(FeedingPetOrm).filter(FeedingPetOrm.id == feeding_id)
         await session.execute(stmt)
@@ -503,5 +503,75 @@ async def delete_feeding(feeding_id: int, session: AsyncSession):
     except Exception as e:
         logger.error(
             f'Ошибка при удалении кормления с ID-{feeding_id}: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_all_pet_molting(pet_id: int, session: AsyncSession):
+    """Возвращает все линьки питомца"""
+    try:
+        result = await session.scalars(
+            select(MoltingPetOrm)
+            .filter(MoltingPetOrm.pet_id == pet_id).order_by(MoltingPetOrm.date_measure)
+        )
+        return result.all()
+    except Exception as e:
+        logger.info(
+            f'У питомца c id {pet_id} нет истории линек. Ошибка: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_molting(molting_id: int, session: AsyncSession):
+    """Возвращает информацию о линьки по id"""
+    return await session.scalar(
+        select(MoltingPetOrm)
+        .filter(MoltingPetOrm.id == molting_id)
+    )
+
+
+async def edit_date_molting(
+    molting_id: int, date: datetime, session: AsyncSession
+):
+    """Изменяет дату линьки."""
+    try:
+        stmt = update(MoltingPetOrm).filter(
+            MoltingPetOrm.id == molting_id
+        ).values(date_measure=date.astimezone(timezone.utc))
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании даты линьки: {e}', exc_info=True
+        )
+        raise
+
+
+async def edit_description_molting(
+    molting_id: int, description: str, session: AsyncSession
+):
+    """Изменяет описание линьки."""
+    try:
+        stmt = update(MoltingPetOrm).filter(
+            MoltingPetOrm.id == molting_id
+        ).values(description=description)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании описания линьки: {e}', exc_info=True
+        )
+        raise
+
+
+async def delete_molting(molting_id: int, session: AsyncSession):
+    """Удаление линьки по id"""
+    try:
+        stmt = delete(MoltingPetOrm).filter(MoltingPetOrm.id == molting_id)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при удалении линьки с ID-{molting_id}: {e}', exc_info=True
         )
         raise
