@@ -88,11 +88,14 @@ async def history_feeding_pet_handler(
     session: AsyncSession
 ):
     """Просмотр истории кормлений питомца"""
-    await callback.answer()
     try:
         user = await get_user(callback.from_user.id, session)
         feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
-
+        if not feeding_pet_history:
+            await callback.answer(
+                text='У данного питомца нет истории кормлений.', show_alert=True
+            )
+            return
         inline_kb = await show_feeding_history_inline_kb(
             feeding_pet_history,
             user.tz_region,
@@ -106,12 +109,9 @@ async def history_feeding_pet_handler(
             f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
             exc_info=True
         )
-        await callback.answer(
-            text='У данного питомца нет истории кормлений',
-            show_alert=True,
-        )
 
     else:
+
         date_last = feeding_pet_history[-1].date_feed.astimezone(
             ZoneInfo(user.tz_region)
         ).strftime('%d.%m.%y, %H:%M')
@@ -135,29 +135,48 @@ async def next_page_feeding_history_handler(
     Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории кормлений питомца.
     """
     await callback.answer()
-    page = callback_data.page + 1
+    try:
+        page = callback_data.page + 1
 
-    feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
+        feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
+        if not feeding_pet_history:
+            await callback.message.answer(
+                text='У данного питомца нет истории кормлений.'
+            )
+            return
+        inline_kb = await show_feeding_history_inline_kb(
+            feeding_pet_history,
+            callback_data.user_tz,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+            page,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при вызове истории кормлений питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
 
-    inline_kb = await show_feeding_history_inline_kb(
-        feeding_pet_history,
-        callback_data.user_tz,
-        callback_data.pet_id,
-        callback_data.company_id,
-        callback_data.group_id,
-        page,
-    )
+    else:
+        # Для обработки пустого списка при удалении всех событий
+        if not feeding_pet_history:
+            await callback.message.answer(
+                text='У данного питомца не найдена история кормлений.',
+                reply_markup=inline_kb,
+            )
+            return
+        date_last = feeding_pet_history[-1].date_feed.astimezone(
+            ZoneInfo(callback_data.user_tz)
+        ).strftime('%d.%m.%y, %H:%M')
 
-    date_last = feeding_pet_history[-1].date_feed.astimezone(
-        ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
-
-    await callback.message.edit_text(
-        text='История кормлений питомца\n\n'
-             f'Кормлений: {len(feeding_pet_history)}\n'
-             f'Последняя дата кормления: {date_last}',
-        reply_markup=inline_kb,
-    )
+        await callback.message.edit_text(
+            text='История кормлений питомца\n\n'
+                 f'Кормлений: {len(feeding_pet_history)}\n'
+                 f'Последняя дата кормления: {date_last}',
+            reply_markup=inline_kb,
+        )
 
 
 @router.callback_query(FeedingHistoryPaginationCallback.filter(F.action == 'prev'))
