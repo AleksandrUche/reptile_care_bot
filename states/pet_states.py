@@ -106,3 +106,14 @@ class FeedingHistoryEditDateFSM(PetEditBaseFSM):
 class FeedingHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания кормления из истории"""
     description = State()
+
+
+class MoltingHistoryEditDateFSM(PetEditBaseFSM):
+    """Для редактирования даты линьки из истории"""
+    date = State()
+    time = State()
+
+
+class MoltingHistoryEditDescriptionFSM(PetEditBaseFSM):
+    """Для редактирования описания линьки из истории"""
+    description = State()
