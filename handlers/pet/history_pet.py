@@ -17,6 +17,9 @@ from factory.callback_factory.pet_factory import (
     MoltingHistoryPaginationCallback,
     MoltingHistoryDetailCallback,
     ChoiceDeleteMoltingCallback,
+    WeightHistoryPaginationCallback,
+    WeightHistoryDetailCallback,
+    ChoiceDeleteWeightCallback,
 )
 from keyboards.inline_keyboards.pet.history_pet_kb import (
     get_menu_history_pet_inline_kb,
@@ -30,6 +33,11 @@ from keyboards.inline_keyboards.pet.history_pet_kb import (
     get_edit_molting_history_clear_state_inline_kb,
     get_successful_edit_molting_history_inline_kb,
     get_delete_molting_inline_kb,
+    show_weight_history_inline_kb,
+    detail_weight_inline_kb,
+    get_edit_weight_history_clear_state_inline_kb,
+    get_successful_edit_weight_history_inline_kb,
+    get_delete_weight_inline_kb,
 )
 from services.pet_services import (
     get_all_pet_feeding,
@@ -42,6 +50,11 @@ from services.pet_services import (
     edit_date_molting,
     edit_description_molting,
     delete_molting,
+    get_all_pet_weight,
+    get_weight,
+    edit_date_weight,
+    edit_description_weight,
+    delete_weight,
 )
 from services.registration_services import get_user
 from services.utils import parse_time, parse_date
@@ -50,6 +63,8 @@ from states.pet_states import (
     FeedingHistoryEditDescriptionFSM,
     MoltingHistoryEditDateFSM,
     MoltingHistoryEditDescriptionFSM,
+    WeightHistoryEditDateFSM,
+    WeightHistoryEditDescriptionFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -876,10 +891,7 @@ async def process_delete_molting(
         )
     else:
         await callback.answer('Линька удалена ✅', show_alert=True)
-        # back_kb = await get_back_main_history_menu_inline_kb(
-        #     callback_data.pet_id, callback_data.company_id, callback_data.group_id
-        # )
-        # await callback.message.edit_reply_markup(back_kb)
+
         detail_callback_data = MoltingHistoryPaginationCallback(
             action='next',
             page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
@@ -911,3 +923,417 @@ async def process_undo_delete_molting(
     )
 
     await detail_molting_handler(callback, detail_callback_data, session)
+
+
+@router.callback_query(HistoryPetCallback.filter(F.action == 'weight_history'))
+async def history_weight_pet_handler(
+    callback: CallbackQuery,
+    callback_data: HistoryPetCallback,
+    session: AsyncSession
+):
+    """Просмотр истории взвешиваний питомца"""
+    try:
+        user = await get_user(callback.from_user.id, session)
+        weight_history = await get_all_pet_weight(callback_data.pet_id, session)
+
+        if not weight_history:
+            await callback.answer(
+                text='У данного питомца нет истории взвешиваний', show_alert=True
+            )
+            return
+
+        inline_kb = await show_weight_history_inline_kb(
+            weight_history,
+            user.tz_region,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+
+    else:
+        date_last = weight_history[0].date_measure.astimezone(
+            ZoneInfo(user.tz_region)
+        ).strftime('%d.%m.%y, %H:%M')
+
+        await callback.message.edit_text(
+            text='История веса питомца\n\n'
+                 f'Взвешиваний: {len(weight_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения веса.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == 'next'))
+async def next_page_weight_history_handler(
+    callback: CallbackQuery,
+    callback_data: WeightHistoryPaginationCallback,
+    session: AsyncSession
+):
+    """
+    Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории взвешиваний питомца.
+    """
+    await callback.answer()
+    try:
+        page = callback_data.page + 1
+        weight_history = await get_all_pet_weight(callback_data.pet_id, session)
+
+        inline_kb = await show_weight_history_inline_kb(
+            weight_history,
+            callback_data.user_tz,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+            page,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+
+    else:
+        # Для обработки пустого списка при удалении всех событий
+        if not weight_history:
+            await callback.message.answer(
+                text='У данного питомца не найдена история взвешиваний.',
+                reply_markup=inline_kb,
+            )
+            return
+
+        date_last = weight_history[0].date_measure.astimezone(
+            ZoneInfo(callback_data.user_tz)
+        ).strftime('%d.%m.%y, %H:%M')
+        await callback.message.edit_text(
+            text='История веса питомца\n\n'
+                 f'Взвешиваний: {len(weight_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения веса.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == 'prev'))
+async def prev_page_weight_history_handler(
+    callback: CallbackQuery,
+    callback_data: WeightHistoryPaginationCallback,
+    session: AsyncSession
+):
+    """
+    Обработчик для кнопки 'Назад'. Пагинация для просмотра истории взвешиваний питомца.
+    """
+    await callback.answer()
+    try:
+        page = callback_data.page - 1
+
+        weight_history = await get_all_pet_weight(callback_data.pet_id, session)
+
+        inline_kb = await show_weight_history_inline_kb(
+            weight_history,
+            callback_data.user_tz,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+            page,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+        await callback.answer(
+            text='У данного питомца нет истории взвешиваний', show_alert=True,
+        )
+    else:
+        date_last = weight_history[0].date_measure.astimezone(
+            ZoneInfo(callback_data.user_tz)
+        ).strftime('%d.%m.%y, %H:%M')
+
+        await callback.message.edit_text(
+            text='История веса питомца\n\n'
+                 f'Взвешиваний: {len(weight_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения веса.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(
+    WeightHistoryDetailCallback.filter(F.action == 'detail'),
+    StateFilter(default_state)
+)
+async def detail_weight_handler(
+    callback: CallbackQuery,
+    callback_data: WeightHistoryDetailCallback,
+    session: AsyncSession
+):
+    """Детальный просмотр измерения веса питомца"""
+    await callback.answer()
+    weight_event = await get_weight(callback_data.weight_id, session)
+
+    inline_kb = await detail_weight_inline_kb(
+        weight_event.id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page
+    )
+
+    date_event = weight_event.date_measure.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%y, %H:%M')
+
+    await callback.message.edit_text(
+        text='Детальный просмотр взвешивания питомца\n\n'
+             f'Дата измерения: {date_event}\n'
+             f'Описание: {weight_event.description}\n',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(WeightHistoryDetailCallback.filter(F.action == 'edit_date'))
+async def edit_weight_history_date_handler(
+    callback: CallbackQuery,
+    callback_data: WeightHistoryDetailCallback,
+    state: FSMContext,
+):
+    """Редактирование даты и времени взвешивания"""
+    await callback.answer()
+
+    await state.set_state(WeightHistoryEditDateFSM.date)
+    inline_kb = await get_edit_weight_history_clear_state_inline_kb(
+        callback_data.weight_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Редактирование даты измерения веса\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
+             'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        page=callback_data.page,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        weight_id=callback_data.weight_id,
+    )
+
+
+@router.message(StateFilter(WeightHistoryEditDateFSM.date))
+async def process_edit_date_weight_history(message: Message, state: FSMContext):
+    """Ввод новой даты измерения веса (редактирование). FSM"""
+    try:
+        state_data = await state.get_data()
+        date = parse_date(message.text)
+
+        user_tz = ZoneInfo(state_data['user_tz'])
+        date_weight = date.replace(tzinfo=user_tz).date()
+        await state.update_data(date=date_weight)
+
+        inline_back_kb = await get_edit_weight_history_clear_state_inline_kb(
+            state_data['weight_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+
+    except ValueError:
+        await message.answer(
+            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+        )
+    else:
+        await message.answer(
+            text='Введите новое время в формате ЧЧ:ММ.\n'
+                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb
+        )
+        await state.set_state(WeightHistoryEditDateFSM.time)
+
+
+@router.message(StateFilter(WeightHistoryEditDateFSM.time))
+async def process_edit_time_weight_history(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Ввод нового времени измерения веса (редактирование). FSM"""
+    try:
+        time_weight = parse_time(message.text)
+        await state.update_data(time=time_weight)
+
+        state_data = await state.get_data()
+        date_time = datetime.combine(state_data['date'], state_data['time'])
+
+        await edit_date_weight(state_data['weight_id'], date_time, session)
+
+    except ValueError:
+        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+    else:
+        inline_back_kb = await get_successful_edit_weight_history_inline_kb(
+            state_data['weight_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+        await message.answer(
+            "Дата взвешивания изменена ✅\n", reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.callback_query(
+    WeightHistoryDetailCallback.filter(F.action == 'edit_description')
+)
+async def edit_weight_history_description_handler(
+    callback: CallbackQuery,
+    callback_data: WeightHistoryDetailCallback,
+    state: FSMContext,
+):
+    """Редактирование описания взвешивания"""
+    await callback.answer()
+
+    await state.set_state(WeightHistoryEditDescriptionFSM.description)
+    inline_kb = await get_edit_feeding_history_clear_state_inline_kb(
+        callback_data.weight_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Введите новое описание\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        page=callback_data.page,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        weight_id=callback_data.weight_id,
+    )
+
+
+@router.message(StateFilter(WeightHistoryEditDescriptionFSM.description))
+async def process_edit_description_weight_history(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Ввод нового описания при редактировании взвешивания и сохранение в БД."""
+    try:
+        await state.update_data(description=message.text)
+        state_data = await state.get_data()
+        await edit_description_weight(
+            state_data['weight_id'], state_data['description'], session
+        )
+    except ValueError:
+        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+    else:
+        inline_back_kb = await get_successful_edit_weight_history_inline_kb(
+            state_data['weight_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+        await message.answer(
+            "Описание взвешивания изменено ✅\n", reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.callback_query(WeightHistoryDetailCallback.filter(F.action == 'delete'))
+async def delete_weight_handler(
+    callback: CallbackQuery, callback_data: WeightHistoryDetailCallback
+):
+    """Удаление измерения веса"""
+    await callback.answer()
+    inline_kb = await get_delete_weight_inline_kb(
+        callback_data.weight_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Удаление взвешивания\n'
+             'Вы уверены, что хотите удалить линьку из истории?\n',
+        reply_markup=inline_kb
+    )
+
+
+@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == 'delete'))
+async def process_delete_weight(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteWeightCallback,
+    session: AsyncSession
+):
+    """Подтверждение удаления измерения веса. FSM"""
+    try:
+        await delete_weight(callback_data.weight_id, session)
+
+    except Exception as e:
+        logger.error(f'Ошибка при удалении измерения веса: {e}', exc_info=True)
+        await callback.message.answer(
+            'Произошла ошибка при удалении взвешивания!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    else:
+        await callback.answer('Взвешивание удалено ✅', show_alert=True)
+
+        detail_callback_data = WeightHistoryPaginationCallback(
+            action='next',
+            page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
+            user_tz=callback_data.user_tz,
+            pet_id=callback_data.pet_id,
+            company_id=callback_data.company_id,
+            group_id=callback_data.group_id,
+        )
+        await next_page_weight_history_handler(callback, detail_callback_data, session)
+
+
+@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == 'cancel'))
+async def process_undo_delete_weight(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteWeightCallback,
+    session: AsyncSession
+):
+    """Отмена удаления измерения веса"""
+    await callback.answer("Удаление взвешивания отменено.", show_alert=True)
+
+    detail_callback_data = WeightHistoryDetailCallback(
+        action='detail',
+        weight_id=callback_data.weight_id,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        page=callback_data.page
+    )
+
+    await detail_weight_handler(callback, detail_callback_data, session)
