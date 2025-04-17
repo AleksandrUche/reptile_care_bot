@@ -169,3 +169,34 @@ class ChoiceDeleteMoltingCallback(CallbackData, prefix='choice_delete_molting'):
     company_id: int
     group_id: int
     molting_id: int
+
+
+class WeightHistoryPaginationCallback(CallbackData, prefix='weight_paginate'):
+    action: str  # Действие: prev или next
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+
+
+class WeightHistoryDetailCallback(CallbackData, prefix='weight_detail'):
+    """Для взаимодействия с событиями измерения веса"""
+    action: str  # Действия: detail, edit_date, edit_description, delete
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    weight_id: int
+
+
+class ChoiceDeleteWeightCallback(CallbackData, prefix='choice_delete_weight'):
+    """Для подтверждения удаления веса питомца"""
+    action: str  # delete, cancel
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    weight_id: int

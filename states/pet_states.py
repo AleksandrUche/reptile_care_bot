@@ -117,3 +117,14 @@ class MoltingHistoryEditDateFSM(PetEditBaseFSM):
 class MoltingHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания линьки из истории"""
     description = State()
+
+
+class WeightHistoryEditDateFSM(PetEditBaseFSM):
+    """Для редактирования даты измерения веса из истории"""
+    date = State()
+    time = State()
+
+
+class WeightHistoryEditDescriptionFSM(PetEditBaseFSM):
+    """Для редактирования описания к измерению веса из истории"""
+    description = State()
