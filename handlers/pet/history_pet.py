@@ -20,6 +20,9 @@ from factory.callback_factory.pet_factory import (
     WeightHistoryPaginationCallback,
     WeightHistoryDetailCallback,
     ChoiceDeleteWeightCallback,
+    LengthHistoryPaginationCallback,
+    LengthHistoryDetailCallback,
+    ChoiceDeleteLengthCallback,
 )
 from keyboards.inline_keyboards.pet.history_pet_kb import (
     get_menu_history_pet_inline_kb,
@@ -38,6 +41,11 @@ from keyboards.inline_keyboards.pet.history_pet_kb import (
     get_edit_weight_history_clear_state_inline_kb,
     get_successful_edit_weight_history_inline_kb,
     get_delete_weight_inline_kb,
+    show_length_history_inline_kb,
+    detail_length_inline_kb,
+    get_edit_length_history_clear_state_inline_kb,
+    get_successful_edit_length_history_inline_kb,
+    get_delete_length_inline_kb,
 )
 from services.pet_services import (
     get_all_pet_feeding,
@@ -55,6 +63,11 @@ from services.pet_services import (
     edit_date_weight,
     edit_description_weight,
     delete_weight,
+    get_all_pet_length,
+    get_length,
+    edit_date_length,
+    edit_description_length,
+    delete_length,
 )
 from services.registration_services import get_user
 from services.utils import parse_time, parse_date
@@ -65,6 +78,8 @@ from states.pet_states import (
     MoltingHistoryEditDescriptionFSM,
     WeightHistoryEditDateFSM,
     WeightHistoryEditDescriptionFSM,
+    LengthHistoryEditDateFSM,
+    LengthHistoryEditDescriptionFSM,
 )
 
 logger = logging.getLogger(__name__)
@@ -1282,7 +1297,7 @@ async def delete_weight_handler(
 
     await callback.message.edit_text(
         text='Удаление взвешивания\n'
-             'Вы уверены, что хотите удалить линьку из истории?\n',
+             'Вы уверены, что хотите удалить взвешивание из истории?\n',
         reply_markup=inline_kb
     )
 
@@ -1337,3 +1352,416 @@ async def process_undo_delete_weight(
     )
 
     await detail_weight_handler(callback, detail_callback_data, session)
+
+
+@router.callback_query(HistoryPetCallback.filter(F.action == 'length_history'))
+async def history_length_pet_handler(
+    callback: CallbackQuery,
+    callback_data: HistoryPetCallback,
+    session: AsyncSession
+):
+    """Просмотр истории измерений длины питомца"""
+    try:
+        user = await get_user(callback.from_user.id, session)
+        length_history = await get_all_pet_length(callback_data.pet_id, session)
+
+        if not length_history:
+            await callback.answer(
+                text='У данного питомца нет истории измерений длины', show_alert=True
+            )
+            return
+
+        inline_kb = await show_length_history_inline_kb(
+            length_history,
+            user.tz_region,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории длины питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+
+    else:
+        date_last = length_history[0].date_measure.astimezone(
+            ZoneInfo(user.tz_region)
+        ).strftime('%d.%m.%y, %H:%M')
+
+        await callback.message.edit_text(
+            text='История измерения длины питомца\n\n'
+                 f'Измерений: {len(length_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == 'next'))
+async def next_page_length_history_handler(
+    callback: CallbackQuery,
+    callback_data: LengthHistoryPaginationCallback,
+    session: AsyncSession
+):
+    """
+    Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории измерений питомца.
+    """
+    await callback.answer()
+    try:
+        page = callback_data.page + 1
+        length_history = await get_all_pet_length(callback_data.pet_id, session)
+
+        inline_kb = await show_length_history_inline_kb(
+            length_history,
+            callback_data.user_tz,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+            page,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории измерений длины питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+
+    else:
+        # Для обработки пустого списка при удалении всех событий
+        if not length_history:
+            await callback.message.answer(
+                text='У данного питомца не найдена история измерений длины.',
+                reply_markup=inline_kb,
+            )
+            return
+
+        date_last = length_history[0].date_measure.astimezone(
+            ZoneInfo(callback_data.user_tz)
+        ).strftime('%d.%m.%y, %H:%M')
+        await callback.message.edit_text(
+            text='История измерения длины питомца\n\n'
+                 f'Измерений: {len(length_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == 'prev'))
+async def prev_page_length_history_handler(
+    callback: CallbackQuery,
+    callback_data: LengthHistoryPaginationCallback,
+    session: AsyncSession
+):
+    """
+    Обработчик для кнопки 'Назад'. Пагинация для просмотра истории измерений питомца.
+    """
+    await callback.answer()
+    try:
+        page = callback_data.page - 1
+
+        length_history = await get_all_pet_length(callback_data.pet_id, session)
+
+        inline_kb = await show_length_history_inline_kb(
+            length_history,
+            callback_data.user_tz,
+            callback_data.pet_id,
+            callback_data.company_id,
+            callback_data.group_id,
+            page,
+        )
+    except Exception as e:
+        logger.info(
+            'Произошла ошибка при поиске истории измерения длины питомца pet id:'
+            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
+            exc_info=True
+        )
+        await callback.answer(
+            text='У данного питомца нет истории измерений длины', show_alert=True,
+        )
+    else:
+        date_last = length_history[0].date_measure.astimezone(
+            ZoneInfo(callback_data.user_tz)
+        ).strftime('%d.%m.%y, %H:%M')
+
+        await callback.message.edit_text(
+            text='История измерения длины питомца\n\n'
+                 f'Измерений: {len(length_history)}\n'
+                 f'Последняя дата измерения: {date_last}\n\n'
+                 'Для редактирования нажмите на дату измерения.',
+            reply_markup=inline_kb,
+        )
+
+
+@router.callback_query(
+    LengthHistoryDetailCallback.filter(F.action == 'detail'), StateFilter(default_state)
+)
+async def detail_length_handler(
+    callback: CallbackQuery,
+    callback_data: LengthHistoryDetailCallback,
+    session: AsyncSession
+):
+    """Детальный просмотр измерения длины питомца"""
+    await callback.answer()
+    length_event = await get_length(callback_data.length_id, session)
+
+    inline_kb = await detail_length_inline_kb(
+        length_event.id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page
+    )
+
+    date_event = length_event.date_measure.astimezone(
+        ZoneInfo(callback_data.user_tz)
+    ).strftime('%d.%m.%y, %H:%M')
+
+    await callback.message.edit_text(
+        text='Детальный просмотр измерения питомца\n\n'
+             f'Дата измерения: {date_event}\n'
+             f'Описание: {length_event.description}\n',
+        reply_markup=inline_kb,
+    )
+
+
+@router.callback_query(LengthHistoryDetailCallback.filter(F.action == 'edit_date'))
+async def edit_length_history_date_handler(
+    callback: CallbackQuery,
+    callback_data: LengthHistoryDetailCallback,
+    state: FSMContext,
+):
+    """Редактирование даты и времени взвешивания"""
+    await callback.answer()
+
+    await state.set_state(LengthHistoryEditDateFSM.date)
+    inline_kb = await get_edit_length_history_clear_state_inline_kb(
+        callback_data.length_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Редактирование даты измерения длины\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
+             'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        page=callback_data.page,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        length_id=callback_data.length_id,
+    )
+
+
+@router.message(StateFilter(LengthHistoryEditDateFSM.date))
+async def process_edit_date_length_history(message: Message, state: FSMContext):
+    """Ввод новой даты измерения длины (редактирование). FSM"""
+    try:
+        state_data = await state.get_data()
+        date = parse_date(message.text)
+
+        user_tz = ZoneInfo(state_data['user_tz'])
+        date_length = date.replace(tzinfo=user_tz).date()
+        await state.update_data(date=date_length)
+
+        inline_back_kb = await get_edit_length_history_clear_state_inline_kb(
+            state_data['length_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+
+    except ValueError:
+        await message.answer(
+            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+        )
+    else:
+        await message.answer(
+            text='Введите новое время в формате ЧЧ:ММ.\n'
+                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb
+        )
+        await state.set_state(LengthHistoryEditDateFSM.time)
+
+
+@router.message(StateFilter(LengthHistoryEditDateFSM.time))
+async def process_edit_time_length_history(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Ввод нового времени измерения длины (редактирование). FSM"""
+    try:
+        time_length = parse_time(message.text)
+        await state.update_data(time=time_length)
+
+        state_data = await state.get_data()
+        date_time = datetime.combine(state_data['date'], state_data['time'])
+
+        await edit_date_length(state_data['length_id'], date_time, session)
+
+    except ValueError:
+        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+    else:
+        inline_back_kb = await get_successful_edit_length_history_inline_kb(
+            state_data['length_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+        await message.answer(
+            "Дата измерения длины была изменена ✅\n", reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.callback_query(
+    LengthHistoryDetailCallback.filter(F.action == 'edit_description')
+)
+async def edit_length_history_description_handler(
+    callback: CallbackQuery,
+    callback_data: LengthHistoryDetailCallback,
+    state: FSMContext,
+):
+    """Редактирование описания измерения длины"""
+    await callback.answer()
+
+    await state.set_state(LengthHistoryEditDescriptionFSM.description)
+    inline_kb = await get_edit_feeding_history_clear_state_inline_kb(
+        callback_data.length_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Введите новое описание\n'
+             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
+        reply_markup=inline_kb
+    )
+    await state.update_data(
+        page=callback_data.page,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        length_id=callback_data.length_id,
+    )
+
+
+@router.message(StateFilter(LengthHistoryEditDescriptionFSM.description))
+async def process_edit_description_length_history(
+    message: Message, state: FSMContext, session: AsyncSession
+):
+    """Ввод нового описания при редактировании измерения длины и сохранение в БД."""
+    try:
+        await state.update_data(description=message.text)
+        state_data = await state.get_data()
+        await edit_description_length(
+            state_data['length_id'], state_data['description'], session
+        )
+    except ValueError:
+        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+    else:
+        inline_back_kb = await get_successful_edit_length_history_inline_kb(
+            state_data['length_id'],
+            state_data['user_tz'],
+            state_data['pet_id'],
+            state_data['company_id'],
+            state_data['group_id'],
+            state_data['page'],
+        )
+        await message.answer(
+            "Описание измерения длины была изменена ✅\n", reply_markup=inline_back_kb,
+        )
+        await state.clear()
+
+
+@router.callback_query(LengthHistoryDetailCallback.filter(F.action == 'delete'))
+async def delete_length_handler(
+    callback: CallbackQuery, callback_data: LengthHistoryDetailCallback
+):
+    """Удаление измерения длины"""
+    await callback.answer()
+    inline_kb = await get_delete_length_inline_kb(
+        callback_data.length_id,
+        callback_data.user_tz,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
+        callback_data.page,
+    )
+
+    await callback.message.edit_text(
+        text='Удаление измерения длины\n'
+             'Вы уверены, что хотите удалить длину из истории?\n',
+        reply_markup=inline_kb
+    )
+
+
+@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == 'delete'))
+async def process_delete_length(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteLengthCallback,
+    session: AsyncSession
+):
+    """Подтверждение удаления измерения длины. FSM"""
+    try:
+        await delete_length(callback_data.length_id, session)
+
+    except Exception as e:
+        logger.error(f'Ошибка при удалении измерения длины: {e}', exc_info=True)
+        await callback.message.answer(
+            'Произошла ошибка при удалении длины питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+        )
+    else:
+        await callback.answer('Измерение длины питомца удалено ✅', show_alert=True)
+
+        detail_callback_data = LengthHistoryPaginationCallback(
+            action='next',
+            page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
+            user_tz=callback_data.user_tz,
+            pet_id=callback_data.pet_id,
+            company_id=callback_data.company_id,
+            group_id=callback_data.group_id,
+        )
+        await next_page_length_history_handler(callback, detail_callback_data, session)
+
+
+@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == 'cancel'))
+async def process_undo_delete_length(
+    callback: CallbackQuery,
+    callback_data: ChoiceDeleteLengthCallback,
+    session: AsyncSession
+):
+    """Отмена удаления измерения длины"""
+    await callback.answer("Удаление измерения длины отменено.", show_alert=True)
+
+    detail_callback_data = LengthHistoryDetailCallback(
+        action='detail',
+        length_id=callback_data.length_id,
+        user_tz=callback_data.user_tz,
+        pet_id=callback_data.pet_id,
+        company_id=callback_data.company_id,
+        group_id=callback_data.group_id,
+        page=callback_data.page
+    )
+
+    await detail_length_handler(callback, detail_callback_data, session)

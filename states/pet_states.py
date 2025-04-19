@@ -128,3 +128,14 @@ class WeightHistoryEditDateFSM(PetEditBaseFSM):
 class WeightHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания к измерению веса из истории"""
     description = State()
+
+
+class LengthHistoryEditDateFSM(PetEditBaseFSM):
+    """Для редактирования даты измерения длины из истории"""
+    date = State()
+    time = State()
+
+
+class LengthHistoryEditDescriptionFSM(PetEditBaseFSM):
+    """Для редактирования описания к измерению длины из истории"""
+    description = State()
