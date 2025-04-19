@@ -15,6 +15,9 @@ from factory.callback_factory.pet_factory import (
     WeightHistoryDetailCallback,
     WeightHistoryPaginationCallback,
     ChoiceDeleteWeightCallback,
+    LengthHistoryDetailCallback,
+    LengthHistoryPaginationCallback,
+    ChoiceDeleteLengthCallback,
 )
 
 
@@ -34,7 +37,7 @@ async def get_menu_history_pet_inline_kb(
     )
     builder.button(
         text='📐 Измерения',
-        callback_data=HistoryPetCallback(action='', **data).pack()
+        callback_data=HistoryPetCallback(action='length_history', **data).pack()
     )
     builder.button(
         text='⚖️ Масса',
@@ -762,6 +765,242 @@ async def get_delete_weight_inline_kb(
             page=page,
             user_tz=user_timezone,
             weight_id=weight_id,
+            **data
+        ).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def show_length_history_inline_kb(
+    length_history: list,
+    user_timezone: str,
+    pet_id: int,
+    company_id: int,
+    group_id: int,
+    page: int = 0,
+    per_page: int = 6
+):
+    """
+    Отображается в просмотре истории длины с пагинацией.
+    :param length_history: Список всех измерений длины питомца.
+    :param user_timezone: Таймзона пользователя из БД
+    :param pet_id: ID питомца
+    :param company_id: ID компании
+    :param group_id: ID группы питомца
+    :param page: Номер текущей страницы.
+    :param per_page: Количество запланированных дат на одной странице.
+    :return: Инлайн клавиатура.
+    """
+    # Вычисляем начальный и конечный индекс для текущей страницы
+    start_index = page * per_page
+    end_index = start_index + per_page
+    length_page = length_history[start_index:end_index]
+
+    builder = InlineKeyboardBuilder()
+    # для возврата в меню
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
+    for length in length_page:
+        date_time = length.date_measure
+        shedule_time = date_time.astimezone(
+            ZoneInfo(user_timezone)
+        ).strftime('%d.%m.%y, %H:%M')
+
+        builder.row(
+            InlineKeyboardButton(
+                text=f'{shedule_time}',
+                callback_data=LengthHistoryDetailCallback(
+                    action='detail',
+                    page=page,
+                    user_tz=user_timezone,
+                    length_id=length.id,
+                    **data
+                ).pack()
+            ),
+            InlineKeyboardButton(
+                text='🗑 Удалить',
+                callback_data=LengthHistoryDetailCallback(
+                    action='delete',
+                    page=page,
+                    user_tz=user_timezone,
+                    length_id=length.id,
+                    **data
+                ).pack()
+            ),
+            width=2,
+        )
+
+    pagination_buttons = []
+    if page > 0:
+        pagination_buttons.append(
+            InlineKeyboardButton(
+                text='⬅️ Назад',
+                callback_data=LengthHistoryPaginationCallback(
+                    action='prev', page=page, user_tz=user_timezone, **data
+                ).pack()
+            )
+        )
+    if end_index < len(length_history):
+        pagination_buttons.append(
+            InlineKeyboardButton(
+                text='Вперед ➡️',
+                callback_data=LengthHistoryPaginationCallback(
+                    action='next', page=page, user_tz=user_timezone, **data
+                ).pack()
+            )
+        )
+
+    if pagination_buttons:
+        builder.row(*pagination_buttons)
+
+    builder.row(
+        InlineKeyboardButton(
+            text='⬅ Назад в меню',
+            callback_data=HistoryPetCallback(action='menu', **data).pack()
+        )
+    )
+    return builder.as_markup()
+
+
+async def detail_length_inline_kb(
+    length_id: int,
+    user_timezone: str,
+    pet_id: int,
+    company_id: int,
+    group_id: int,
+    page: int = 0,
+):
+    """Отображается в детальном просмотре истории длины"""
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(
+            text='✏ Дату',
+            callback_data=LengthHistoryDetailCallback(
+                action='edit_date',
+                page=page,
+                user_tz=user_timezone,
+                length_id=length_id,
+                **data
+            ).pack()
+        ),
+        InlineKeyboardButton(
+            text='✏ Описание',
+            callback_data=LengthHistoryDetailCallback(
+                action='edit_description',
+                page=page,
+                user_tz=user_timezone,
+                length_id=length_id,
+                **data
+            ).pack()
+        ),
+        InlineKeyboardButton(
+            text='🗑 Удалить',
+            callback_data=LengthHistoryDetailCallback(
+                action='delete',
+                page=page,
+                user_tz=user_timezone,
+                length_id=length_id,
+                **data
+            ).pack()
+        ),
+        width=1
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text='⬅ Назад',
+            callback_data=LengthHistoryPaginationCallback(
+                # page -1 т.к. использую обработчик для next
+                action='next', page=page - 1, user_tz=user_timezone, **data
+            ).pack()
+        )
+    )
+    return builder.as_markup()
+
+
+async def get_edit_length_history_clear_state_inline_kb(
+    length_id: int,
+    user_timezone,
+    pet_id: int,
+    company_id: int,
+    group_id: int,
+    page: int = 0,
+):
+    """Отображается при редактировании истории длины (в истории)"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+
+    builder.button(
+        text='Отмена',
+        callback_data='cancel_state'
+    )
+    builder.button(
+        text='⬅ Назад',
+        callback_data=LengthHistoryDetailCallback(
+            action='detail',
+            page=page,
+            user_tz=user_timezone,
+            length_id=length_id,
+            **data
+        ).pack()
+    )
+    builder.adjust(2)
+    return builder.as_markup()
+
+
+async def get_successful_edit_length_history_inline_kb(
+    length_id: int,
+    user_timezone: str,
+    pet_id: int,
+    company_id: int,
+    group_id: int,
+    page: int = 0,
+):
+    """Отображается при успешном редактировании длины (в истории)"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+    builder.button(
+        text='⬅ Детальный просмотр',
+        callback_data=LengthHistoryDetailCallback(
+            action='detail',
+            page=page,
+            user_tz=user_timezone,
+            length_id=length_id,
+            **data
+        ).pack()
+    )
+    return builder.as_markup()
+
+
+async def get_delete_length_inline_kb(
+    length_id: int,
+    user_timezone: str,
+    pet_id: int,
+    company_id: int,
+    group_id: int,
+    page: int = 0,
+):
+    """Подтверждение удаления длины питомца (в истории)"""
+    builder = InlineKeyboardBuilder()
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
+    builder.button(
+        text='✅ ДА',
+        callback_data=ChoiceDeleteLengthCallback(
+            action='delete',
+            page=page,
+            user_tz=user_timezone,
+            length_id=length_id,
+            **data
+        ).pack()
+    )
+    builder.button(
+        text='❌ НЕТ',
+        callback_data=ChoiceDeleteLengthCallback(
+            action='cancel',
+            page=page,
+            user_tz=user_timezone,
+            length_id=length_id,
             **data
         ).pack()
     )
