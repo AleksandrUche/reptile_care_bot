@@ -596,7 +596,7 @@ async def get_all_pet_weight(pet_id: int, session: AsyncSession):
 
 
 async def get_weight(weight_id: int, session: AsyncSession):
-    """Возвращает информацию о линьки по id"""
+    """Возвращает информацию об измерении веса по id."""
     return await session.scalar(
         select(WeightPetOrm)
         .filter(WeightPetOrm.id == weight_id)
@@ -606,7 +606,7 @@ async def get_weight(weight_id: int, session: AsyncSession):
 async def edit_date_weight(
     weight_id: int, date: datetime, session: AsyncSession
 ):
-    """Изменяет дату линьки."""
+    """Изменяет дату измерения веса."""
     try:
         stmt = update(WeightPetOrm).filter(
             WeightPetOrm.id == weight_id
@@ -623,7 +623,7 @@ async def edit_date_weight(
 async def edit_description_weight(
     weight_id: int, description: str, session: AsyncSession
 ):
-    """Изменяет описание линьки."""
+    """Изменяет описание измерения веса."""
     try:
         stmt = update(WeightPetOrm).filter(
             WeightPetOrm.id == weight_id
@@ -646,5 +646,76 @@ async def delete_weight(weight_id: int, session: AsyncSession):
     except Exception as e:
         logger.error(
             f'Ошибка при удалении веса с ID-{weight_id}: {e}', exc_info=True
+        )
+        raise
+
+
+async def get_all_pet_length(pet_id: int, session: AsyncSession):
+    """Возвращает все измерения длины питомца"""
+    try:
+        result = await session.scalars(
+            select(LengthPetOrm)
+            .filter(LengthPetOrm.pet_id == pet_id).order_by(LengthPetOrm.date_measure)
+        )
+        return result.all()
+    except Exception as e:
+        logger.info(
+            f'Ошибка при поиске измерений длины питомца c id {pet_id}. {e}',
+            exc_info=True
+        )
+        raise
+
+
+async def get_length(length_id: int, session: AsyncSession):
+    """Возвращает информацию об измерении длины по id"""
+    return await session.scalar(
+        select(LengthPetOrm)
+        .filter(LengthPetOrm.id == length_id)
+    )
+
+
+async def edit_date_length(
+    length_id: int, date: datetime, session: AsyncSession
+):
+    """Изменяет дату измерения длины."""
+    try:
+        stmt = update(LengthPetOrm).filter(
+            LengthPetOrm.id == length_id
+        ).values(date_measure=date.astimezone(timezone.utc))
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании даты измерения длины: {e}', exc_info=True
+        )
+        raise
+
+
+async def edit_description_length(
+    length_id: int, description: str, session: AsyncSession
+):
+    """Изменяет описание измерения длины."""
+    try:
+        stmt = update(LengthPetOrm).filter(
+            LengthPetOrm.id == length_id
+        ).values(description=description)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при редактировании описания измерения длины: {e}', exc_info=True
+        )
+        raise
+
+
+async def delete_length(length_id: int, session: AsyncSession):
+    """Удаление измерения длины по id"""
+    try:
+        stmt = delete(LengthPetOrm).filter(LengthPetOrm.id == length_id)
+        await session.execute(stmt)
+        await session.commit()
+    except Exception as e:
+        logger.error(
+            f'Ошибка при удалении длины с ID {length_id}: {e}', exc_info=True
         )
         raise
