@@ -200,3 +200,35 @@ class ChoiceDeleteWeightCallback(CallbackData, prefix='choice_delete_weight'):
     company_id: int
     group_id: int
     weight_id: int
+
+
+class LengthHistoryPaginationCallback(CallbackData, prefix='length_paginate'):
+    """Для просмотра событий измерения длины"""
+    action: str  # Действие: prev или next
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+
+
+class LengthHistoryDetailCallback(CallbackData, prefix='length_detail'):
+    """Для взаимодействия с событиями измерения длины"""
+    action: str  # Действия: detail, edit_date, edit_description, delete
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    length_id: int
+
+
+class ChoiceDeleteLengthCallback(CallbackData, prefix='choice_delete_length'):
+    """Для подтверждения удаления измерения длины питомца"""
+    action: str  # delete, cancel
+    page: int
+    user_tz: str
+    pet_id: int
+    company_id: int
+    group_id: int
+    length_id: int
