@@ -25,10 +25,10 @@ from states.pet_states import (
 )
 
 logger = logging.getLogger(__name__)
-router = Router(name="adding_events")
+router = Router(name='adding_events')
 
 
-@router.callback_query(EditPetCallback.filter(F.field == "weight"))
+@router.callback_query(EditPetCallback.filter(F.field == 'weight'))
 async def add_pet_weight_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -37,7 +37,7 @@ async def add_pet_weight_handler(
     """Обработчик для добавления веса питомца."""
     await callback.answer()
     await callback.message.edit_text(
-        text="🦎Вес питомца\n<b>Введите вес питомца:</b>",
+        text='🦎Вес питомца\n<b>Введите вес питомца:</b>',
         reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
@@ -56,15 +56,15 @@ async def process_add_weight(
     await state.update_data(pet_weight=message.text)
     state_data = await state.get_data()
     try:
-        weight = float(state_data["pet_weight"].replace(",", "."))
+        weight = float(state_data['pet_weight'].replace(',', '.'))
     except ValueError:
         await message.answer(
-            "Масса может состоять из цифр и знаков разделения❗\nНапример: 25,7"
+            'Масса может состоять из цифр и знаков разделения❗\nНапример: 25,7'
         )
 
-    add_weight = await add_weight_pet(state_data["pet_id"], weight, session)
+    add_weight = await add_weight_pet(state_data['pet_id'], weight, session)
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
-        state_data["pet_id"], state_data["company_id"], state_data["group_id"]
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
     )
     if add_weight:
         await message.answer(
@@ -73,8 +73,8 @@ async def process_add_weight(
         )
     else:
         await message.answer(
-            "Произошла ошибка при добавлении массы питомца!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при добавлении массы питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
 
@@ -83,13 +83,13 @@ async def process_add_weight(
 async def warning_incorrect_weight(message: Message):
     """Сработает при некорректном вводе массы питомца"""
     await message.answer(
-        text="То, что Вы отправили не похоже на массу\n"
-        "Пожалуйста, введите массу еще раз\n"
-        "Масса может состоять из цифр❗"
+        text='То, что Вы отправили не похоже на массу\n'
+        'Пожалуйста, введите массу еще раз\n'
+        'Масса может состоять из цифр❗'
     )
 
 
-@router.callback_query(EditPetCallback.filter(F.field == "length"))
+@router.callback_query(EditPetCallback.filter(F.field == 'length'))
 async def add_pet_length_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -98,7 +98,7 @@ async def add_pet_length_handler(
     """Обработчик для добавления длины питомца."""
     await callback.answer()
     await callback.message.edit_text(
-        text="🦎Длина питомца\n<b>Введите длину питомца:</b>",
+        text='🦎Длина питомца\n<b>Введите длину питомца:</b>',
         reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
@@ -117,15 +117,15 @@ async def process_add_length(
     await state.update_data(pet_length=message.text)
     state_data = await state.get_data()
     try:
-        length = float(state_data["pet_length"].replace(",", "."))
+        length = float(state_data['pet_length'].replace(',', '.'))
     except ValueError:
         await message.answer(
-            "Длина может состоять из цифр и знаков разделения❗\nНапример: 25,7"
+            'Длина может состоять из цифр и знаков разделения❗\nНапример: 25,7'
         )
 
-    add_length = await add_length_pet(state_data["pet_id"], length, session)
+    add_length = await add_length_pet(state_data['pet_id'], length, session)
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
-        state_data["pet_id"], state_data["company_id"], state_data["group_id"]
+        state_data['pet_id'], state_data['company_id'], state_data['group_id']
     )
     if add_length:
         await message.answer(
@@ -134,8 +134,8 @@ async def process_add_length(
         )
     else:
         await message.answer(
-            "Произошла ошибка при добавлении длины питомца!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при добавлении длины питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
 
@@ -144,13 +144,13 @@ async def process_add_length(
 async def warning_incorrect_length(message: Message):
     """Сработает при некорректном вводе длины питомца"""
     await message.answer(
-        text="То, что Вы отправили не похоже на длину\n"
-        "Пожалуйста, введите длину еще раз\n"
-        "Масса может состоять из цифр❗"
+        text='То, что Вы отправили не похоже на длину\n'
+        'Пожалуйста, введите длину еще раз\n'
+        'Масса может состоять из цифр❗'
     )
 
 
-@router.callback_query(EditPetCallback.filter(F.field == "molting"))
+@router.callback_query(EditPetCallback.filter(F.field == 'molting'))
 async def add_pet_molting_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -159,9 +159,9 @@ async def add_pet_molting_handler(
     """Обработчик для добавления даты линьки питомца."""
     await callback.answer()
     await callback.message.edit_text(
-        text="🦎Добавление даты линьки питомца\n"
-        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
-        "<b>Введите дату линьки питомца в формате ДД.ММ.ГГГГ:</b>\n",
+        text='🦎Добавление даты линьки питомца\n'
+        '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+        '<b>Введите дату линьки питомца в формате ДД.ММ.ГГГГ:</b>\n',
         reply_markup=common_pet_kb.menu_add_pet,
     )
     await state.update_data(
@@ -178,29 +178,29 @@ async def process_add_molting_pet(
 ):
     """Добавление даты линьки питомца."""
     try:
-        date_molting = datetime.strptime(message.text, "%d.%m.%Y")
+        date_molting = datetime.strptime(message.text, '%d.%m.%Y')
         await state.update_data(date_molting=date_molting)
     except ValueError:
-        await message.answer("Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.")
+        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
     else:
         state_data = await state.get_data()
 
         edit_pet = await add_molting_pet(
-            state_data["pet_id"], state_data["date_molting"], session
+            state_data['pet_id'], state_data['date_molting'], session
         )
         inline_back_kb = await get_return_detail_view_pet_inline_kb(
-            state_data["pet_id"], state_data["company_id"], state_data["group_id"]
+            state_data['pet_id'], state_data['company_id'], state_data['group_id']
         )
 
         if edit_pet:
             await message.answer(
-                "Добавлена дата линьки питомца: "
+                'Добавлена дата линьки питомца: '
                 f'"{date_molting.astimezone(TIME_ZONE).strftime("%d.%m.%Y")}".',
                 reply_markup=inline_back_kb,
             )
         else:
             await message.answer(
-                "Произошла ошибка при добавлении даты линьки питомца!\n"
-                "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+                'Произошла ошибка при добавлении даты линьки питомца!\n'
+                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
             )
         await state.clear()

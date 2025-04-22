@@ -20,19 +20,19 @@ class GeoAPIClient:
         :param city_name: Название города.
         :return {'lng': 28.03372, 'lat': -32.6749}
         """
-        params = {"q": city_name, "username": self.api_key}
+        params = {'q': city_name, 'username': self.api_key}
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(self.url_geo + "searchJSON", params=params)
+            response = await client.get(self.url_geo + 'searchJSON', params=params)
             data = response.json()
 
             try:
-                coords = data["geonames"][0]
-                return {"lng": float(coords["lng"]), "lat": float(coords["lat"])}
+                coords = data['geonames'][0]
+                return {'lng': float(coords['lng']), 'lat': float(coords['lat'])}
             except Exception as e:
                 logger.error(
-                    "Не удалось определить координаты для "
-                    f"города {city_name} ошибка: {e}",
+                    'Не удалось определить координаты для '
+                    f'города {city_name} ошибка: {e}',
                     exc_info=True,
                 )
 
@@ -43,20 +43,20 @@ class GeoAPIClient:
         :return {'timezone': 'Africa/Johannesburg', 'offset': 2}
         """
         params = {
-            "lat": coord["lat"],
-            "lng": coord["lng"],
-            "username": self.api_key,
+            'lat': coord['lat'],
+            'lng': coord['lng'],
+            'username': self.api_key,
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(self.url_geo + "timezoneJSON", params=params)
+            response = await client.get(self.url_geo + 'timezoneJSON', params=params)
             data = response.json()
 
             try:
-                return {"time_zone": data["timezoneId"], "offset": data["gmtOffset"]}
+                return {'time_zone': data['timezoneId'], 'offset': data['gmtOffset']}
             except Exception as e:
                 logger.error(
-                    f"Не удалось определить часовой пояс и смещение по {coord} ошибка: {e}",
+                    f'Не удалось определить часовой пояс и смещение по {coord} ошибка: {e}',
                     exc_info=True,
                 )
 

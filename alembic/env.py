@@ -12,12 +12,12 @@ from config_data.config import DB_USER, DB_NAME, DB_PASS, DB_HOST, DB_PORT, DATA
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, "DB_USER", DB_USER)
-config.set_section_option(section, "DB_NAME", DB_NAME)
-config.set_section_option(section, "DB_PASS", DB_PASS)
-config.set_section_option(section, "DB_HOST", DB_HOST)
-config.set_section_option(section, "DB_PORT", DB_PORT)
-config.set_section_option(section, "DATABASE_URL", DATABASE_URL)
+config.set_section_option(section, 'DB_USER', DB_USER)
+config.set_section_option(section, 'DB_NAME', DB_NAME)
+config.set_section_option(section, 'DB_PASS', DB_PASS)
+config.set_section_option(section, 'DB_HOST', DB_HOST)
+config.set_section_option(section, 'DB_PORT', DB_PORT)
+config.set_section_option(section, 'DATABASE_URL', DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -39,12 +39,12 @@ target_metadata = Base.metadata
 
 
 def run_migrations_offline() -> None:
-    url = config.get_main_option("sqlalchemy.url")
+    url = config.get_main_option('sqlalchemy.url')
     context.configure(
         url=url,
         target_metadata=target_metadata,
         literal_binds=True,
-        dialect_opts={"paramstyle": "named"},
+        dialect_opts={'paramstyle': 'named'},
     )
 
     with context.begin_transaction():
@@ -80,7 +80,7 @@ def run_migrations_offline() -> None:
 async def run_async_migrations():
     """Запуск асинхронных миграций."""
     connectable = create_async_engine(
-        config.get_main_option("sqlalchemy.url"),
+        config.get_main_option('sqlalchemy.url'),
         echo=True,
         future=True,
     )

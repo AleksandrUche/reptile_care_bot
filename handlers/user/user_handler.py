@@ -31,20 +31,20 @@ from services.user_services import (
 )
 from states.user_states import SearchTimeZoneByCityFSM, SearchTimeZoneByGeoPositionFSM
 
-router = Router(name="user")
+router = Router(name='user')
 logger = logging.getLogger(__name__)
 
 
-@router.callback_query(F.data == "profile")
-@router.callback_query(F.data == "back_to_my_profile")
+@router.callback_query(F.data == 'profile')
+@router.callback_query(F.data == 'back_to_my_profile')
 async def show_my_profile(callback: CallbackQuery, session: AsyncSession):
     """Обработчик для отображения профиль пользователя"""
     await callback.answer()
     await get_user_profile(callback, my_profile, session)
 
 
-@router.callback_query(F.data == "edit_my_profile")
-@router.callback_query(F.data == "back_to_edit_my_profile")
+@router.callback_query(F.data == 'edit_my_profile')
+@router.callback_query(F.data == 'back_to_edit_my_profile')
 async def edit_my_profile(callback: CallbackQuery, session: AsyncSession):
     """Обработчик для отображения меню редактирования пользователя"""
     await callback.answer()
@@ -52,7 +52,7 @@ async def edit_my_profile(callback: CallbackQuery, session: AsyncSession):
     await get_user_profile(callback, keyboard, session)
 
 
-@router.callback_query(EditMyProfileCallback.filter(F.action == "language"))
+@router.callback_query(EditMyProfileCallback.filter(F.action == 'language'))
 async def edit_profile_language(
     callback: CallbackQuery, callback_data: EditMyProfileCallback
 ):
@@ -61,7 +61,7 @@ async def edit_profile_language(
     inline_kb = await get_language_select_inline_kb(callback_data.user_tg_id)
 
     await callback.message.edit_text(
-        text="Изменение языка\n<b>Выберите язык</b> 👇",
+        text='Изменение языка\n<b>Выберите язык</b> 👇',
         reply_markup=inline_kb,
     )
 
@@ -74,7 +74,7 @@ async def process_language_select(
 ):
     """Изменение языка пользователя."""
     edit_pet = await edit_user_profile_value(
-        callback_data.user_tg_id, "language", callback_data.language.value, session
+        callback_data.user_tg_id, 'language', callback_data.language.value, session
     )
 
     if edit_pet:
@@ -84,12 +84,12 @@ async def process_language_select(
         )
     else:
         await callback.message.answer(
-            "Произошла ошибка при изменении языка!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при изменении языка!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
 
 
-@router.callback_query(EditMyProfileCallback.filter(F.action == "edit_time_zone"))
+@router.callback_query(EditMyProfileCallback.filter(F.action == 'edit_time_zone'))
 async def edit_profile_timezone(
     callback: CallbackQuery, callback_data: EditMyProfileCallback
 ):
@@ -98,12 +98,12 @@ async def edit_profile_timezone(
     inline_kb = await get_timezone_select_inline_kb(callback_data.user_tg_id)
 
     await callback.message.edit_text(
-        text="🕛 Часовой пояс\n<b>Выберите способ добавления</b> 👇",
+        text='🕛 Часовой пояс\n<b>Выберите способ добавления</b> 👇',
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(EditTimeZoneSelectCallback.filter(F.action == "search_city"))
+@router.callback_query(EditTimeZoneSelectCallback.filter(F.action == 'search_city'))
 async def process_edit_time_zone_by_search_city(
     callback: CallbackQuery,
     state: FSMContext,
@@ -116,10 +116,10 @@ async def process_edit_time_zone_by_search_city(
     )
 
     await callback.message.edit_text(
-        "Поиск часового пояса по вашему городу\n"
-        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
-        "Город можно ввести с уточнением области\n"
-        "<b>Введите город:</b>\n",
+        'Поиск часового пояса по вашему городу\n'
+        '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+        'Город можно ввести с уточнением области\n'
+        '<b>Введите город:</b>\n',
         reply_markup=inline_back_kb,
     )
     await state.set_state(SearchTimeZoneByCityFSM.city)
@@ -129,31 +129,31 @@ async def process_edit_time_zone_by_search_city(
 async def process_edit_time_zone_by_city(message: Message, state: FSMContext):
     """Изменение часового пояса по поиску города пользователя."""
     await state.update_data(city=message.text)
-    city = await state.get_value("city")
+    city = await state.get_value('city')
 
     api_client = GeoAPIClient()
     timezone = await api_client.get_search_time_zone_by_city(city)
     if not timezone:
-        await message.answer("Возможно, Вы допустили ошибку, повторите еще раз.")
+        await message.answer('Возможно, Вы допустили ошибку, повторите еще раз.')
     inline_approve_kb = await get_approve_tz_by_city_inline_kb(
         message.from_user.id,
-        timezone["time_zone"],
-        timezone["offset"],
-        timezone["lng"],
-        timezone["lat"],
+        timezone['time_zone'],
+        timezone['offset'],
+        timezone['lng'],
+        timezone['lat'],
     )
-    gmt = "+" if timezone["offset"] > 0 else ""
+    gmt = '+' if timezone['offset'] > 0 else ''
 
     if timezone:
         await message.answer(
             f'Ваш часовой пояс "GMT {gmt}{timezone["offset"]}"?\n'
-            f"{timezone['time_zone']}",
+            f'{timezone["time_zone"]}',
             reply_markup=inline_approve_kb,
         )
     else:
         await message.answer(
-            "Произошла ошибка при поиске часового пояса!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при поиске часового пояса!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
 
@@ -182,12 +182,12 @@ async def process_approve_edit_time_zone_by_city(
         )
     else:
         await callback.message.answer(
-            "Произошла ошибка при добавлении часового пояса!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при добавлении часового пояса!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
 
 
-@router.callback_query(EditTimeZoneSelectCallback.filter(F.action == "geolocation"))
+@router.callback_query(EditTimeZoneSelectCallback.filter(F.action == 'geolocation'))
 async def process_edit_time_zone_by_geolocation(
     callback: CallbackQuery,
     state: FSMContext,
@@ -200,9 +200,9 @@ async def process_edit_time_zone_by_geolocation(
     )
 
     await callback.message.edit_text(
-        "Поиск часового пояса по вашей геопозиции\n"
-        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
-        "<b>Поделитесь геопозицией</b>\n",
+        'Поиск часового пояса по вашей геопозиции\n'
+        '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
+        '<b>Поделитесь геопозицией</b>\n',
         reply_markup=inline_back_kb,
     )
     await state.set_state(SearchTimeZoneByGeoPositionFSM.location)
@@ -213,28 +213,28 @@ async def process_edit_time_zone_by_location(message: Message, state: FSMContext
     """Изменение часового пояса по геопозиции пользователя."""
 
     api_client = GeoAPIClient()
-    coords = {"lng": message.location.longitude, "lat": message.location.latitude}
+    coords = {'lng': message.location.longitude, 'lat': message.location.latitude}
     timezone = await api_client.get_time_zone_by_coord(coords)
 
     inline_approve_kb = await get_approve_tz_by_location_inline_kb(
         message.from_user.id,
-        timezone["time_zone"],
-        timezone["offset"],
-        coords["lng"],
-        coords["lat"],
+        timezone['time_zone'],
+        timezone['offset'],
+        coords['lng'],
+        coords['lat'],
     )
-    gmt = "+" if timezone["offset"] > 0 else ""
+    gmt = '+' if timezone['offset'] > 0 else ''
 
     if timezone:
         await message.answer(
             f'Ваш часовой пояс "GMT {gmt}{timezone["offset"]}"?\n'
-            f"{timezone['time_zone']}",
+            f'{timezone["time_zone"]}',
             reply_markup=inline_approve_kb,
         )
     else:
         await message.answer(
-            "Произошла ошибка при поиске часового пояса!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при поиске часового пояса!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     await state.clear()
 
@@ -243,6 +243,6 @@ async def process_edit_time_zone_by_location(message: Message, state: FSMContext
 async def warning_incorrect_geo_location(message: Message):
     """Сработает при некорректной отправки геопозиции"""
     await message.answer(
-        text="То, что Вы отправили не похоже на вашу геопозицию 🚩\n"
-        "Пожалуйста, отправьте геопозицию еще раз\n"
+        text='То, что Вы отправили не похоже на вашу геопозицию 🚩\n'
+        'Пожалуйста, отправьте геопозицию еще раз\n'
     )

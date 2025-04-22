@@ -26,7 +26,7 @@ class BaseTable(AsyncAttrs, DeclarativeBase):
 
 
 class UsersTable(BaseTable):
-    __tablename__ = "users"
+    __tablename__ = 'users'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     telegram_id: Mapped[int] = mapped_column(
@@ -36,102 +36,102 @@ class UsersTable(BaseTable):
     first_name: Mapped[str | None]
     last_name: Mapped[str | None]
     role: Mapped[UserRole] = mapped_column(
-        "Роль пользователя", Enum(UserRole), default=UserRole.USER
+        'Роль пользователя', Enum(UserRole), default=UserRole.USER
     )
-    is_active: Mapped[bool] = mapped_column("Активный?", Boolean, default=True)
-    tz_region: Mapped[str | None] = mapped_column("Регион")
-    tz_offset: Mapped[int | None] = mapped_column("Часовой пояс")
-    longitude: Mapped[float | None] = mapped_column("Долгота")
-    latitude: Mapped[float | None] = mapped_column("Широта")
+    is_active: Mapped[bool] = mapped_column('Активный?', Boolean, default=True)
+    tz_region: Mapped[str | None] = mapped_column('Регион')
+    tz_offset: Mapped[int | None] = mapped_column('Часовой пояс')
+    longitude: Mapped[float | None] = mapped_column('Долгота')
+    latitude: Mapped[float | None] = mapped_column('Широта')
     language: Mapped[str | None]
-    blocked: Mapped[bool] = mapped_column("Заблокирован?", Boolean, default=False)
+    blocked: Mapped[bool] = mapped_column('Заблокирован?', Boolean, default=False)
     created_date = mapped_column(
-        "Дата регистрации", DateTime(timezone=True), server_default=func.now()
+        'Дата регистрации', DateTime(timezone=True), server_default=func.now()
     )
-    companies: Mapped[list["CompanyOrm"]] = relationship(
-        "CompanyOrm", back_populates="user"
+    companies: Mapped[list['CompanyOrm']] = relationship(
+        'CompanyOrm', back_populates='user'
     )
-    shared_companies: Mapped[list["UserCompanyAssociationsTable"]] = relationship(
-        "UserCompanyAssociation",
-        back_populates="user",
+    shared_companies: Mapped[list['UserCompanyAssociationsTable']] = relationship(
+        'UserCompanyAssociation',
+        back_populates='user',
     )
-    shared_groups: Mapped[list["UserGroupAssociation"]] = relationship(
-        "UserGroupAssociation", back_populates="user"
+    shared_groups: Mapped[list['UserGroupAssociation']] = relationship(
+        'UserGroupAssociation', back_populates='user'
     )
-    subscriptions: Mapped[list["UserSubscriptionsTable"]] = relationship(
-        "UserSubscriptionTable", back_populates="user"
+    subscriptions: Mapped[list['UserSubscriptionsTable']] = relationship(
+        'UserSubscriptionTable', back_populates='user'
     )
 
     @property
     def full_name(self) -> str | None:
         name = str(self.first_name), str(self.last_name)
-        return " ".join(name).replace("None", "").strip() or None
+        return ' '.join(name).replace('None', '').strip() or None
 
 
 class SubscriptionsTable(BaseTable):
-    __tablename__ = "subscription"
+    __tablename__ = 'subscription'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     subscription_type: Mapped[SubscriptionType] = mapped_column(
-        "Тип подписки", Enum(SubscriptionType), default=SubscriptionType.ONE_MONTH
+        'Тип подписки', Enum(SubscriptionType), default=SubscriptionType.ONE_MONTH
     )
-    price: Mapped[int] = mapped_column("Цена")
-    duration: Mapped[int] = mapped_column("Продолжительность")
-    is_active: Mapped[bool] = mapped_column("Активная?", Boolean, default=True)
+    price: Mapped[int] = mapped_column('Цена')
+    duration: Mapped[int] = mapped_column('Продолжительность')
+    is_active: Mapped[bool] = mapped_column('Активная?', Boolean, default=True)
 
 
 class UserSubscriptionsTable(BaseTable):
-    __tablename__ = "user_subscriptions"
+    __tablename__ = 'user_subscriptions'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     created_date = mapped_column(
-        "Дата начала", DateTime(timezone=True), server_default=func.now()
+        'Дата начала', DateTime(timezone=True), server_default=func.now()
     )
     expires_date: Mapped[DateTime] = mapped_column(
-        "Дата окончания", DateTime(timezone=True), nullable=False
+        'Дата окончания', DateTime(timezone=True), nullable=False
     )
-    is_active: Mapped[bool] = mapped_column("Активная?", Boolean, default=True)
+    is_active: Mapped[bool] = mapped_column('Активная?', Boolean, default=True)
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"), unique=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'), unique=True)
     user: Mapped[UsersTable] = relationship(
-        UsersTable, back_populates="subscription", uselist=False
+        UsersTable, back_populates='subscription', uselist=False
     )
 
-    subscription_id: Mapped[int] = mapped_column(ForeignKey("subscriptions.id"))
-    subscription: Mapped[UserSubscriptionsTable] = relationship(back_populates="users")
+    subscription_id: Mapped[int] = mapped_column(ForeignKey('subscriptions.id'))
+    subscription: Mapped[UserSubscriptionsTable] = relationship(back_populates='users')
 
 
 class UserCompanyAssociationsTable(BaseTable):
-    __tablename__ = "user_company_associations"
+    __tablename__ = 'user_company_associations'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     role: Mapped[UserRoleCompany] = mapped_column(
-        "Роль", Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
+        'Роль', Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
     )
 
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    user: Mapped[UsersTable] = relationship(back_populates="shared_companies")
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user: Mapped[UsersTable] = relationship(back_populates='shared_companies')
 
-    company_id: Mapped[int] = mapped_column(ForeignKey("companies.id"))
-    company: Mapped["CompanyOrm"] = relationship(
-        "CompaniesTable", back_populates="shared_users"
+    company_id: Mapped[int] = mapped_column(ForeignKey('companies.id'))
+    company: Mapped['CompanyOrm'] = relationship(
+        'CompaniesTable', back_populates='shared_users'
     )  # TODO: ГДЕ ТО __tablename__ В ЕДИНСТВЕННОМ ЧИСЛЕ, ГДЕ ТО ВО МНОЖЕСТВЕННОМ
 
     __table_args__ = (
-        UniqueConstraint("user_id", "company_id", name="uq_user_company"),
+        UniqueConstraint('user_id', 'company_id', name='uq_user_company'),
     )
 
 
 class UserGroupAssociation(BaseTable):
-    __tablename__ = "user_group_association"
+    __tablename__ = 'user_group_association'
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(ForeignKey("users.id"))
-    group_id: Mapped[int] = mapped_column(ForeignKey("group.id"))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    group_id: Mapped[int] = mapped_column(ForeignKey('group.id'))
     role: Mapped[UserRoleCompany] = mapped_column(
-        "Роль", Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
+        'Роль', Enum(UserRoleCompany), default=UserRoleCompany.VIEWER
     )
-    user: Mapped[UsersTable] = relationship("UserOrm", back_populates="shared_groups")
-    group: Mapped[GroupOrm] = relationship("GroupOrm", back_populates="shared_users")
+    user: Mapped[UsersTable] = relationship('UserOrm', back_populates='shared_groups')
+    group: Mapped[GroupOrm] = relationship('GroupOrm', back_populates='shared_users')
 
-    __table_args__ = (UniqueConstraint("user_id", "group_id", name="uq_user_group"),)
+    __table_args__ = (UniqueConstraint('user_id', 'group_id', name='uq_user_group'),)

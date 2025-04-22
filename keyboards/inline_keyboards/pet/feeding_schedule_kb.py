@@ -19,19 +19,19 @@ async def get_menu_schedule_feedings_inline_kb(
 ):
     """Меню графика кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
     builder.button(
-        text="Добавить график",
-        callback_data=scheduleFeedingsCallback(action="add_schedule", **data).pack(),
+        text='Добавить график',
+        callback_data=scheduleFeedingsCallback(action='add_schedule', **data).pack(),
     )
     builder.button(
-        text="Запланированные",
+        text='Запланированные',
         callback_data=scheduleFeedingsCallback(
-            action="planned_schedule", **data
+            action='planned_schedule', **data
         ).pack(),
     )
     builder.button(
-        text="⬅ Вернуться к питомцу", callback_data=PetsCallback(**data).pack()
+        text='⬅ Вернуться к питомцу', callback_data=PetsCallback(**data).pack()
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -42,29 +42,29 @@ async def get_add_schedule_feedings_inline_kb(
 ):
     """Клавиатура для выбора режима добавления графика кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
     builder.button(
-        text="1 вариант",
-        callback_data=scheduleFeedingsCallback(action="single_addition", **data).pack(),
+        text='1 вариант',
+        callback_data=scheduleFeedingsCallback(action='single_addition', **data).pack(),
     )
     builder.button(
-        text="2 вариант",
-        callback_data=scheduleFeedingsCallback(action="group_addition", **data).pack(),
+        text='2 вариант',
+        callback_data=scheduleFeedingsCallback(action='group_addition', **data).pack(),
     )
     builder.button(
-        text="3 вариант",
+        text='3 вариант',
         callback_data=scheduleFeedingsCallback(
-            action="group_addition_and_description", **data
+            action='group_addition_and_description', **data
         ).pack(),
     )
     builder.button(
-        text="4 вариант",
-        callback_data=scheduleFeedingsCallback(action="every_day", **data).pack(),
+        text='4 вариант',
+        callback_data=scheduleFeedingsCallback(action='every_day', **data).pack(),
     )
     builder.button(
-        text="⬅ Назад",
-        callback_data=scheduleFeedingsCallback(action="menu", **data).pack(),
+        text='⬅ Назад',
+        callback_data=scheduleFeedingsCallback(action='menu', **data).pack(),
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -75,12 +75,12 @@ async def get_select_schedule_feedings_clear_state_inline_kb(
 ):
     """Возврат к меню выбора добавления графиков кормления с очисткой машины состояний"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
-    builder.button(text="Отмена", callback_data="cancel_state")
+    builder.button(text='Отмена', callback_data='cancel_state')
     builder.button(
-        text="⬅ Назад",
-        callback_data=scheduleFeedingsCallback(action="menu", **data).pack(),
+        text='⬅ Назад',
+        callback_data=scheduleFeedingsCallback(action='menu', **data).pack(),
     )
     builder.adjust(2)
     return builder.as_markup()
@@ -91,11 +91,11 @@ async def get_select_schedule_feedings_inline_kb(
 ):
     """Возврат к меню выбора добавления графиков кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
     builder.button(
-        text="⬅ Назад",
-        callback_data=scheduleFeedingsCallback(action="menu", **data).pack(),
+        text='⬅ Назад',
+        callback_data=scheduleFeedingsCallback(action='menu', **data).pack(),
     )
     builder.adjust(1)
     return builder.as_markup()
@@ -128,19 +128,19 @@ async def show_schedule_feedings_inline_kb(
 
     builder = InlineKeyboardBuilder()
     # для возврата в меню
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
     for schedule in schedule_page:
         date_time = schedule.scheduled_time
         schedule_time = date_time.astimezone(ZoneInfo(user_timezone)).strftime(
-            "%d.%m.%Y, %H:%M"
+            '%d.%m.%Y, %H:%M'
         )
 
         builder.row(
             InlineKeyboardButton(
-                text=f"Дата: {schedule_time}",
+                text=f'Дата: {schedule_time}',
                 callback_data=FeedingscheduleDetailCallback(
-                    action="detail",
+                    action='detail',
                     page=page,
                     user_tz=user_timezone,
                     schedule_id=schedule.id,
@@ -150,9 +150,9 @@ async def show_schedule_feedings_inline_kb(
         )
         builder.row(
             InlineKeyboardButton(
-                text="✏ Редактировать",
+                text='✏ Редактировать',
                 callback_data=FeedingscheduleDetailCallback(
-                    action="edit",
+                    action='edit',
                     page=page,
                     user_tz=user_timezone,
                     schedule_id=schedule.id,
@@ -160,9 +160,9 @@ async def show_schedule_feedings_inline_kb(
                 ).pack(),
             ),
             InlineKeyboardButton(
-                text="🗑 Удалить",
+                text='🗑 Удалить',
                 callback_data=FeedingscheduleDetailCallback(
-                    action="delete",
+                    action='delete',
                     page=page,
                     user_tz=user_timezone,
                     schedule_id=schedule.id,
@@ -176,18 +176,18 @@ async def show_schedule_feedings_inline_kb(
     if page > 0:
         pagination_buttons.append(
             InlineKeyboardButton(
-                text="⬅️ Назад",
+                text='⬅️ Назад',
                 callback_data=FeedingschedulePaginationCallback(
-                    action="prev", page=page, user_tz=user_timezone, **data
+                    action='prev', page=page, user_tz=user_timezone, **data
                 ).pack(),
             )
         )
     if end_index < len(schedules):
         pagination_buttons.append(
             InlineKeyboardButton(
-                text="Вперед ➡️",
+                text='Вперед ➡️',
                 callback_data=FeedingschedulePaginationCallback(
-                    action="next", page=page, user_tz=user_timezone, **data
+                    action='next', page=page, user_tz=user_timezone, **data
                 ).pack(),
             )
         )
@@ -197,8 +197,8 @@ async def show_schedule_feedings_inline_kb(
 
     builder.row(
         InlineKeyboardButton(
-            text="⬅ Меню",
-            callback_data=scheduleFeedingsCallback(action="menu", **data).pack(),
+            text='⬅ Меню',
+            callback_data=scheduleFeedingsCallback(action='menu', **data).pack(),
         )
     )
     return builder.as_markup()
@@ -213,13 +213,13 @@ async def detail_schedule_feedings_inline_kb(
     page: int = 0,
 ):
     """Отображается в детальном просмотре запланированного кормления"""
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(
-            text="✏ Редактировать",
+            text='✏ Редактировать',
             callback_data=FeedingscheduleDetailCallback(
-                action="edit",
+                action='edit',
                 page=page,
                 user_tz=user_timezone,
                 schedule_id=schedule_id,
@@ -227,9 +227,9 @@ async def detail_schedule_feedings_inline_kb(
             ).pack(),
         ),
         InlineKeyboardButton(
-            text="🗑 Удалить",
+            text='🗑 Удалить',
             callback_data=FeedingscheduleDetailCallback(
-                action="delete",
+                action='delete',
                 page=page,
                 user_tz=user_timezone,
                 schedule_id=schedule_id,
@@ -239,10 +239,10 @@ async def detail_schedule_feedings_inline_kb(
     )
     builder.row(
         InlineKeyboardButton(
-            text="⬅ Назад",
+            text='⬅ Назад',
             callback_data=FeedingschedulePaginationCallback(
                 # page -1 т.к. использую обработчик для next
-                action="next",
+                action='next',
                 page=page - 1,
                 user_tz=user_timezone,
                 **data,
@@ -262,13 +262,13 @@ async def get_edit_schedule_feedings_clear_state_inline_kb(
 ):
     """Отображается при редактировании запланированного кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
 
-    builder.button(text="Отмена", callback_data="cancel_state")
+    builder.button(text='Отмена', callback_data='cancel_state')
     builder.button(
-        text="⬅ Назад",
+        text='⬅ Назад',
         callback_data=FeedingscheduleDetailCallback(
-            action="detail",
+            action='detail',
             page=page,
             user_tz=user_timezone,
             schedule_id=schedule_id,
@@ -289,11 +289,11 @@ async def get_successful_edit_schedule_feedings_inline_kb(
 ):
     """Отображается при успешном редактировании запланированного кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
     builder.button(
-        text="⬅ Детальный просмотр",
+        text='⬅ Детальный просмотр',
         callback_data=FeedingscheduleDetailCallback(
-            action="detail",
+            action='detail',
             page=page,
             user_tz=user_timezone,
             schedule_id=schedule_id,
@@ -313,11 +313,11 @@ async def get_delete_feeding_schedule_inline_kb(
 ):
     """Подтверждение удаления запланированного кормления"""
     builder = InlineKeyboardBuilder()
-    data = {"pet_id": pet_id, "company_id": company_id, "group_id": group_id}
+    data = {'pet_id': pet_id, 'company_id': company_id, 'group_id': group_id}
     builder.button(
-        text="✅ ДА",
+        text='✅ ДА',
         callback_data=ChoiceDeleteFeedingschedule(
-            action="delete",
+            action='delete',
             page=page,
             user_tz=user_timezone,
             schedule_id=schedule_id,
@@ -325,9 +325,9 @@ async def get_delete_feeding_schedule_inline_kb(
         ).pack(),
     )
     builder.button(
-        text="❌ НЕТ",
+        text='❌ НЕТ',
         callback_data=ChoiceDeleteFeedingschedule(
-            action="cancel",
+            action='cancel',
             page=page,
             user_tz=user_timezone,
             schedule_id=schedule_id,
@@ -343,27 +343,27 @@ async def get_schedule_feeding_approve_inline_kb(
 ):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Покормил(а) ✅",
+        text='Покормил(а) ✅',
         callback_data=ConfirmFeedingEventsCallback(
-            action="approve",
+            action='approve',
             event_feeding_id=event_feeding_id,
             pet_id=pet_id,
             pet_name=pet_name,
         ).pack(),
     )
     builder.button(
-        text="Напомнить ⏱",
+        text='Напомнить ⏱',
         callback_data=ConfirmFeedingEventsCallback(
-            action="remind",
+            action='remind',
             event_feeding_id=event_feeding_id,
             pet_id=pet_id,
             pet_name=pet_name,
         ).pack(),
     )
     builder.button(
-        text="Не напоминать ❌",
+        text='Не напоминать ❌',
         callback_data=ConfirmFeedingEventsCallback(
-            action="cancel",
+            action='cancel',
             event_feeding_id=event_feeding_id,
             pet_id=pet_id,
             pet_name=pet_name,
@@ -382,15 +382,15 @@ async def no_time_zone_inline_kb(
     """
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="Указать таймзону",
+        text='Указать таймзону',
         callback_data=EditMyProfileCallback(
-            action="edit_time_zone", user_tg_id=user_tg_id
+            action='edit_time_zone', user_tg_id=user_tg_id
         ).pack(),
     )
     builder.button(
-        text="Назад",
+        text='Назад',
         callback_data=scheduleFeedingsCallback(
-            action="menu",
+            action='menu',
             pet_id=pet_id,
             company_id=company_id,
             group_id=group_id,

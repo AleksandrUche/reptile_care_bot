@@ -8,7 +8,7 @@ async def get_return_detail_view_pet_inline_kb(
 ):
     builder = InlineKeyboardBuilder()
     builder.button(
-        text="⬅ Вернуться к питомцу",
+        text='⬅ Вернуться к питомцу',
         callback_data=PetsCallback(
             pet_id=pet_id, company_id=company_id, group_id=group_id
         ).pack(),

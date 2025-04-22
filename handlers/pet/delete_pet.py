@@ -10,10 +10,10 @@ from keyboards.inline_keyboards.pet.delete_pet_kb import get_delete_pet_inline_k
 from services.pet_services import delete_pet, get_pet
 
 logger = logging.getLogger(__name__)
-router = Router(name="del_pet")
+router = Router(name='del_pet')
 
 
-@router.callback_query(DeletePetCallback.filter(F.action == "menu"))
+@router.callback_query(DeletePetCallback.filter(F.action == 'menu'))
 async def delete_pet_handler(
     callback: CallbackQuery, callback_data: DeletePetCallback, session: AsyncSession
 ):
@@ -28,7 +28,7 @@ async def delete_pet_handler(
         )
         inline_kb = await get_delete_pet_inline_kb(callback_data.pet_id, pet.name)
     except Exception as e:
-        logger.error(f"Не удалось найти питомца {e}", exc_info=True)
+        logger.error(f'Не удалось найти питомца {e}', exc_info=True)
     else:
         await callback.message.edit_text(
             f'<b>Вы уверены, что хотите удалить питомца "{pet.name}"?</b>\n',
@@ -36,7 +36,7 @@ async def delete_pet_handler(
         )
 
 
-@router.callback_query(ChoiceDeletePet.filter(F.action == "delete"))
+@router.callback_query(ChoiceDeletePet.filter(F.action == 'delete'))
 async def process_delete_confirm_pet(
     callback: CallbackQuery, callback_data: DeletePetCallback, session: AsyncSession
 ):
@@ -45,10 +45,10 @@ async def process_delete_confirm_pet(
         await delete_pet(callback_data.pet_id, session)
 
     except Exception as e:
-        logger.error(f"Ошибка при удалении питомца: {e}", exc_info=True)
+        logger.error(f'Ошибка при удалении питомца: {e}', exc_info=True)
         await callback.message.answer(
-            "Произошла ошибка при удалении питомца!\n"
-            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
+            'Произошла ошибка при удалении питомца!\n'
+            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
         )
     else:
         await callback.message.edit_text(
@@ -57,7 +57,7 @@ async def process_delete_confirm_pet(
         )
 
 
-@router.callback_query(ChoiceDeletePet.filter(F.action == "cancel"))
+@router.callback_query(ChoiceDeletePet.filter(F.action == 'cancel'))
 async def process_undo_delete_pet(
     callback: CallbackQuery, callback_data: DeletePetCallback
 ):

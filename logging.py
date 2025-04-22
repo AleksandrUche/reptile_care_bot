@@ -12,11 +12,11 @@ class CustomExceptionDictTransformer(ExceptionDictTransformer):
     def __call__(self, exc_info: ExcInfo) -> list[dict[str, Any]]:
         stacks = super().__call__(exc_info)
         stack_dict = stacks[0]
-        stack_dict["place"] = stack_dict["frames"][2]
+        stack_dict['place'] = stack_dict['frames'][2]
         stacks[0] = dict(  # noqa: C408
-            exc_type=stack_dict["exc_type"],
-            exc_value=stack_dict["exc_value"],
-            place=stack_dict["place"],
+            exc_type=stack_dict['exc_type'],
+            exc_value=stack_dict['exc_value'],
+            place=stack_dict['place'],
         )
         return stacks
 

@@ -23,7 +23,7 @@ async def get_user(telegram_id: int, session: AsyncSession) -> UserOrm | None:
         return res.scalar()
     except Exception as e:
         logger.info(
-            f"Профиля пользователя c id {telegram_id} - нет: {e}", exc_info=True
+            f'Профиля пользователя c id {telegram_id} - нет: {e}', exc_info=True
         )
 
 
@@ -38,8 +38,8 @@ async def user_registration(message: Message, session: AsyncSession) -> None:
 
     if user_exist:
         await message.answer(
-            text=f"Рады вас видеть снова {user_exist.first_name}😊\n"
-            "Напомню, я бот-помощник, для ухода за вашими питомцами 🦎🐍🦖\n",
+            text=f'Рады вас видеть снова {user_exist.first_name}😊\n'
+            'Напомню, я бот-помощник, для ухода за вашими питомцами 🦎🐍🦖\n',
             reply_markup=keyboard,
         )
         return
@@ -55,29 +55,29 @@ async def user_registration(message: Message, session: AsyncSession) -> None:
     await session.flush()
 
     company = CompanyOrm(
-        name="Моя компания",
-        description="Первая компания, создается автоматически.",
+        name='Моя компания',
+        description='Первая компания, создается автоматически.',
         user_id=user.id,
     )
     session.add(company)
     await session.flush()
 
     group = GroupOrm(
-        name="Мои питомцы",
-        description="Данная группа создана автоматически.",
+        name='Мои питомцы',
+        description='Данная группа создана автоматически.',
         company_id=company.id,
     )
     session.add(group)
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f"Ошибка при регистрации пользователя: {e}", exc_info=True)
+        logger.error(f'Ошибка при регистрации пользователя: {e}', exc_info=True)
         await message.answer(
-            text="Произошла ошибка при регистрации. Пожалуйста, попробуйте позже."
+            text='Произошла ошибка при регистрации. Пожалуйста, попробуйте позже.'
         )
     else:
         await message.answer(
-            text=f"Здравствуйте, {user.first_name}! Вы успешно зарегистрированы!\n"
-            "Я бот-помощник создан для ухода за вашими питомцами 🦎🐍🦖\n",
+            text=f'Здравствуйте, {user.first_name}! Вы успешно зарегистрированы!\n'
+            'Я бот-помощник создан для ухода за вашими питомцами 🦎🐍🦖\n',
             reply_markup=keyboard,
         )

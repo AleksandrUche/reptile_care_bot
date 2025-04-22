@@ -6,11 +6,11 @@ from keyboards.keyboard_utils.inline_kb_utils import create_inline_kb
 
 menu_company = create_inline_kb(
     1,
-    my_companies="Мои компании",
-    back_to_main_menu="⬅ Назад",
+    my_companies='Мои компании',
+    back_to_main_menu='⬅ Назад',
 )
 
-back_to_all_company = create_inline_kb(1, back_to_all_company="⬅ Назад")
+back_to_all_company = create_inline_kb(1, back_to_all_company='⬅ Назад')
 
 
 async def show_companies_page_inline_kb(
@@ -40,16 +40,16 @@ async def show_companies_page_inline_kb(
 
     if page > 0:
         builder.button(
-            text="⬅️ Назад",
-            callback_data=AllPetPaginationCallback(action="prev", page=page).pack(),
+            text='⬅️ Назад',
+            callback_data=AllPetPaginationCallback(action='prev', page=page).pack(),
         )
     if end_index < len(companies):
         builder.button(
-            text="Вперед ➡️",
-            callback_data=AllPetPaginationCallback(action="next", page=page).pack(),
+            text='Вперед ➡️',
+            callback_data=AllPetPaginationCallback(action='next', page=page).pack(),
         )
 
-    builder.button(text="🔙 Меню", callback_data="back_to_company_menu")
+    builder.button(text='🔙 Меню', callback_data='back_to_company_menu')
     builder.adjust(1)
 
     return builder.as_markup()

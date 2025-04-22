@@ -15,24 +15,24 @@ async def get_user_profile(callback: CallbackQuery, keyboard, session: AsyncSess
         user = await get_user(callback.from_user.id, session)
     except Exception as e:
         logger.error(
-            f"Ошибка при открытии профиля пользователя c id = {callback.from_user.id}: {e}",
+            f'Ошибка при открытии профиля пользователя c id = {callback.from_user.id}: {e}',
             exc_info=True,
         )
         await callback.message.answer(
-            text="Произошла ошибка, пользователь не найден\n"
-            "Попробуйте еще раз, в случае неудачи обратитесь в поддержку."
+            text='Произошла ошибка, пользователь не найден\n'
+            'Попробуйте еще раз, в случае неудачи обратитесь в поддержку.'
         )
     else:
         if user.tz_region:
-            gmt = "+" if user.tz_offset > 0 else ""
+            gmt = '+' if user.tz_offset > 0 else ''
             user_tz = f'GMT "{gmt}{user.tz_offset}"'
         else:
-            user_tz = "Не указан"
+            user_tz = 'Не указан'
 
         await callback.message.edit_text(
-            text=f"Ваше имя: {user.first_name}\n"
-            f"Язык: {user.language}\n"
-            f"Часовой пояс: {user_tz}",
+            text=f'Ваше имя: {user.first_name}\n'
+            f'Язык: {user.language}\n'
+            f'Часовой пояс: {user_tz}',
             reply_markup=keyboard,
         )
 

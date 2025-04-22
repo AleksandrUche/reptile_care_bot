@@ -14,7 +14,7 @@ from middlewares.db import DataBaseSession
 
 
 async def main():
-    await logger.ainfo("Starting bot...")
+    await logger.ainfo('Starting bot...')
 
     storage = MemoryStorage()
 
@@ -23,15 +23,15 @@ async def main():
 
     dp.startup.register(set_main_menu)
 
-    await logger.ainfo("Подключаем routers")
+    await logger.ainfo('Подключаем routers')
     dp.include_router(main_router)
 
-    await logger.ainfo("Подключаем middlewares")
+    await logger.ainfo('Подключаем middlewares')
     dp.update.middleware(DataBaseSession(session_pool=async_session))
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     asyncio.run(main())
