@@ -23,6 +23,3 @@ class DataBaseSession(BaseMiddleware):
                 # В случае ошибки откатываем изменения
                 await session.rollback()
                 raise e
-            finally:
-                # Сессия автоматически закрывается
-                pass
