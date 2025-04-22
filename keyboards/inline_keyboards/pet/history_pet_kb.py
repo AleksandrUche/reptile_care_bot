@@ -333,7 +333,7 @@ async def show_molting_history_inline_kb(
         date_time = molting.date_measure
         shedule_time = date_time.astimezone(
             ZoneInfo(user_timezone)
-        ).strftime('%d.%m.%y, %H:%M')
+        ).strftime('%d.%m.%y')
 
         builder.row(
             InlineKeyboardButton(
