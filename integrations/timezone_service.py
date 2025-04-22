@@ -9,6 +9,7 @@ logger = logging.getLogger(__name__)
 
 class GeoAPIClient:
     """http://api.geonames.org/"""
+
     def __init__(self, url: str = URL_API_GEO, api_key: str = API_KEY_GEO):
         self.url_geo = url
         self.api_key = api_key
@@ -19,24 +20,20 @@ class GeoAPIClient:
         :param city_name: Название города.
         :return {'lng': 28.03372, 'lat': -32.6749}
         """
-        params = {
-            "q": city_name,
-            "username": self.api_key
-        }
+        params = {"q": city_name, "username": self.api_key}
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self.url_geo + "searchJSON", params=params
-            )
+            response = await client.get(self.url_geo + "searchJSON", params=params)
             data = response.json()
 
             try:
-                coords = data['geonames'][0]
-                return {'lng': float(coords['lng']), 'lat': float(coords['lat'])}
+                coords = data["geonames"][0]
+                return {"lng": float(coords["lng"]), "lat": float(coords["lat"])}
             except Exception as e:
                 logger.error(
                     "Не удалось определить координаты для "
-                    f"города {city_name} ошибка: {e}", exc_info=True
+                    f"города {city_name} ошибка: {e}",
+                    exc_info=True,
                 )
 
     async def get_time_zone_by_coord(self, coord: dict) -> dict | None:
@@ -46,23 +43,21 @@ class GeoAPIClient:
         :return {'timezone': 'Africa/Johannesburg', 'offset': 2}
         """
         params = {
-            'lat': coord['lat'],
-            'lng': coord['lng'],
+            "lat": coord["lat"],
+            "lng": coord["lng"],
             "username": self.api_key,
         }
 
         async with httpx.AsyncClient() as client:
-            response = await client.get(
-                self.url_geo + 'timezoneJSON', params=params
-            )
+            response = await client.get(self.url_geo + "timezoneJSON", params=params)
             data = response.json()
 
             try:
-                return {'time_zone': data["timezoneId"], 'offset': data['gmtOffset']}
+                return {"time_zone": data["timezoneId"], "offset": data["gmtOffset"]}
             except Exception as e:
                 logger.error(
                     f"Не удалось определить часовой пояс и смещение по {coord} ошибка: {e}",
-                    exc_info=True
+                    exc_info=True,
                 )
 
     async def get_search_time_zone_by_city(self, city_name: str) -> dict | None:

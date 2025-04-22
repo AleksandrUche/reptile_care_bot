@@ -7,7 +7,7 @@ from .delete_pet import router as delete_pet_router
 from .detail_pet import router as detail_pet_router
 from .edit_pet import router as edit_pet_router
 from .feeding import router as feeding_router
-from .feeding_schedule import router as feeding_shedule_router
+from .feeding_schedule import router as feeding_schedule_router
 from .history_pet import router as history_pet_router
 
 pet_router = Router()
@@ -19,5 +19,5 @@ pet_router.include_router(delete_pet_router)
 pet_router.include_router(detail_pet_router)
 pet_router.include_router(edit_pet_router)
 pet_router.include_router(feeding_router)
-pet_router.include_router(feeding_shedule_router)
+pet_router.include_router(feeding_schedule_router)
 pet_router.include_router(history_pet_router)

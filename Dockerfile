@@ -1,14 +1,20 @@
-FROM python:3.11.9-slim
+FROM python:3.12-alpine
 
 WORKDIR /app
 
 ENV POETRY_VERSION=1.7.1
-RUN pip install "poetry==$POETRY_VERSION"
+ENV PATH="/root/.cargo/bin:${PATH}"
 
-COPY pyproject.toml poetry.lock ./
+RUN apk --update add
+RUN apk add --no-cache gcc python3-dev musl-dev
 
-RUN poetry install --no-root --no-interaction --no-ansi
+# Установка uv
+RUN pip install uv
+
+# Копируем и устанавливаем зависимости
+COPY requirements.txt .
+RUN uv pip install --no-cache -r requirements.txt --system
 
 COPY . .
 
-CMD ["poetry", "run", "python", "main.py"]
+CMD ["python", "main.py"]

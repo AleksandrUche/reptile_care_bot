@@ -23,21 +23,21 @@ async def show_pets_page_inline_kb(pets: list, page: int = 0, pets_per_page: int
             text=pet.name,
             callback_data=PetsCallback(
                 pet_id=pet.id, company_id=pet.company_id, group_id=pet.group_id
-            ).pack()
+            ).pack(),
         )
 
     if page > 0:
         builder.button(
-            text='⬅️ Назад',
-            callback_data=AllPetPaginationCallback(action='prev', page=page).pack()
+            text="⬅️ Назад",
+            callback_data=AllPetPaginationCallback(action="prev", page=page).pack(),
         )
     if end_index < len(pets):
         builder.button(
-            text='Вперед ➡️',
-            callback_data=AllPetPaginationCallback(action='next', page=page).pack()
+            text="Вперед ➡️",
+            callback_data=AllPetPaginationCallback(action="next", page=page).pack(),
         )
 
-    builder.button(text='🔙 Главное меню', callback_data='back_to_main_menu')
+    builder.button(text="🔙 Главное меню", callback_data="back_to_main_menu")
     builder.adjust(1)  # Кнопок в строке
 
     return builder.as_markup()

@@ -1,26 +1,26 @@
-from enum import Enum
+from enum import StrEnum
 
 
-class UserRole(Enum):
-    OWNER = 'owner'
-    ADMIN = 'admin'
-    USER = 'user'
+class UserRole(StrEnum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    USER = "user"
 
 
-class SubscriptionType(Enum):
-    ONE_MONTH = 'one month'
-    TWO_MONTHS = 'two months'
-    SIX_MONTHS = 'six months'
-    YEAR = 'year'
+class SubscriptionType(StrEnum):
+    ONE_MONTH = "one month"
+    TWO_MONTHS = "two months"
+    SIX_MONTHS = "six months"
+    YEAR = "year"
 
 
-class UserRoleCompany(Enum):
-    OWNER = 'owner'
-    ADMIN = 'admin'
-    EDITOR = 'editor'
-    VIEWER = 'viewer'
+class UserRoleCompany(StrEnum):
+    OWNER = "owner"
+    ADMIN = "admin"
+    EDITOR = "editor"
+    VIEWER = "viewer"
 
 
-class Language(Enum):
-    EN = 'en'
-    RU = 'ru'
+class Language(StrEnum):
+    EN = "en"
+    RU = "ru"

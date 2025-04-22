@@ -32,24 +32,26 @@ from states.pet_states import (
 )
 
 logger = logging.getLogger(__name__)
-router = Router(name='edit_pet')
+router = Router(name="edit_pet")
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'all_editing_tools'))
+@router.callback_query(EditPetCallback.filter(F.field == "all_editing_tools"))
 async def detailed_editing_pet_handler(
     callback: CallbackQuery, callback_data: EditPetCallback
 ):
     """Обработчик для отображения меню редактирования питомца"""
     await callback.answer()
     inline_kb = await get_edit_pet_inline_kb(
-        callback_data.pet_id, callback_data.company_id, callback_data.group_id,
+        callback_data.pet_id,
+        callback_data.company_id,
+        callback_data.group_id,
     )
     await callback.message.edit_reply_markup(
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'back_interaction_pet'))
+@router.callback_query(EditPetCallback.filter(F.field == "back_interaction_pet"))
 async def back_interaction_pet_handler(
     callback: CallbackQuery, callback_data: EditPetCallback
 ):
@@ -64,22 +66,24 @@ async def back_interaction_pet_handler(
     await callback.message.edit_reply_markup(reply_markup=inline_kb)
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'name'))
+@router.callback_query(EditPetCallback.filter(F.field == "name"))
 async def edit_pet_name_handler(
-    callback: CallbackQuery, callback_data: EditPetCallback, state: FSMContext,
+    callback: CallbackQuery,
+    callback_data: EditPetCallback,
+    state: FSMContext,
 ):
     """Обработчик для изменения имени питомца."""
     await callback.answer()
     await callback.message.edit_text(
-        text='🦎Изменение имени питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите новое имя питомца:</b>',
+        text="🦎Изменение имени питомца\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите новое имя питомца:</b>",
         reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
     )
     await state.set_state(PetEditNameFSM.pet_name)
 
@@ -93,20 +97,20 @@ async def process_edit_pet_name(
     state_data = await state.get_data()
 
     edit_pet = await edit_pet_value(
-        state_data['pet_id'], 'name', state_data['pet_name'], session
+        state_data["pet_id"], "name", state_data["pet_name"], session
     )
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
-        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        state_data["pet_id"], state_data["company_id"], state_data["group_id"]
     )
     if edit_pet:
         await message.answer(
-            f"Имя питомца изменено на \"{state_data['pet_name']}\".",
+            f'Имя питомца изменено на "{state_data["pet_name"]}".',
             reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
-            'Произошла ошибка при изменении имени питомца!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при изменении имени питомца!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     await state.clear()
 
@@ -115,14 +119,13 @@ async def process_edit_pet_name(
 async def warning_incorrect_value(message: Message):
     """Сработает при некорректном редактировании питомца"""
     await message.answer(
-        text='То, что Вы отправили не похоже на имя\n'
-             'Пожалуйста, введите имя еще раз\n'
-             'Имя может состоять из букв и цифр❗'
-
+        text="То, что Вы отправили не похоже на имя\n"
+        "Пожалуйста, введите имя еще раз\n"
+        "Имя может состоять из букв и цифр❗"
     )
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'morph'))
+@router.callback_query(EditPetCallback.filter(F.field == "morph"))
 async def edit_pet_morph_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -130,16 +133,16 @@ async def edit_pet_morph_handler(
 ):
     """Обработчик для изменения морфы питомца."""
     await callback.answer()
-    await  callback.message.edit_text(
-        text='🦎Изменение морфы питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите морфу питомца:</b>',
+    await callback.message.edit_text(
+        text="🦎Изменение морфы питомца\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите морфу питомца:</b>",
         reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
     )
     await state.set_state(PetEditMorphFSM.pet_morph)
 
@@ -153,25 +156,25 @@ async def process_edit_pet_morph(
     state_data = await state.get_data()
 
     edit_pet = await edit_pet_value(
-        state_data['pet_id'], 'morph', state_data['pet_morph'], session
+        state_data["pet_id"], "morph", state_data["pet_morph"], session
     )
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
-        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        state_data["pet_id"], state_data["company_id"], state_data["group_id"]
     )
     if edit_pet:
         await message.answer(
-            f"Теперь морфа питомца: \"{state_data['pet_morph']}\".",
+            f'Теперь морфа питомца: "{state_data["pet_morph"]}".',
             reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
-            'Произошла ошибка при изменении морфы питомца!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при изменении морфы питомца!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     await state.clear()
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'view'))
+@router.callback_query(EditPetCallback.filter(F.field == "view"))
 async def edit_pet_view_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -179,16 +182,16 @@ async def edit_pet_view_handler(
 ):
     """Обработчик для изменения вида питомца."""
     await callback.answer()
-    await  callback.message.edit_text(
-        text='🦎Изменение вида питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите вид питомца:</b>',
+    await callback.message.edit_text(
+        text="🦎Изменение вида питомца\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите вид питомца:</b>",
         reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
     )
     await state.set_state(PetEditViewFSM.pet_view)
 
@@ -202,25 +205,25 @@ async def process_edit_pet_view(
     state_data = await state.get_data()
 
     edit_pet = await edit_pet_value(
-        state_data['pet_id'], 'view', state_data['pet_view'], session
+        state_data["pet_id"], "view", state_data["pet_view"], session
     )
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
-        state_data['pet_id'], state_data['company_id'], state_data['group_id']
+        state_data["pet_id"], state_data["company_id"], state_data["group_id"]
     )
     if edit_pet:
         await message.answer(
-            f"Теперь вид питомца: \"{state_data['pet_view']}\".",
+            f'Теперь вид питомца: "{state_data["pet_view"]}".',
             reply_markup=inline_back_kb,
         )
     else:
         await message.answer(
-            'Произошла ошибка при изменении вида питомца!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при изменении вида питомца!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     await state.clear()
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'gender'))
+@router.callback_query(EditPetCallback.filter(F.field == "gender"))
 async def edit_pet_gender_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -231,9 +234,8 @@ async def edit_pet_gender_handler(
     inline_kb = await get_gender_select_pet_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
-    await  callback.message.edit_text(
-        text='🦎Изменение пола питомца\n'
-             '<b>Выберите пол питомца</b> 👇',
+    await callback.message.edit_text(
+        text="🦎Изменение пола питомца\n<b>Выберите пол питомца</b> 👇",
         reply_markup=inline_kb,
     )
 
@@ -246,24 +248,24 @@ async def process_edit_pet_gender(
 ):
     """Изменение пола питомца."""
     edit_pet = await edit_pet_value(
-        callback_data.pet_id, 'gender', callback_data.action.name, session
+        callback_data.pet_id, "gender", callback_data.action.name, session
     )
     inline_back_kb = await get_return_detail_view_pet_inline_kb(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
     if edit_pet:
         await callback.message.edit_text(
-            f"Теперь пол питомца: \"{callback_data.action.value}\".",
+            f'Теперь пол питомца: "{callback_data.action.value}".',
             reply_markup=inline_back_kb,
         )
     else:
         await callback.message.answer(
-            'Произошла ошибка при изменении пола питомца!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при изменении пола питомца!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'birth'))
+@router.callback_query(EditPetCallback.filter(F.field == "birth"))
 async def edit_pet_birth_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -271,16 +273,16 @@ async def edit_pet_birth_handler(
 ):
     """Обработчик для изменения даты рождения питомца."""
     await callback.answer()
-    await  callback.message.edit_text(
-        text='🦎Изменение даты рождения питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату рождения питомца в формате ДД.ММ.ГГГГ:</b>',
+    await callback.message.edit_text(
+        text="🦎Изменение даты рождения питомца\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату рождения питомца в формате ДД.ММ.ГГГГ:</b>",
         reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
     )
     await state.set_state(PetEditBirthFSM.pet_birth)
 
@@ -291,35 +293,35 @@ async def process_edit_pet_birth(
 ):
     """Изменение даты рождения питомца."""
     try:
-        date_birth = datetime.strptime(message.text, '%d.%m.%Y')
+        date_birth = datetime.strptime(message.text, "%d.%m.%Y")
         await state.update_data(pet_birth=date_birth)
     except ValueError:
-        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
+        await message.answer("Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.")
     else:
         state_data = await state.get_data()
 
         edit_pet = await edit_pet_value(
-            state_data['pet_id'], 'date_birth', state_data['pet_birth'], session
+            state_data["pet_id"], "date_birth", state_data["pet_birth"], session
         )
         inline_back_kb = await get_return_detail_view_pet_inline_kb(
-            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+            state_data["pet_id"], state_data["company_id"], state_data["group_id"]
         )
 
         if edit_pet:
             await message.answer(
                 "Теперь дата рождения питомца: "
-                f"\"{date_birth.astimezone(TIME_ZONE).strftime('%d.%m.%Y')}\".",
+                f'"{date_birth.astimezone(TIME_ZONE).strftime("%d.%m.%Y")}".',
                 reply_markup=inline_back_kb,
             )
         else:
             await message.answer(
-                'Произошла ошибка при изменении даты рождения питомца!\n'
-                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+                "Произошла ошибка при изменении даты рождения питомца!\n"
+                "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
             )
         await state.clear()
 
 
-@router.callback_query(EditPetCallback.filter(F.field == 'purchase'))
+@router.callback_query(EditPetCallback.filter(F.field == "purchase"))
 async def edit_pet_purchase_handler(
     callback: CallbackQuery,
     callback_data: EditPetCallback,
@@ -328,15 +330,15 @@ async def edit_pet_purchase_handler(
     """Обработчик для изменения даты приобретения питомца."""
     await callback.answer()
     await callback.message.edit_text(
-        text='🦎Изменение даты приобретения питомца\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату приобретения питомца в формате ДД.ММ.ГГГГ:</b>\n',
+        text="🦎Изменение даты приобретения питомца\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату приобретения питомца в формате ДД.ММ.ГГГГ:</b>\n",
         reply_markup=keyboards.inline_keyboards.pet.common.menu_add_pet,
     )
     await state.update_data(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
-        group_id=callback_data.group_id
+        group_id=callback_data.group_id,
     )
     await state.set_state(PetEditPurchaseFSM.pet_purchase)
 
@@ -347,29 +349,29 @@ async def process_edit_purchase_birth(
 ):
     """Изменение даты приобретения питомца."""
     try:
-        date_purchase = datetime.strptime(message.text, '%d.%m.%Y')
+        date_purchase = datetime.strptime(message.text, "%d.%m.%Y")
         await state.update_data(pet_purchase=date_purchase)
     except ValueError:
-        await message.answer('Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.')
+        await message.answer("Неверный формат даты. Введите дату в формате ДД.ММ.ГГГГ.")
     else:
         state_data = await state.get_data()
 
         edit_pet = await edit_pet_value(
-            state_data['pet_id'], 'date_purchase', state_data['pet_purchase'], session
+            state_data["pet_id"], "date_purchase", state_data["pet_purchase"], session
         )
         inline_back_kb = await get_return_detail_view_pet_inline_kb(
-            state_data['pet_id'], state_data['company_id'], state_data['group_id']
+            state_data["pet_id"], state_data["company_id"], state_data["group_id"]
         )
 
         if edit_pet:
             await message.answer(
                 "Теперь дата приобретения питомца: "
-                f"\"{date_purchase.astimezone(TIME_ZONE).strftime('%d.%m.%Y')}\".",
+                f'"{date_purchase.astimezone(TIME_ZONE).strftime("%d.%m.%Y")}".',
                 reply_markup=inline_back_kb,
             )
         else:
             await message.answer(
-                'Произошла ошибка при изменении даты приобретения питомца!\n'
-                'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+                "Произошла ошибка при изменении даты приобретения питомца!\n"
+                "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
             )
         await state.clear()
