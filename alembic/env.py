@@ -12,12 +12,12 @@ from config_data.config import DB_USER, DB_NAME, DB_PASS, DB_HOST, DB_PORT, DATA
 config = context.config
 
 section = config.config_ini_section
-config.set_section_option(section, 'DB_USER', DB_USER)
-config.set_section_option(section, 'DB_NAME', DB_NAME)
-config.set_section_option(section, 'DB_PASS', DB_PASS)
-config.set_section_option(section, 'DB_HOST', DB_HOST)
-config.set_section_option(section, 'DB_PORT', DB_PORT)
-config.set_section_option(section, 'DATABASE_URL', DATABASE_URL)
+config.set_section_option(section, "DB_USER", DB_USER)
+config.set_section_option(section, "DB_NAME", DB_NAME)
+config.set_section_option(section, "DB_PASS", DB_PASS)
+config.set_section_option(section, "DB_HOST", DB_HOST)
+config.set_section_option(section, "DB_PORT", DB_PORT)
+config.set_section_option(section, "DATABASE_URL", DATABASE_URL)
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
@@ -28,6 +28,7 @@ if config.config_file_name is not None:
 # for 'autogenerate' support
 
 from database.models.user_models import Base
+
 target_metadata = Base.metadata
 
 
@@ -75,6 +76,7 @@ def run_migrations_offline() -> None:
 # else:
 #     run_migrations_online()
 
+
 async def run_async_migrations():
     """Запуск асинхронных миграций."""
     connectable = create_async_engine(
@@ -84,18 +86,22 @@ async def run_async_migrations():
     )
 
     async with connectable.connect() as connection:
-        await connection.run_sync(lambda sync_conn: context.configure(
-            connection=sync_conn,
-            target_metadata=target_metadata,
-            compare_type=True,
-        ))
+        await connection.run_sync(
+            lambda sync_conn: context.configure(
+                connection=sync_conn,
+                target_metadata=target_metadata,
+                compare_type=True,
+            )
+        )
 
         async with connection.begin():
             await connection.run_sync(lambda sync_conn: context.run_migrations())
 
+
 def run_migrations_online():
     """Запуск миграций в онлайн-режиме."""
     asyncio.run(run_async_migrations())
+
 
 if context.is_offline_mode():
     run_migrations_offline()

@@ -1,5 +1,4 @@
 import asyncio
-import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -10,33 +9,24 @@ from config_data.config import BOT_TOKEN
 from database.engine import async_session
 from handlers.root_router import main_router
 from keyboards.set_menu import set_main_menu
+from logging import logger
 from middlewares.db import DataBaseSession
-
-logger = logging.getLogger(__name__)
 
 
 async def main():
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(filename)s:%(lineno)d #%(levelname)-8s '
-               '[%(asctime)s] - %(name)s - %(message)s')
-
-    logger.info('Starting bot')
+    await logger.ainfo("Starting bot...")
 
     storage = MemoryStorage()
 
-    bot = Bot(
-        token=BOT_TOKEN,
-        default=DefaultBotProperties(parse_mode=ParseMode.HTML)
-    )
+    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
     dp = Dispatcher(storage=storage)
 
     dp.startup.register(set_main_menu)
 
-    logger.info('Подключаем роутеры')
+    await logger.ainfo("Подключаем routers")
     dp.include_router(main_router)
 
-    logger.info('Подключаем миддлвари')
+    await logger.ainfo("Подключаем middlewares")
     dp.update.middleware(DataBaseSession(session_pool=async_session))
 
     await bot.delete_webhook(drop_pending_updates=True)

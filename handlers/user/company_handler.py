@@ -18,22 +18,22 @@ from services.pet_services import (
 )
 
 logger = logging.getLogger(__name__)
-router = Router(name='company')
+router = Router(name="company")
 
 
 @router.callback_query(
-    F.data.in_({'company', 'back_to_company_menu'}), StateFilter(default_state)
+    F.data.in_({"company", "back_to_company_menu"}), StateFilter(default_state)
 )
 async def company_main_menu(callback: CallbackQuery):
     await callback.answer()
     await callback.message.edit_text(
-        text='Компании 🏢',
+        text="Компании 🏢",
         reply_markup=menu_company,
     )
 
 
 @router.callback_query(
-    F.data.in_({'my_companies', 'back_to_all_company'}), StateFilter(default_state)
+    F.data.in_({"my_companies", "back_to_all_company"}), StateFilter(default_state)
 )
 async def my_all_companies(callback: CallbackQuery, session: AsyncSession):
     await callback.answer()
@@ -42,8 +42,7 @@ async def my_all_companies(callback: CallbackQuery, session: AsyncSession):
     inline_kb = await show_companies_page_inline_kb(companies=my_companies, page=0)
 
     await callback.message.edit_text(
-        text='🏢Все компании:\n\n'
-             f'Количество компаний: {len(my_companies)}',
+        text=f"🏢Все компании:\n\nКоличество компаний: {len(my_companies)}",
         reply_markup=inline_kb,
     )
 
@@ -59,9 +58,8 @@ async def detail_company_handler(
     company = await get_company(callback_data.company_id, session)
 
     await callback.message.edit_text(
-        text=f'Название компании: {company.name}\n\n'
-             f'Описание: {company.description}\n'
-             f'Питомцев в компании: ---\n',
-        reply_markup=back_to_all_company
-
+        text=f"Название компании: {company.name}\n\n"
+        f"Описание: {company.description}\n"
+        f"Питомцев в компании: ---\n",
+        reply_markup=back_to_all_company,
     )

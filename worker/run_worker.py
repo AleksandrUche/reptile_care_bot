@@ -12,8 +12,8 @@ logger.remove()
 logger.add(
     sys.stderr,
     format="<green>{time:DD-MM-YYYY HH:mm:ss}</green> | <level>{level}</level> | "
-           "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
-           "<level>{message}</level>",
+    "<cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - "
+    "<level>{message}</level>",
     level="INFO",
 )
 
@@ -21,11 +21,11 @@ bot_queue = Queue.from_url(REDIS_URL)
 
 
 async def startup(ctx):
-    logger.info('Запущен Worker SAQ!')
+    logger.info("Запущен Worker SAQ!")
 
 
 async def shutdown(ctx):
-    logger.info('Остановлен Worker SAQ!')
+    logger.info("Остановлен Worker SAQ!")
 
 
 worker_settings = SettingsDict(
@@ -40,7 +40,7 @@ worker_settings = SettingsDict(
         CronJob(
             function=run_reminder_of_feedings,
             cron="0 * * * *",  # каждый час в 00 минут
-        )
+        ),
     ],
     startup=startup,
     shutdown=shutdown,

@@ -1,6 +1,7 @@
 services:
   redis:
     image: redis:latest
+#    platform: linux/amd64  # Arm
     container_name: redis
     restart: always
     ports:
@@ -11,7 +12,8 @@ services:
       - app_network
 
   postgres:
-    image: postgres:13.1
+    image: postgres:latest
+#    platform: linux/amd64  # Arm
     container_name: postgres
     restart: always
     environment:
@@ -34,7 +36,7 @@ services:
       - redis
       - postgres
     env_file: .env
-    command: poetry run saq worker.run_worker.worker_settings --web
+    command: saq worker.run_worker.worker_settings --web
     networks:
       - app_network
     ports:
@@ -44,7 +46,7 @@ services:
     build: .
     container_name: bot
     restart: always
-    command: poetry run python main.py
+    command: python main.py
     depends_on:
       - redis
       - postgres

@@ -83,12 +83,13 @@ from states.pet_states import (
 )
 
 logger = logging.getLogger(__name__)
-router = Router(name='history_pet')
+router = Router(name="history_pet")
 
 
-@router.callback_query(HistoryPetCallback.filter(F.action == 'menu'))
+@router.callback_query(HistoryPetCallback.filter(F.action == "menu"))
 async def menu_history_pet_handler(
-    callback: CallbackQuery, callback_data: HistoryPetCallback,
+    callback: CallbackQuery,
+    callback_data: HistoryPetCallback,
 ):
     """Главное меню взаимодействия с историями"""
     await callback.answer()
@@ -96,26 +97,24 @@ async def menu_history_pet_handler(
         callback_data.pet_id, callback_data.company_id, callback_data.group_id
     )
     await callback.message.edit_text(
-        text='<b>Показатели питомца</b>\n\n'
-             'Здесь вы можете отслеживать все важные параметры:\n'
-             '<b>Кормления</b> - график и история кормлений\n'
-             '<b>Линька</b> - контроль периодов линьки\n'
-             '<b>Измерения</b> - рост и размеры\n'
-             '<b>Масса</b> - динамика веса\n\n'
-             'ℹ️ В каждом разделе доступны:\n'
-             'Просмотр истории изменений\n'
-             'Редактирование предыдущих записей\n'
-             'Удаление записей\n\n'
-             'Выберите категорию:',
+        text="<b>Показатели питомца</b>\n\n"
+        "Здесь вы можете отслеживать все важные параметры:\n"
+        "<b>Кормления</b> - график и история кормлений\n"
+        "<b>Линька</b> - контроль периодов линьки\n"
+        "<b>Измерения</b> - рост и размеры\n"
+        "<b>Масса</b> - динамика веса\n\n"
+        "ℹ️ В каждом разделе доступны:\n"
+        "Просмотр истории изменений\n"
+        "Редактирование предыдущих записей\n"
+        "Удаление записей\n\n"
+        "Выберите категорию:",
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(HistoryPetCallback.filter(F.action == 'feeding_pet_history'))
+@router.callback_query(HistoryPetCallback.filter(F.action == "feeding_pet_history"))
 async def history_feeding_pet_handler(
-    callback: CallbackQuery,
-    callback_data: HistoryPetCallback,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: HistoryPetCallback, session: AsyncSession
 ):
     """Просмотр истории кормлений питомца"""
     try:
@@ -123,7 +122,7 @@ async def history_feeding_pet_handler(
         feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
         if not feeding_pet_history:
             await callback.answer(
-                text='У данного питомца нет истории кормлений.', show_alert=True
+                text="У данного питомца нет истории кормлений.", show_alert=True
             )
             return
         inline_kb = await show_feeding_history_inline_kb(
@@ -135,31 +134,32 @@ async def history_feeding_pet_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при вызове истории кормлений питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при вызове истории кормлений питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
-
-        date_last = feeding_pet_history[-1].date_feed.astimezone(
-            ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            feeding_pet_history[-1]
+            .date_feed.astimezone(ZoneInfo(user.tz_region))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История кормлений питомца\n\n'
-                 f'Кормлений: {len(feeding_pet_history)}\n'
-                 f'Последняя дата кормления: {date_last}\n\n'
-                 'Для редактирования нажмите на дату кормления.',
+            text="История кормлений питомца\n\n"
+            f"Кормлений: {len(feeding_pet_history)}\n"
+            f"Последняя дата кормления: {date_last}\n\n"
+            "Для редактирования нажмите на дату кормления.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(FeedingHistoryPaginationCallback.filter(F.action == 'next'))
+@router.callback_query(FeedingHistoryPaginationCallback.filter(F.action == "next"))
 async def next_page_feeding_history_handler(
     callback: CallbackQuery,
     callback_data: FeedingHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории кормлений питомца.
@@ -171,7 +171,7 @@ async def next_page_feeding_history_handler(
         feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
         if not feeding_pet_history:
             await callback.message.answer(
-                text='У данного питомца нет истории кормлений.'
+                text="У данного питомца нет истории кормлений."
             )
             return
         inline_kb = await show_feeding_history_inline_kb(
@@ -184,36 +184,38 @@ async def next_page_feeding_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при вызове истории кормлений питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при вызове истории кормлений питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
         # Для обработки пустого списка при удалении всех событий
         if not feeding_pet_history:
             await callback.message.answer(
-                text='У данного питомца не найдена история кормлений.',
+                text="У данного питомца не найдена история кормлений.",
                 reply_markup=inline_kb,
             )
             return
-        date_last = feeding_pet_history[-1].date_feed.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            feeding_pet_history[-1]
+            .date_feed.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История кормлений питомца\n\n'
-                 f'Кормлений: {len(feeding_pet_history)}\n'
-                 f'Последняя дата кормления: {date_last}',
+            text="История кормлений питомца\n\n"
+            f"Кормлений: {len(feeding_pet_history)}\n"
+            f"Последняя дата кормления: {date_last}",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(FeedingHistoryPaginationCallback.filter(F.action == 'prev'))
+@router.callback_query(FeedingHistoryPaginationCallback.filter(F.action == "prev"))
 async def prev_page_feeding_history_handler(
     callback: CallbackQuery,
     callback_data: FeedingHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Назад'. Пагинация для просмотра истории кормлений питомца.
@@ -232,26 +234,28 @@ async def prev_page_feeding_history_handler(
         page,
     )
 
-    date_last = feeding_pet_history[-1].date_feed.astimezone(
-        ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
+    date_last = (
+        feeding_pet_history[-1]
+        .date_feed.astimezone(ZoneInfo(callback_data.user_tz))
+        .strftime("%d.%m.%y, %H:%M")
+    )
 
     await callback.message.edit_text(
-        text='История кормлений питомца\n\n'
-             f'Кормлений: {len(feeding_pet_history)}\n'
-             f'Последняя дата кормления: {date_last}',
+        text="История кормлений питомца\n\n"
+        f"Кормлений: {len(feeding_pet_history)}\n"
+        f"Последняя дата кормления: {date_last}",
         reply_markup=inline_kb,
     )
 
 
 @router.callback_query(
-    FeedingHistoryDetailCallback.filter(F.action == 'detail'),
-    StateFilter(default_state)
+    FeedingHistoryDetailCallback.filter(F.action == "detail"),
+    StateFilter(default_state),
 )
 async def detail_feeding_handler(
     callback: CallbackQuery,
     callback_data: FeedingHistoryDetailCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Детальный просмотр кормления питомца"""
     await callback.answer()
@@ -263,22 +267,22 @@ async def detail_feeding_handler(
         callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
-        callback_data.page
+        callback_data.page,
     )
 
     date_event = feeding_event.date_feed.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
+    ).strftime("%d.%m.%y, %H:%M")
 
     await callback.message.edit_text(
-        text='Детальный просмотр кормления питомца\n\n'
-             f'Дата кормления: {date_event}\n'
-             f'Описание: {feeding_event.description}\n',
+        text="Детальный просмотр кормления питомца\n\n"
+        f"Дата кормления: {date_event}\n"
+        f"Описание: {feeding_event.description}\n",
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(FeedingHistoryDetailCallback.filter(F.action == 'edit_date'))
+@router.callback_query(FeedingHistoryDetailCallback.filter(F.action == "edit_date"))
 async def edit_feeding_history_date_handler(
     callback: CallbackQuery,
     callback_data: FeedingHistoryDetailCallback,
@@ -298,11 +302,11 @@ async def edit_feeding_history_date_handler(
     )
 
     await callback.message.edit_text(
-        text='Редактирование даты кормления\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
-             'Разделитель может быть: ".", ",", "пробел" и "/"',
-        reply_markup=inline_kb
+        text="Редактирование даты кормления\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n"
+        'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -310,7 +314,7 @@ async def edit_feeding_history_date_handler(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        shedule_id=callback_data.feeding_id,
+        schedule_id=callback_data.feeding_id,
     )
 
 
@@ -321,29 +325,29 @@ async def process_edit_date_feeding_history(message: Message, state: FSMContext)
         state_data = await state.get_data()
         date = parse_date(message.text)
 
-        user_tz = ZoneInfo(state_data['user_tz'])
+        user_tz = ZoneInfo(state_data["user_tz"])
         date_feeding = date.replace(tzinfo=user_tz).date()
         await state.update_data(date=date_feeding)
 
         inline_back_kb = await get_edit_feeding_history_clear_state_inline_kb(
-            state_data['shedule_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["schedule_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
 
     except ValueError:
         await message.answer(
-            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+            "Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ."
         )
     else:
         await message.answer(
-            text='Введите новое время в формате ЧЧ:ММ.\n'
-                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
-            reply_markup=inline_back_kb
+            text="Введите новое время в формате ЧЧ:ММ.\n"
+            "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+            'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb,
         )
         await state.set_state(FeedingHistoryEditDateFSM.time)
 
@@ -358,20 +362,20 @@ async def process_edit_time_feeding_history(
         await state.update_data(time=time_feeding)
 
         state_data = await state.get_data()
-        date_time = datetime.combine(state_data['date'], state_data['time'])
+        date_time = datetime.combine(state_data["date"], state_data["time"])
 
-        await edit_date_feeding_history(state_data['shedule_id'], date_time, session)
+        await edit_date_feeding_history(state_data["schedule_id"], date_time, session)
 
     except ValueError:
-        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+        await message.answer("Неверный формат времени. Введите время в формате ЧЧ:ММ.")
     else:
         inline_back_kb = await get_successful_edit_feeding_history_inline_kb(
-            state_data['shedule_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["schedule_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
             "Дата кормления отредактирована ✅\n",
@@ -381,7 +385,7 @@ async def process_edit_time_feeding_history(
 
 
 @router.callback_query(
-    FeedingHistoryDetailCallback.filter(F.action == 'edit_description')
+    FeedingHistoryDetailCallback.filter(F.action == "edit_description")
 )
 async def edit_feeding_history_description_handler(
     callback: CallbackQuery,
@@ -402,9 +406,9 @@ async def edit_feeding_history_description_handler(
     )
 
     await callback.message.edit_text(
-        text='Введите новое описание кормления\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
-        reply_markup=inline_kb
+        text="Введите новое описание кормления\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n",
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -412,7 +416,7 @@ async def edit_feeding_history_description_handler(
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        shedule_id=callback_data.feeding_id,
+        schedule_id=callback_data.feeding_id,
     )
 
 
@@ -425,20 +429,20 @@ async def process_edit_description_feeding_history(
         await state.update_data(description=message.text)
         state_data = await state.get_data()
         await edit_description_feeding_history(
-            state_data['shedule_id'],
-            state_data['description'],
+            state_data["schedule_id"],
+            state_data["description"],
             session,
         )
     except ValueError:
-        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+        await message.answer("Произошла ошибка, пожалуйста, повторите еще раз.")
     else:
         inline_back_kb = await get_successful_edit_feeding_history_inline_kb(
-            state_data['shedule_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["schedule_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
             "Описание кормления отредактировано ✅\n",
@@ -447,7 +451,7 @@ async def process_edit_description_feeding_history(
         await state.clear()
 
 
-@router.callback_query(FeedingHistoryDetailCallback.filter(F.action == 'delete'))
+@router.callback_query(FeedingHistoryDetailCallback.filter(F.action == "delete"))
 async def delete_feeding_handler(
     callback: CallbackQuery, callback_data: FeedingHistoryDetailCallback
 ):
@@ -463,35 +467,33 @@ async def delete_feeding_handler(
     )
 
     await callback.message.edit_text(
-        text='Удаление кормления\n'
-             'Вы уверены, что хотите удалить кормление из истории?\n',
-        reply_markup=inline_kb
+        text="Удаление кормления\n"
+        "Вы уверены, что хотите удалить кормление из истории?\n",
+        reply_markup=inline_kb,
     )
 
 
-@router.callback_query(ChoiceDeleteFeeding.filter(F.action == 'delete'))
+@router.callback_query(ChoiceDeleteFeeding.filter(F.action == "delete"))
 async def process_delete_feeding(
-    callback: CallbackQuery,
-    callback_data: ChoiceDeleteFeeding,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: ChoiceDeleteFeeding, session: AsyncSession
 ):
     """Подтверждение удаления кормления. FSM"""
     try:
         await delete_feeding(callback_data.feeding_id, session)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении кормления: {e}', exc_info=True)
+        logger.error(f"Ошибка при удалении кормления: {e}", exc_info=True)
         await callback.message.answer(
-            'Произошла ошибка при удалении кормления!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при удалении кормления!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     else:
         await callback.answer(
-            'Кормление удалено ✅',
+            "Кормление удалено ✅",
             show_alert=True,
         )
         detail_callback_data = FeedingHistoryPaginationCallback(
-            action='next',
+            action="next",
             page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
             user_tz=callback_data.user_tz,
             pet_id=callback_data.pet_id,
@@ -501,36 +503,29 @@ async def process_delete_feeding(
         await next_page_feeding_history_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(ChoiceDeleteFeeding.filter(F.action == 'cancel'))
+@router.callback_query(ChoiceDeleteFeeding.filter(F.action == "cancel"))
 async def process_undo_delete_feeding(
-    callback: CallbackQuery,
-    callback_data: ChoiceDeleteFeeding,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: ChoiceDeleteFeeding, session: AsyncSession
 ):
     """Отмена удаления кормления"""
-    await callback.answer(
-        "Удаление кормления отменено.",
-        show_alert=True
-    )
+    await callback.answer("Удаление кормления отменено.", show_alert=True)
 
     detail_callback_data = FeedingHistoryDetailCallback(
-        action='detail',
+        action="detail",
         feeding_id=callback_data.feeding_id,
         user_tz=callback_data.user_tz,
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        page=callback_data.page
+        page=callback_data.page,
     )
 
     await detail_feeding_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(HistoryPetCallback.filter(F.action == 'molting_history'))
+@router.callback_query(HistoryPetCallback.filter(F.action == "molting_history"))
 async def history_molting_pet_handler(
-    callback: CallbackQuery,
-    callback_data: HistoryPetCallback,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: HistoryPetCallback, session: AsyncSession
 ):
     """Просмотр истории линек питомца"""
     try:
@@ -539,7 +534,7 @@ async def history_molting_pet_handler(
 
         if not molting_history:
             await callback.answer(
-                text='У данного питомца нет истории линек', show_alert=True
+                text="У данного питомца нет истории линек", show_alert=True
             )
             return
 
@@ -552,30 +547,32 @@ async def history_molting_pet_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории линек питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории линек питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
-        date_last = molting_history[0].date_measure.astimezone(
-            ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            molting_history[0]
+            .date_measure.astimezone(ZoneInfo(user.tz_region))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История линек питомца\n\n'
-                 f'Линек: {len(molting_history)}\n'
-                 f'Последняя дата линьки: {date_last}\n\n'
-                 'Для редактирования нажмите на дату линьки.',
+            text="История линек питомца\n\n"
+            f"Линек: {len(molting_history)}\n"
+            f"Последняя дата линьки: {date_last}\n\n"
+            "Для редактирования нажмите на дату линьки.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(MoltingHistoryPaginationCallback.filter(F.action == 'next'))
+@router.callback_query(MoltingHistoryPaginationCallback.filter(F.action == "next"))
 async def next_page_molting_history_handler(
     callback: CallbackQuery,
     callback_data: MoltingHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории линек питомца.
@@ -595,37 +592,39 @@ async def next_page_molting_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории линек питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории линек питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
         # Для обработки пустого списка при удалении всех событий
         if not molting_history:
             await callback.message.answer(
-                text='У данного питомца не найдена история линек.',
+                text="У данного питомца не найдена история линек.",
                 reply_markup=inline_kb,
             )
             return
 
-        date_last = molting_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            molting_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
         await callback.message.edit_text(
-            text='История линек питомца\n\n'
-                 f'Линек: {len(molting_history)}\n'
-                 f'Последняя дата линьки: {date_last}\n\n'
-                 'Для редактирования нажмите на дату линьки.',
+            text="История линек питомца\n\n"
+            f"Линек: {len(molting_history)}\n"
+            f"Последняя дата линьки: {date_last}\n\n"
+            "Для редактирования нажмите на дату линьки.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(MoltingHistoryPaginationCallback.filter(F.action == 'prev'))
+@router.callback_query(MoltingHistoryPaginationCallback.filter(F.action == "prev"))
 async def prev_page_molting_history_handler(
     callback: CallbackQuery,
     callback_data: MoltingHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Назад'. Пагинация для просмотра истории линек питомца.
@@ -646,35 +645,38 @@ async def prev_page_molting_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории линек питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории линек питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
         await callback.answer(
-            text='У данного питомца нет истории линек', show_alert=True,
+            text="У данного питомца нет истории линек",
+            show_alert=True,
         )
     else:
-        date_last = molting_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            molting_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История линек питомца\n\n'
-                 f'Линек: {len(molting_history)}\n'
-                 f'Последняя дата линьки: {date_last}\n\n'
-                 'Для редактирования нажмите на дату линьки.',
+            text="История линек питомца\n\n"
+            f"Линек: {len(molting_history)}\n"
+            f"Последняя дата линьки: {date_last}\n\n"
+            "Для редактирования нажмите на дату линьки.",
             reply_markup=inline_kb,
         )
 
 
 @router.callback_query(
-    MoltingHistoryDetailCallback.filter(F.action == 'detail'),
-    StateFilter(default_state)
+    MoltingHistoryDetailCallback.filter(F.action == "detail"),
+    StateFilter(default_state),
 )
 async def detail_molting_handler(
     callback: CallbackQuery,
     callback_data: MoltingHistoryDetailCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Детальный просмотр линьки питомца"""
     await callback.answer()
@@ -686,22 +688,22 @@ async def detail_molting_handler(
         callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
-        callback_data.page
+        callback_data.page,
     )
 
     date_event = molting_event.date_measure.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
+    ).strftime("%d.%m.%y, %H:%M")
 
     await callback.message.edit_text(
-        text='Детальный просмотр линьки питомца\n\n'
-             f'Дата линьки: {date_event}\n'
-             f'Описание: {molting_event.description}\n',
+        text="Детальный просмотр линьки питомца\n\n"
+        f"Дата линьки: {date_event}\n"
+        f"Описание: {molting_event.description}\n",
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(MoltingHistoryDetailCallback.filter(F.action == 'edit_date'))
+@router.callback_query(MoltingHistoryDetailCallback.filter(F.action == "edit_date"))
 async def edit_molting_history_date_handler(
     callback: CallbackQuery,
     callback_data: MoltingHistoryDetailCallback,
@@ -721,11 +723,11 @@ async def edit_molting_history_date_handler(
     )
 
     await callback.message.edit_text(
-        text='Редактирование даты линьки\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
-             'Разделитель может быть: ".", ",", "пробел" и "/"',
-        reply_markup=inline_kb
+        text="Редактирование даты линьки\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n"
+        'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -744,29 +746,29 @@ async def process_edit_date_molting_history(message: Message, state: FSMContext)
         state_data = await state.get_data()
         date = parse_date(message.text)
 
-        user_tz = ZoneInfo(state_data['user_tz'])
+        user_tz = ZoneInfo(state_data["user_tz"])
         date_molting = date.replace(tzinfo=user_tz).date()
         await state.update_data(date=date_molting)
 
         inline_back_kb = await get_edit_molting_history_clear_state_inline_kb(
-            state_data['molting_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["molting_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
 
     except ValueError:
         await message.answer(
-            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+            "Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ."
         )
     else:
         await message.answer(
-            text='Введите новое время в формате ЧЧ:ММ.\n'
-                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
-            reply_markup=inline_back_kb
+            text="Введите новое время в формате ЧЧ:ММ.\n"
+            "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+            'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb,
         )
         await state.set_state(MoltingHistoryEditDateFSM.time)
 
@@ -781,29 +783,30 @@ async def process_edit_time_molting_history(
         await state.update_data(time=time_molting)
 
         state_data = await state.get_data()
-        date_time = datetime.combine(state_data['date'], state_data['time'])
+        date_time = datetime.combine(state_data["date"], state_data["time"])
 
-        await edit_date_molting(state_data['molting_id'], date_time, session)
+        await edit_date_molting(state_data["molting_id"], date_time, session)
 
     except ValueError:
-        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+        await message.answer("Неверный формат времени. Введите время в формате ЧЧ:ММ.")
     else:
         inline_back_kb = await get_successful_edit_molting_history_inline_kb(
-            state_data['molting_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["molting_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Дата линьки изменена ✅\n", reply_markup=inline_back_kb,
+            "Дата линьки изменена ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
 @router.callback_query(
-    MoltingHistoryDetailCallback.filter(F.action == 'edit_description')
+    MoltingHistoryDetailCallback.filter(F.action == "edit_description")
 )
 async def edit_molting_history_description_handler(
     callback: CallbackQuery,
@@ -824,9 +827,9 @@ async def edit_molting_history_description_handler(
     )
 
     await callback.message.edit_text(
-        text='Введите новое описание линьки\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
-        reply_markup=inline_kb
+        text="Введите новое описание линьки\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n",
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -847,26 +850,27 @@ async def process_edit_description_molting_history(
         await state.update_data(description=message.text)
         state_data = await state.get_data()
         await edit_description_molting(
-            state_data['molting_id'], state_data['description'], session
+            state_data["molting_id"], state_data["description"], session
         )
     except ValueError:
-        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+        await message.answer("Произошла ошибка, пожалуйста, повторите еще раз.")
     else:
         inline_back_kb = await get_successful_edit_molting_history_inline_kb(
-            state_data['molting_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["molting_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Описание линьки изменено ✅\n", reply_markup=inline_back_kb,
+            "Описание линьки изменено ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
-@router.callback_query(MoltingHistoryDetailCallback.filter(F.action == 'delete'))
+@router.callback_query(MoltingHistoryDetailCallback.filter(F.action == "delete"))
 async def delete_molting_handler(
     callback: CallbackQuery, callback_data: MoltingHistoryDetailCallback
 ):
@@ -882,33 +886,32 @@ async def delete_molting_handler(
     )
 
     await callback.message.edit_text(
-        text='Удаление линьки\n'
-             'Вы уверены, что хотите удалить линьку из истории?\n',
-        reply_markup=inline_kb
+        text="Удаление линьки\nВы уверены, что хотите удалить линьку из истории?\n",
+        reply_markup=inline_kb,
     )
 
 
-@router.callback_query(ChoiceDeleteMoltingCallback.filter(F.action == 'delete'))
+@router.callback_query(ChoiceDeleteMoltingCallback.filter(F.action == "delete"))
 async def process_delete_molting(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteMoltingCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Подтверждение удаления линьки. FSM"""
     try:
         await delete_molting(callback_data.molting_id, session)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении линьки: {e}', exc_info=True)
+        logger.error(f"Ошибка при удалении линьки: {e}", exc_info=True)
         await callback.message.answer(
-            'Произошла ошибка при удалении линьки!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при удалении линьки!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     else:
-        await callback.answer('Линька удалена ✅', show_alert=True)
+        await callback.answer("Линька удалена ✅", show_alert=True)
 
         detail_callback_data = MoltingHistoryPaginationCallback(
-            action='next',
+            action="next",
             page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
             user_tz=callback_data.user_tz,
             pet_id=callback_data.pet_id,
@@ -918,33 +921,31 @@ async def process_delete_molting(
         await next_page_molting_history_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(ChoiceDeleteMoltingCallback.filter(F.action == 'cancel'))
+@router.callback_query(ChoiceDeleteMoltingCallback.filter(F.action == "cancel"))
 async def process_undo_delete_molting(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteMoltingCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Отмена удаления линьки"""
     await callback.answer("Удаление линьки отменено.", show_alert=True)
 
     detail_callback_data = MoltingHistoryDetailCallback(
-        action='detail',
+        action="detail",
         molting_id=callback_data.molting_id,
         user_tz=callback_data.user_tz,
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        page=callback_data.page
+        page=callback_data.page,
     )
 
     await detail_molting_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(HistoryPetCallback.filter(F.action == 'weight_history'))
+@router.callback_query(HistoryPetCallback.filter(F.action == "weight_history"))
 async def history_weight_pet_handler(
-    callback: CallbackQuery,
-    callback_data: HistoryPetCallback,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: HistoryPetCallback, session: AsyncSession
 ):
     """Просмотр истории взвешиваний питомца"""
     try:
@@ -953,7 +954,7 @@ async def history_weight_pet_handler(
 
         if not weight_history:
             await callback.answer(
-                text='У данного питомца нет истории взвешиваний', show_alert=True
+                text="У данного питомца нет истории взвешиваний", show_alert=True
             )
             return
 
@@ -966,30 +967,32 @@ async def history_weight_pet_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории взвешиваний питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
-        date_last = weight_history[0].date_measure.astimezone(
-            ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            weight_history[0]
+            .date_measure.astimezone(ZoneInfo(user.tz_region))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История веса питомца\n\n'
-                 f'Взвешиваний: {len(weight_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения веса.',
+            text="История веса питомца\n\n"
+            f"Взвешиваний: {len(weight_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения веса.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == 'next'))
+@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == "next"))
 async def next_page_weight_history_handler(
     callback: CallbackQuery,
     callback_data: WeightHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории взвешиваний питомца.
@@ -1009,37 +1012,39 @@ async def next_page_weight_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории взвешиваний питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
         # Для обработки пустого списка при удалении всех событий
         if not weight_history:
             await callback.message.answer(
-                text='У данного питомца не найдена история взвешиваний.',
+                text="У данного питомца не найдена история взвешиваний.",
                 reply_markup=inline_kb,
             )
             return
 
-        date_last = weight_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            weight_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
         await callback.message.edit_text(
-            text='История веса питомца\n\n'
-                 f'Взвешиваний: {len(weight_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения веса.',
+            text="История веса питомца\n\n"
+            f"Взвешиваний: {len(weight_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения веса.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == 'prev'))
+@router.callback_query(WeightHistoryPaginationCallback.filter(F.action == "prev"))
 async def prev_page_weight_history_handler(
     callback: CallbackQuery,
     callback_data: WeightHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Назад'. Пагинация для просмотра истории взвешиваний питомца.
@@ -1060,35 +1065,37 @@ async def prev_page_weight_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории взвешиваний питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории взвешиваний питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
         await callback.answer(
-            text='У данного питомца нет истории взвешиваний', show_alert=True,
+            text="У данного питомца нет истории взвешиваний",
+            show_alert=True,
         )
     else:
-        date_last = weight_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            weight_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История веса питомца\n\n'
-                 f'Взвешиваний: {len(weight_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения веса.',
+            text="История веса питомца\n\n"
+            f"Взвешиваний: {len(weight_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения веса.",
             reply_markup=inline_kb,
         )
 
 
 @router.callback_query(
-    WeightHistoryDetailCallback.filter(F.action == 'detail'),
-    StateFilter(default_state)
+    WeightHistoryDetailCallback.filter(F.action == "detail"), StateFilter(default_state)
 )
 async def detail_weight_handler(
     callback: CallbackQuery,
     callback_data: WeightHistoryDetailCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Детальный просмотр измерения веса питомца"""
     await callback.answer()
@@ -1100,22 +1107,22 @@ async def detail_weight_handler(
         callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
-        callback_data.page
+        callback_data.page,
     )
 
     date_event = weight_event.date_measure.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
+    ).strftime("%d.%m.%y, %H:%M")
 
     await callback.message.edit_text(
-        text='Детальный просмотр взвешивания питомца\n\n'
-             f'Дата измерения: {date_event}\n'
-             f'Описание: {weight_event.description}\n',
+        text="Детальный просмотр взвешивания питомца\n\n"
+        f"Дата измерения: {date_event}\n"
+        f"Описание: {weight_event.description}\n",
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(WeightHistoryDetailCallback.filter(F.action == 'edit_date'))
+@router.callback_query(WeightHistoryDetailCallback.filter(F.action == "edit_date"))
 async def edit_weight_history_date_handler(
     callback: CallbackQuery,
     callback_data: WeightHistoryDetailCallback,
@@ -1135,11 +1142,11 @@ async def edit_weight_history_date_handler(
     )
 
     await callback.message.edit_text(
-        text='Редактирование даты измерения веса\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
-             'Разделитель может быть: ".", ",", "пробел" и "/"',
-        reply_markup=inline_kb
+        text="Редактирование даты измерения веса\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n"
+        'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -1158,29 +1165,29 @@ async def process_edit_date_weight_history(message: Message, state: FSMContext):
         state_data = await state.get_data()
         date = parse_date(message.text)
 
-        user_tz = ZoneInfo(state_data['user_tz'])
+        user_tz = ZoneInfo(state_data["user_tz"])
         date_weight = date.replace(tzinfo=user_tz).date()
         await state.update_data(date=date_weight)
 
         inline_back_kb = await get_edit_weight_history_clear_state_inline_kb(
-            state_data['weight_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["weight_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
 
     except ValueError:
         await message.answer(
-            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+            "Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ."
         )
     else:
         await message.answer(
-            text='Введите новое время в формате ЧЧ:ММ.\n'
-                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
-            reply_markup=inline_back_kb
+            text="Введите новое время в формате ЧЧ:ММ.\n"
+            "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+            'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb,
         )
         await state.set_state(WeightHistoryEditDateFSM.time)
 
@@ -1195,29 +1202,30 @@ async def process_edit_time_weight_history(
         await state.update_data(time=time_weight)
 
         state_data = await state.get_data()
-        date_time = datetime.combine(state_data['date'], state_data['time'])
+        date_time = datetime.combine(state_data["date"], state_data["time"])
 
-        await edit_date_weight(state_data['weight_id'], date_time, session)
+        await edit_date_weight(state_data["weight_id"], date_time, session)
 
     except ValueError:
-        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+        await message.answer("Неверный формат времени. Введите время в формате ЧЧ:ММ.")
     else:
         inline_back_kb = await get_successful_edit_weight_history_inline_kb(
-            state_data['weight_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["weight_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Дата взвешивания изменена ✅\n", reply_markup=inline_back_kb,
+            "Дата взвешивания изменена ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
 @router.callback_query(
-    WeightHistoryDetailCallback.filter(F.action == 'edit_description')
+    WeightHistoryDetailCallback.filter(F.action == "edit_description")
 )
 async def edit_weight_history_description_handler(
     callback: CallbackQuery,
@@ -1238,9 +1246,9 @@ async def edit_weight_history_description_handler(
     )
 
     await callback.message.edit_text(
-        text='Введите новое описание\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
-        reply_markup=inline_kb
+        text="Введите новое описание\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n",
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -1261,26 +1269,27 @@ async def process_edit_description_weight_history(
         await state.update_data(description=message.text)
         state_data = await state.get_data()
         await edit_description_weight(
-            state_data['weight_id'], state_data['description'], session
+            state_data["weight_id"], state_data["description"], session
         )
     except ValueError:
-        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+        await message.answer("Произошла ошибка, пожалуйста, повторите еще раз.")
     else:
         inline_back_kb = await get_successful_edit_weight_history_inline_kb(
-            state_data['weight_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["weight_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Описание взвешивания изменено ✅\n", reply_markup=inline_back_kb,
+            "Описание взвешивания изменено ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
-@router.callback_query(WeightHistoryDetailCallback.filter(F.action == 'delete'))
+@router.callback_query(WeightHistoryDetailCallback.filter(F.action == "delete"))
 async def delete_weight_handler(
     callback: CallbackQuery, callback_data: WeightHistoryDetailCallback
 ):
@@ -1296,33 +1305,33 @@ async def delete_weight_handler(
     )
 
     await callback.message.edit_text(
-        text='Удаление взвешивания\n'
-             'Вы уверены, что хотите удалить взвешивание из истории?\n',
-        reply_markup=inline_kb
+        text="Удаление взвешивания\n"
+        "Вы уверены, что хотите удалить взвешивание из истории?\n",
+        reply_markup=inline_kb,
     )
 
 
-@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == 'delete'))
+@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == "delete"))
 async def process_delete_weight(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteWeightCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Подтверждение удаления измерения веса. FSM"""
     try:
         await delete_weight(callback_data.weight_id, session)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении измерения веса: {e}', exc_info=True)
+        logger.error(f"Ошибка при удалении измерения веса: {e}", exc_info=True)
         await callback.message.answer(
-            'Произошла ошибка при удалении взвешивания!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при удалении взвешивания!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     else:
-        await callback.answer('Взвешивание удалено ✅', show_alert=True)
+        await callback.answer("Взвешивание удалено ✅", show_alert=True)
 
         detail_callback_data = WeightHistoryPaginationCallback(
-            action='next',
+            action="next",
             page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
             user_tz=callback_data.user_tz,
             pet_id=callback_data.pet_id,
@@ -1332,33 +1341,31 @@ async def process_delete_weight(
         await next_page_weight_history_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == 'cancel'))
+@router.callback_query(ChoiceDeleteWeightCallback.filter(F.action == "cancel"))
 async def process_undo_delete_weight(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteWeightCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Отмена удаления измерения веса"""
     await callback.answer("Удаление взвешивания отменено.", show_alert=True)
 
     detail_callback_data = WeightHistoryDetailCallback(
-        action='detail',
+        action="detail",
         weight_id=callback_data.weight_id,
         user_tz=callback_data.user_tz,
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        page=callback_data.page
+        page=callback_data.page,
     )
 
     await detail_weight_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(HistoryPetCallback.filter(F.action == 'length_history'))
+@router.callback_query(HistoryPetCallback.filter(F.action == "length_history"))
 async def history_length_pet_handler(
-    callback: CallbackQuery,
-    callback_data: HistoryPetCallback,
-    session: AsyncSession
+    callback: CallbackQuery, callback_data: HistoryPetCallback, session: AsyncSession
 ):
     """Просмотр истории измерений длины питомца"""
     try:
@@ -1367,7 +1374,7 @@ async def history_length_pet_handler(
 
         if not length_history:
             await callback.answer(
-                text='У данного питомца нет истории измерений длины', show_alert=True
+                text="У данного питомца нет истории измерений длины", show_alert=True
             )
             return
 
@@ -1380,30 +1387,32 @@ async def history_length_pet_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории длины питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории длины питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
-        date_last = length_history[0].date_measure.astimezone(
-            ZoneInfo(user.tz_region)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            length_history[0]
+            .date_measure.astimezone(ZoneInfo(user.tz_region))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История измерения длины питомца\n\n'
-                 f'Измерений: {len(length_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения.',
+            text="История измерения длины питомца\n\n"
+            f"Измерений: {len(length_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == 'next'))
+@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == "next"))
 async def next_page_length_history_handler(
     callback: CallbackQuery,
     callback_data: LengthHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Вперед'. Пагинация для просмотра истории измерений питомца.
@@ -1423,37 +1432,39 @@ async def next_page_length_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории измерений длины питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории измерений длины питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
 
     else:
         # Для обработки пустого списка при удалении всех событий
         if not length_history:
             await callback.message.answer(
-                text='У данного питомца не найдена история измерений длины.',
+                text="У данного питомца не найдена история измерений длины.",
                 reply_markup=inline_kb,
             )
             return
 
-        date_last = length_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            length_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
         await callback.message.edit_text(
-            text='История измерения длины питомца\n\n'
-                 f'Измерений: {len(length_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения.',
+            text="История измерения длины питомца\n\n"
+            f"Измерений: {len(length_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения.",
             reply_markup=inline_kb,
         )
 
 
-@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == 'prev'))
+@router.callback_query(LengthHistoryPaginationCallback.filter(F.action == "prev"))
 async def prev_page_length_history_handler(
     callback: CallbackQuery,
     callback_data: LengthHistoryPaginationCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """
     Обработчик для кнопки 'Назад'. Пагинация для просмотра истории измерений питомца.
@@ -1474,34 +1485,37 @@ async def prev_page_length_history_handler(
         )
     except Exception as e:
         logger.info(
-            'Произошла ошибка при поиске истории измерения длины питомца pet id:'
-            f'{callback_data.pet_id}, user id: {callback.from_user.id}. {e}',
-            exc_info=True
+            "Произошла ошибка при поиске истории измерения длины питомца pet id:"
+            f"{callback_data.pet_id}, user id: {callback.from_user.id}. {e}",
+            exc_info=True,
         )
         await callback.answer(
-            text='У данного питомца нет истории измерений длины', show_alert=True,
+            text="У данного питомца нет истории измерений длины",
+            show_alert=True,
         )
     else:
-        date_last = length_history[0].date_measure.astimezone(
-            ZoneInfo(callback_data.user_tz)
-        ).strftime('%d.%m.%y, %H:%M')
+        date_last = (
+            length_history[0]
+            .date_measure.astimezone(ZoneInfo(callback_data.user_tz))
+            .strftime("%d.%m.%y, %H:%M")
+        )
 
         await callback.message.edit_text(
-            text='История измерения длины питомца\n\n'
-                 f'Измерений: {len(length_history)}\n'
-                 f'Последняя дата измерения: {date_last}\n\n'
-                 'Для редактирования нажмите на дату измерения.',
+            text="История измерения длины питомца\n\n"
+            f"Измерений: {len(length_history)}\n"
+            f"Последняя дата измерения: {date_last}\n\n"
+            "Для редактирования нажмите на дату измерения.",
             reply_markup=inline_kb,
         )
 
 
 @router.callback_query(
-    LengthHistoryDetailCallback.filter(F.action == 'detail'), StateFilter(default_state)
+    LengthHistoryDetailCallback.filter(F.action == "detail"), StateFilter(default_state)
 )
 async def detail_length_handler(
     callback: CallbackQuery,
     callback_data: LengthHistoryDetailCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Детальный просмотр измерения длины питомца"""
     await callback.answer()
@@ -1513,22 +1527,22 @@ async def detail_length_handler(
         callback_data.pet_id,
         callback_data.company_id,
         callback_data.group_id,
-        callback_data.page
+        callback_data.page,
     )
 
     date_event = length_event.date_measure.astimezone(
         ZoneInfo(callback_data.user_tz)
-    ).strftime('%d.%m.%y, %H:%M')
+    ).strftime("%d.%m.%y, %H:%M")
 
     await callback.message.edit_text(
-        text='Детальный просмотр измерения питомца\n\n'
-             f'Дата измерения: {date_event}\n'
-             f'Описание: {length_event.description}\n',
+        text="Детальный просмотр измерения питомца\n\n"
+        f"Дата измерения: {date_event}\n"
+        f"Описание: {length_event.description}\n",
         reply_markup=inline_kb,
     )
 
 
-@router.callback_query(LengthHistoryDetailCallback.filter(F.action == 'edit_date'))
+@router.callback_query(LengthHistoryDetailCallback.filter(F.action == "edit_date"))
 async def edit_length_history_date_handler(
     callback: CallbackQuery,
     callback_data: LengthHistoryDetailCallback,
@@ -1548,11 +1562,11 @@ async def edit_length_history_date_handler(
     )
 
     await callback.message.edit_text(
-        text='Редактирование даты измерения длины\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-             '<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n'
-             'Разделитель может быть: ".", ",", "пробел" и "/"',
-        reply_markup=inline_kb
+        text="Редактирование даты измерения длины\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+        "<b>Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ</b>\n"
+        'Разделитель может быть: ".", ",", "пробел" и "/"',
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -1571,29 +1585,29 @@ async def process_edit_date_length_history(message: Message, state: FSMContext):
         state_data = await state.get_data()
         date = parse_date(message.text)
 
-        user_tz = ZoneInfo(state_data['user_tz'])
+        user_tz = ZoneInfo(state_data["user_tz"])
         date_length = date.replace(tzinfo=user_tz).date()
         await state.update_data(date=date_length)
 
         inline_back_kb = await get_edit_length_history_clear_state_inline_kb(
-            state_data['length_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["length_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
 
     except ValueError:
         await message.answer(
-            'Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ.'
+            "Неверный формат даты.\n Введите дату в формате ДД.ММ.ГГГГ или ДД.ММ.ГГ."
         )
     else:
         await message.answer(
-            text='Введите новое время в формате ЧЧ:ММ.\n'
-                 '🔙Для возврата нажмите «Отмена», затем «Назад».\n\n'
-                 'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
-            reply_markup=inline_back_kb
+            text="Введите новое время в формате ЧЧ:ММ.\n"
+            "🔙Для возврата нажмите «Отмена», затем «Назад».\n\n"
+            'Разделитель может быть: ":", ".", ",", "пробел" и "/"',
+            reply_markup=inline_back_kb,
         )
         await state.set_state(LengthHistoryEditDateFSM.time)
 
@@ -1608,29 +1622,30 @@ async def process_edit_time_length_history(
         await state.update_data(time=time_length)
 
         state_data = await state.get_data()
-        date_time = datetime.combine(state_data['date'], state_data['time'])
+        date_time = datetime.combine(state_data["date"], state_data["time"])
 
-        await edit_date_length(state_data['length_id'], date_time, session)
+        await edit_date_length(state_data["length_id"], date_time, session)
 
     except ValueError:
-        await message.answer('Неверный формат времени. Введите время в формате ЧЧ:ММ.')
+        await message.answer("Неверный формат времени. Введите время в формате ЧЧ:ММ.")
     else:
         inline_back_kb = await get_successful_edit_length_history_inline_kb(
-            state_data['length_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["length_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Дата измерения длины была изменена ✅\n", reply_markup=inline_back_kb,
+            "Дата измерения длины была изменена ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
 @router.callback_query(
-    LengthHistoryDetailCallback.filter(F.action == 'edit_description')
+    LengthHistoryDetailCallback.filter(F.action == "edit_description")
 )
 async def edit_length_history_description_handler(
     callback: CallbackQuery,
@@ -1651,9 +1666,9 @@ async def edit_length_history_description_handler(
     )
 
     await callback.message.edit_text(
-        text='Введите новое описание\n'
-             '🔙Для возврата нажмите «Отмена», затем «Назад».\n',
-        reply_markup=inline_kb
+        text="Введите новое описание\n"
+        "🔙Для возврата нажмите «Отмена», затем «Назад».\n",
+        reply_markup=inline_kb,
     )
     await state.update_data(
         page=callback_data.page,
@@ -1674,26 +1689,27 @@ async def process_edit_description_length_history(
         await state.update_data(description=message.text)
         state_data = await state.get_data()
         await edit_description_length(
-            state_data['length_id'], state_data['description'], session
+            state_data["length_id"], state_data["description"], session
         )
     except ValueError:
-        await message.answer('Произошла ошибка, пожалуйста, повторите еще раз.')
+        await message.answer("Произошла ошибка, пожалуйста, повторите еще раз.")
     else:
         inline_back_kb = await get_successful_edit_length_history_inline_kb(
-            state_data['length_id'],
-            state_data['user_tz'],
-            state_data['pet_id'],
-            state_data['company_id'],
-            state_data['group_id'],
-            state_data['page'],
+            state_data["length_id"],
+            state_data["user_tz"],
+            state_data["pet_id"],
+            state_data["company_id"],
+            state_data["group_id"],
+            state_data["page"],
         )
         await message.answer(
-            "Описание измерения длины была изменена ✅\n", reply_markup=inline_back_kb,
+            "Описание измерения длины была изменена ✅\n",
+            reply_markup=inline_back_kb,
         )
         await state.clear()
 
 
-@router.callback_query(LengthHistoryDetailCallback.filter(F.action == 'delete'))
+@router.callback_query(LengthHistoryDetailCallback.filter(F.action == "delete"))
 async def delete_length_handler(
     callback: CallbackQuery, callback_data: LengthHistoryDetailCallback
 ):
@@ -1709,33 +1725,33 @@ async def delete_length_handler(
     )
 
     await callback.message.edit_text(
-        text='Удаление измерения длины\n'
-             'Вы уверены, что хотите удалить длину из истории?\n',
-        reply_markup=inline_kb
+        text="Удаление измерения длины\n"
+        "Вы уверены, что хотите удалить длину из истории?\n",
+        reply_markup=inline_kb,
     )
 
 
-@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == 'delete'))
+@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == "delete"))
 async def process_delete_length(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteLengthCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Подтверждение удаления измерения длины. FSM"""
     try:
         await delete_length(callback_data.length_id, session)
 
     except Exception as e:
-        logger.error(f'Ошибка при удалении измерения длины: {e}', exc_info=True)
+        logger.error(f"Ошибка при удалении измерения длины: {e}", exc_info=True)
         await callback.message.answer(
-            'Произошла ошибка при удалении длины питомца!\n'
-            'Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏'
+            "Произошла ошибка при удалении длины питомца!\n"
+            "Попробуйте еще раз 😉, если что, обратитесь в поддержку 😏"
         )
     else:
-        await callback.answer('Измерение длины питомца удалено ✅', show_alert=True)
+        await callback.answer("Измерение длины питомца удалено ✅", show_alert=True)
 
         detail_callback_data = LengthHistoryPaginationCallback(
-            action='next',
+            action="next",
             page=callback_data.page - 1,  # page -1 т.к. использую обработчик для next
             user_tz=callback_data.user_tz,
             pet_id=callback_data.pet_id,
@@ -1745,23 +1761,23 @@ async def process_delete_length(
         await next_page_length_history_handler(callback, detail_callback_data, session)
 
 
-@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == 'cancel'))
+@router.callback_query(ChoiceDeleteLengthCallback.filter(F.action == "cancel"))
 async def process_undo_delete_length(
     callback: CallbackQuery,
     callback_data: ChoiceDeleteLengthCallback,
-    session: AsyncSession
+    session: AsyncSession,
 ):
     """Отмена удаления измерения длины"""
     await callback.answer("Удаление измерения длины отменено.", show_alert=True)
 
     detail_callback_data = LengthHistoryDetailCallback(
-        action='detail',
+        action="detail",
         length_id=callback_data.length_id,
         user_tz=callback_data.user_tz,
         pet_id=callback_data.pet_id,
         company_id=callback_data.company_id,
         group_id=callback_data.group_id,
-        page=callback_data.page
+        page=callback_data.page,
     )
 
     await detail_length_handler(callback, detail_callback_data, session)

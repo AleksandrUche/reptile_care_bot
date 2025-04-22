@@ -7,57 +7,68 @@ class PetAddFSM(StatesGroup):
 
 class PetIdFSM(StatesGroup):
     """Для добавления поля id питомца"""
+
     pet_id = State()
 
 
 class PetEditBaseFSM(PetIdFSM):
     """Базовый для редактирования питомцев"""
+
     company_id = State()
     group_id = State()
 
 
 class PetEditNameFSM(PetEditBaseFSM):
     """Имя питомца"""
+
     pet_name = State()
 
 
 class PetEditMorphFSM(PetEditBaseFSM):
     """Морфа питомца"""
+
     pet_morph = State()
 
 
 class PetEditViewFSM(PetEditBaseFSM):
     """Вид питомца"""
+
     pet_view = State()
 
 
 class PetEditWeightFSM(PetEditBaseFSM):
     """Вес питомца"""
+
     pet_weight = State()
 
 
 class PetEditLengthFSM(PetEditBaseFSM):
     """Длина питомца"""
+
     pet_length = State()
 
 
 class PetEditMoltingFSM(PetEditBaseFSM):
     """Линька питомца"""
+
     pet_molting = State()
 
 
 class PetEditBirthFSM(PetEditBaseFSM):
     """Дата рождения"""
+
     pet_birth = State()
 
 
 class PetEditPurchaseFSM(PetEditBaseFSM):
     """Дата приобретения"""
+
     pet_purchase = State()
 
 
 class FeedingSingleFSM(PetEditBaseFSM):
-    """Для одиночного добавления даты кормления """
+    """Для одиночного добавления даты кормления"""
+
     date = State()
     time = State()
     description = State()
@@ -65,6 +76,7 @@ class FeedingSingleFSM(PetEditBaseFSM):
 
 class FeedingGroupFSM(PetEditBaseFSM):
     """Для добавления графика кормления"""
+
     date = State()
     time = State()
     offset = State()
@@ -73,6 +85,7 @@ class FeedingGroupFSM(PetEditBaseFSM):
 
 class FeedingGroupAndDescriptionFSM(PetEditBaseFSM):
     """Для добавления графика кормления с описанием"""
+
     date = State()
     time = State()
     offset = State()
@@ -85,6 +98,7 @@ class FeedingGroupAndDescriptionFSM(PetEditBaseFSM):
 
 class FeedingEveryDayFSM(PetEditBaseFSM):
     """Для добавления графика кормления на каждый день"""
+
     date = State()
     time = State()
     repeat = State()
@@ -92,6 +106,7 @@ class FeedingEveryDayFSM(PetEditBaseFSM):
 
 class FeedingEditEventFSM(PetEditBaseFSM):
     """Для редактирования запланированного кормления"""
+
     date = State()
     time = State()
     description = State()
@@ -99,43 +114,51 @@ class FeedingEditEventFSM(PetEditBaseFSM):
 
 class FeedingHistoryEditDateFSM(PetEditBaseFSM):
     """Для редактирования даты кормления из истории"""
+
     date = State()
     time = State()
 
 
 class FeedingHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания кормления из истории"""
+
     description = State()
 
 
 class MoltingHistoryEditDateFSM(PetEditBaseFSM):
     """Для редактирования даты линьки из истории"""
+
     date = State()
     time = State()
 
 
 class MoltingHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания линьки из истории"""
+
     description = State()
 
 
 class WeightHistoryEditDateFSM(PetEditBaseFSM):
     """Для редактирования даты измерения веса из истории"""
+
     date = State()
     time = State()
 
 
 class WeightHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания к измерению веса из истории"""
+
     description = State()
 
 
 class LengthHistoryEditDateFSM(PetEditBaseFSM):
     """Для редактирования даты измерения длины из истории"""
+
     date = State()
     time = State()
 
 
 class LengthHistoryEditDescriptionFSM(PetEditBaseFSM):
     """Для редактирования описания к измерению длины из истории"""
+
     description = State()

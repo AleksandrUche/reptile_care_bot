@@ -35,10 +35,7 @@ async def get_all_companies_user(user_id: int, session: AsyncSession):
 
 async def get_company(company_id: int, session: AsyncSession):
     """Возвращает компанию по id"""
-    return await session.scalar(
-        select(CompanyOrm)
-        .filter(CompanyOrm.id == company_id)
-    )
+    return await session.scalar(select(CompanyOrm).filter(CompanyOrm.id == company_id))
 
 
 async def get_company_and_groups(user_id: int, session: AsyncSession):
@@ -65,7 +62,7 @@ async def add_pet(user_id: int, pet_name: str, session: AsyncSession):
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении питомца: {e}', exc_info=True)
+        logger.error(f"Ошибка при добавлении питомца: {e}", exc_info=True)
         return False
     else:
         return True
@@ -89,8 +86,7 @@ async def edit_pet_value(
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при изменении \"{name_field}\" питомца: {e}',
-                     exc_info=True)
+        logger.error(f'Ошибка при изменении "{name_field}" питомца: {e}', exc_info=True)
     else:
         return True
 
@@ -102,7 +98,7 @@ async def delete_pet(pet_id: int, session: AsyncSession):
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при удалении питомца с ID-{pet_id}: {e}', exc_info=True)
+        logger.error(f"Ошибка при удалении питомца с ID-{pet_id}: {e}", exc_info=True)
         raise
 
 
@@ -118,8 +114,7 @@ async def get_my_companies_and_pets(user_id: int, session: AsyncSession):
 
 async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSession):
     return await session.scalar(
-        select(PetOrm)
-        .filter(
+        select(PetOrm).filter(
             PetOrm.id == pet_id,
             PetOrm.company_id == company_id,
             PetOrm.group_id == group_id,
@@ -127,8 +122,9 @@ async def get_pet(pet_id: int, company_id: int, group_id: int, session: AsyncSes
     )
 
 
-async def get_pet_all_information(pet_id: int, company_id: int, group_id: int,
-                                  session: AsyncSession):
+async def get_pet_all_information(
+    pet_id: int, company_id: int, group_id: int, session: AsyncSession
+):
     """
     Возвращает объект питомца, название компании и группы, а также последние
     измерения длины, веса и последнюю дату линьки.
@@ -176,11 +172,11 @@ async def get_pet_all_information(pet_id: int, company_id: int, group_id: int,
             PetOrm.group_id == group_id,
         )
         .add_columns(
-            CompanyOrm.name.label('company_name'),
-            GroupOrm.name.label('group_name'),
-            latest_weight_alias.weight.label('latest_weight'),
-            latest_length_alias.length.label('latest_length'),
-            latest_molting_alias.date_measure.label('latest_molting_date'),
+            CompanyOrm.name.label("company_name"),
+            GroupOrm.name.label("group_name"),
+            latest_weight_alias.weight.label("latest_weight"),
+            latest_length_alias.length.label("latest_length"),
+            latest_molting_alias.date_measure.label("latest_molting_date"),
         )
     )
 
@@ -188,12 +184,12 @@ async def get_pet_all_information(pet_id: int, company_id: int, group_id: int,
     row = result.first()
 
     return {
-        'pet': row.PetOrm,
-        'company_name': row.company_name,
-        'group_name': row.group_name,
-        'latest_weight': row.latest_weight,
-        'latest_length': row.latest_length,
-        'latest_molting_date': row.latest_molting_date,
+        "pet": row.PetOrm,
+        "company_name": row.company_name,
+        "group_name": row.group_name,
+        "latest_weight": row.latest_weight,
+        "latest_length": row.latest_length,
+        "latest_molting_date": row.latest_molting_date,
     }
 
 
@@ -211,7 +207,7 @@ async def add_weight_pet(pet_id: int, weight: float, session: AsyncSession):
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении веса: {e}', exc_info=True)
+        logger.error(f"Ошибка при добавлении веса: {e}", exc_info=True)
         return False
     else:
         return True
@@ -231,7 +227,7 @@ async def add_length_pet(pet_id: int, length: float, session: AsyncSession):
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении длины: {e}', exc_info=True)
+        logger.error(f"Ошибка при добавлении длины: {e}", exc_info=True)
         return False
     else:
         return True
@@ -249,7 +245,7 @@ async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSes
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении даты линьки: {e}', exc_info=True)
+        logger.error(f"Ошибка при добавлении даты линьки: {e}", exc_info=True)
         return False
     else:
         return True
@@ -271,11 +267,11 @@ async def add_feeding_pet_date(
         session.add(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении кормления: {e}', exc_info=True)
+        logger.error(f"Ошибка при добавлении кормления: {e}", exc_info=True)
         raise
 
 
-async def add_feeding_shedule(
+async def add_feeding_schedule(
     pet_id: int, date: datetime, session: AsyncSession, description: str = None
 ):
     """
@@ -290,13 +286,18 @@ async def add_feeding_shedule(
         session.add(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении даты запланированного кормления: {e}',
-                     exc_info=True)
+        logger.error(
+            f"Ошибка при добавлении даты запланированного кормления: {e}", exc_info=True
+        )
         raise
 
 
-async def add_group_feeding_shedule(
-    pet_id: int, date: datetime, offset: int, repeat: int, session: AsyncSession,
+async def add_group_feeding_schedule(
+    pet_id: int,
+    date: datetime,
+    offset: int,
+    repeat: int,
+    session: AsyncSession,
 ):
     """
     Добавляет график кормления питомца.
@@ -315,12 +316,12 @@ async def add_group_feeding_shedule(
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при добавлении группы запланированных кормлений: {e}',
-            exc_info=True
+            f"Ошибка при добавлении группы запланированных кормлений: {e}",
+            exc_info=True,
         )
 
 
-async def add_group_feeding_and_description_shedule(
+async def add_group_feeding_and_description_schedule(
     pet_id: int,
     date: datetime,
     offset: int,
@@ -356,52 +357,57 @@ async def add_group_feeding_and_description_shedule(
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при добавлении группы запланированных кормлений c описаниями: {e}',
-            exc_info=True
+            f"Ошибка при добавлении группы запланированных кормлений c описаниями: {e}",
+            exc_info=True,
         )
 
 
-async def change_reminder_feeding_shedule(
+async def change_reminder_feeding_schedule(
     event_feeding_id: int, pet_id: int, remind: bool, session: AsyncSession
 ):
     """Отменяет повторное уведомление кормления питомца"""
     try:
-        stmt = update(FeedingScheduleOrm).filter(
-            FeedingScheduleOrm.id == event_feeding_id,
-            FeedingScheduleOrm.pet_id == pet_id,
-        ).values(remind=remind)
+        stmt = (
+            update(FeedingScheduleOrm)
+            .filter(
+                FeedingScheduleOrm.id == event_feeding_id,
+                FeedingScheduleOrm.pet_id == pet_id,
+            )
+            .values(remind=remind)
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
             f'Ошибка при изменении статуса "напоминания" кормления питомца: {e}',
-            exc_info=True
+            exc_info=True,
         )
         raise
 
 
-async def get_feeding_shedule(feeding_id: int, session: AsyncSession):
+async def get_feeding_schedule(feeding_id: int, session: AsyncSession):
     """Возвращает информацию о запланированном кормлении по id"""
     return await session.scalar(
-        select(FeedingScheduleOrm)
-        .filter(FeedingScheduleOrm.id == feeding_id)
+        select(FeedingScheduleOrm).filter(FeedingScheduleOrm.id == feeding_id)
     )
 
 
-async def edit_feeding_shedule(
-    shedule_id: int, date: datetime, description: str, session: AsyncSession
+async def edit_feeding_schedule(
+    schedule_id: int, date: datetime, description: str, session: AsyncSession
 ):
     """Изменяет значения указанного поля."""
     try:
-        stmt = update(FeedingScheduleOrm).filter(
-            FeedingScheduleOrm.id == shedule_id
-        ).values(scheduled_time=date.astimezone(timezone.utc), description=description)
+        stmt = (
+            update(FeedingScheduleOrm)
+            .filter(FeedingScheduleOrm.id == schedule_id)
+            .values(
+                scheduled_time=date.astimezone(timezone.utc), description=description
+            )
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при редактировании события кормления: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при редактировании события кормления: {e}", exc_info=True)
         raise
 
 
@@ -413,27 +419,30 @@ async def get_planned_pet_feeding_schedule(pet_id: int, session: AsyncSession):
             .filter(
                 FeedingScheduleOrm.pet_id == pet_id,
                 FeedingScheduleOrm.is_active == True,
-            ).order_by(FeedingScheduleOrm.scheduled_time)
+            )
+            .order_by(FeedingScheduleOrm.scheduled_time)
         )
         return result.all()
     except Exception as e:
         logger.info(
-            f'У питомца c id {pet_id} нет запланированного графика кормлений. \n'
-            f'Ошибка: {e}', exc_info=True
+            f"У питомца c id {pet_id} нет запланированного графика кормлений. \n"
+            f"Ошибка: {e}",
+            exc_info=True,
         )
         raise
 
 
-async def delete_feeding_shedule(shedule_id: int, session: AsyncSession):
+async def delete_feeding_schedule(schedule_id: int, session: AsyncSession):
     """Удаление запланированного кормления по id"""
     try:
-        stmt = delete(FeedingScheduleOrm).filter(FeedingScheduleOrm.id == shedule_id)
+        stmt = delete(FeedingScheduleOrm).filter(FeedingScheduleOrm.id == schedule_id)
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при удалении запланированного кормления с ID-{shedule_id}: {e}',
-            exc_info=True)
+            f"Ошибка при удалении запланированного кормления с ID-{schedule_id}: {e}",
+            exc_info=True,
+        )
         raise
 
 
@@ -442,13 +451,13 @@ async def get_all_pet_feeding(pet_id: int, session: AsyncSession):
     try:
         result = await session.scalars(
             select(FeedingPetOrm)
-            .filter(FeedingPetOrm.pet_id == pet_id).order_by(FeedingPetOrm.date_feed)
+            .filter(FeedingPetOrm.pet_id == pet_id)
+            .order_by(FeedingPetOrm.date_feed)
         )
         return result.all()
     except Exception as e:
         logger.info(
-            f'Ошибка при поиске кормлений у питомца c id {pet_id}. {e}',
-            exc_info=True
+            f"Ошибка при поиске кормлений у питомца c id {pet_id}. {e}", exc_info=True
         )
         raise
 
@@ -456,8 +465,7 @@ async def get_all_pet_feeding(pet_id: int, session: AsyncSession):
 async def get_feeding(feeding_id: int, session: AsyncSession):
     """Возвращает информацию о кормлении по id"""
     return await session.scalar(
-        select(FeedingPetOrm)
-        .filter(FeedingPetOrm.id == feeding_id)
+        select(FeedingPetOrm).filter(FeedingPetOrm.id == feeding_id)
     )
 
 
@@ -466,15 +474,15 @@ async def edit_date_feeding_history(
 ):
     """Изменяет дату кормления."""
     try:
-        stmt = update(FeedingPetOrm).filter(
-            FeedingPetOrm.id == feeding_id
-        ).values(date_feed=date.astimezone(timezone.utc))
+        stmt = (
+            update(FeedingPetOrm)
+            .filter(FeedingPetOrm.id == feeding_id)
+            .values(date_feed=date.astimezone(timezone.utc))
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при редактировании даты кормления: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при редактировании даты кормления: {e}", exc_info=True)
         raise
 
 
@@ -483,14 +491,16 @@ async def edit_description_feeding_history(
 ):
     """Изменяет описание кормления."""
     try:
-        stmt = update(FeedingPetOrm).filter(
-            FeedingPetOrm.id == feeding_id
-        ).values(description=description)
+        stmt = (
+            update(FeedingPetOrm)
+            .filter(FeedingPetOrm.id == feeding_id)
+            .values(description=description)
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при редактировании описания кормления: {e}', exc_info=True
+            f"Ошибка при редактировании описания кормления: {e}", exc_info=True
         )
         raise
 
@@ -503,7 +513,7 @@ async def delete_feeding(feeding_id: int, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при удалении кормления с ID-{feeding_id}: {e}', exc_info=True
+            f"Ошибка при удалении кормления с ID-{feeding_id}: {e}", exc_info=True
         )
         raise
 
@@ -513,13 +523,14 @@ async def get_all_pet_molting(pet_id: int, session: AsyncSession):
     try:
         result = await session.scalars(
             select(MoltingPetOrm)
-            .filter(MoltingPetOrm.pet_id == pet_id).order_by(MoltingPetOrm.date_measure)
+            .filter(MoltingPetOrm.pet_id == pet_id)
+            .order_by(MoltingPetOrm.date_measure)
         )
         return result.all()
     except Exception as e:
         logger.info(
-            f'Ошибка при поиске истории линек питомца c id {pet_id} нет. {e}',
-            exc_info=True
+            f"Ошибка при поиске истории линек питомца c id {pet_id} нет. {e}",
+            exc_info=True,
         )
         raise
 
@@ -527,25 +538,22 @@ async def get_all_pet_molting(pet_id: int, session: AsyncSession):
 async def get_molting(molting_id: int, session: AsyncSession):
     """Возвращает информацию о линьки по id"""
     return await session.scalar(
-        select(MoltingPetOrm)
-        .filter(MoltingPetOrm.id == molting_id)
+        select(MoltingPetOrm).filter(MoltingPetOrm.id == molting_id)
     )
 
 
-async def edit_date_molting(
-    molting_id: int, date: datetime, session: AsyncSession
-):
+async def edit_date_molting(molting_id: int, date: datetime, session: AsyncSession):
     """Изменяет дату линьки."""
     try:
-        stmt = update(MoltingPetOrm).filter(
-            MoltingPetOrm.id == molting_id
-        ).values(date_measure=date.astimezone(timezone.utc))
+        stmt = (
+            update(MoltingPetOrm)
+            .filter(MoltingPetOrm.id == molting_id)
+            .values(date_measure=date.astimezone(timezone.utc))
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при редактировании даты линьки: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при редактировании даты линьки: {e}", exc_info=True)
         raise
 
 
@@ -554,15 +562,15 @@ async def edit_description_molting(
 ):
     """Изменяет описание линьки."""
     try:
-        stmt = update(MoltingPetOrm).filter(
-            MoltingPetOrm.id == molting_id
-        ).values(description=description)
+        stmt = (
+            update(MoltingPetOrm)
+            .filter(MoltingPetOrm.id == molting_id)
+            .values(description=description)
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при редактировании описания линьки: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при редактировании описания линьки: {e}", exc_info=True)
         raise
 
 
@@ -574,7 +582,7 @@ async def delete_molting(molting_id: int, session: AsyncSession):
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при удалении линьки с ID-{molting_id}: {e}', exc_info=True
+            f"Ошибка при удалении линьки с ID-{molting_id}: {e}", exc_info=True
         )
         raise
 
@@ -584,13 +592,14 @@ async def get_all_pet_weight(pet_id: int, session: AsyncSession):
     try:
         result = await session.scalars(
             select(WeightPetOrm)
-            .filter(WeightPetOrm.pet_id == pet_id).order_by(WeightPetOrm.date_measure)
+            .filter(WeightPetOrm.pet_id == pet_id)
+            .order_by(WeightPetOrm.date_measure)
         )
         return result.all()
     except Exception as e:
         logger.info(
-            f'Ошибка при поиске измерений веса питомца c id {pet_id}. {e}',
-            exc_info=True
+            f"Ошибка при поиске измерений веса питомца c id {pet_id}. {e}",
+            exc_info=True,
         )
         raise
 
@@ -598,24 +607,23 @@ async def get_all_pet_weight(pet_id: int, session: AsyncSession):
 async def get_weight(weight_id: int, session: AsyncSession):
     """Возвращает информацию об измерении веса по id."""
     return await session.scalar(
-        select(WeightPetOrm)
-        .filter(WeightPetOrm.id == weight_id)
+        select(WeightPetOrm).filter(WeightPetOrm.id == weight_id)
     )
 
 
-async def edit_date_weight(
-    weight_id: int, date: datetime, session: AsyncSession
-):
+async def edit_date_weight(weight_id: int, date: datetime, session: AsyncSession):
     """Изменяет дату измерения веса."""
     try:
-        stmt = update(WeightPetOrm).filter(
-            WeightPetOrm.id == weight_id
-        ).values(date_measure=date.astimezone(timezone.utc))
+        stmt = (
+            update(WeightPetOrm)
+            .filter(WeightPetOrm.id == weight_id)
+            .values(date_measure=date.astimezone(timezone.utc))
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при редактировании даты измерения веса: {e}', exc_info=True
+            f"Ошибка при редактировании даты измерения веса: {e}", exc_info=True
         )
         raise
 
@@ -625,15 +633,15 @@ async def edit_description_weight(
 ):
     """Изменяет описание измерения веса."""
     try:
-        stmt = update(WeightPetOrm).filter(
-            WeightPetOrm.id == weight_id
-        ).values(description=description)
+        stmt = (
+            update(WeightPetOrm)
+            .filter(WeightPetOrm.id == weight_id)
+            .values(description=description)
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при редактировании описания веса: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при редактировании описания веса: {e}", exc_info=True)
         raise
 
 
@@ -644,9 +652,7 @@ async def delete_weight(weight_id: int, session: AsyncSession):
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при удалении веса с ID-{weight_id}: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при удалении веса с ID-{weight_id}: {e}", exc_info=True)
         raise
 
 
@@ -655,13 +661,14 @@ async def get_all_pet_length(pet_id: int, session: AsyncSession):
     try:
         result = await session.scalars(
             select(LengthPetOrm)
-            .filter(LengthPetOrm.pet_id == pet_id).order_by(LengthPetOrm.date_measure)
+            .filter(LengthPetOrm.pet_id == pet_id)
+            .order_by(LengthPetOrm.date_measure)
         )
         return result.all()
     except Exception as e:
         logger.info(
-            f'Ошибка при поиске измерений длины питомца c id {pet_id}. {e}',
-            exc_info=True
+            f"Ошибка при поиске измерений длины питомца c id {pet_id}. {e}",
+            exc_info=True,
         )
         raise
 
@@ -669,24 +676,23 @@ async def get_all_pet_length(pet_id: int, session: AsyncSession):
 async def get_length(length_id: int, session: AsyncSession):
     """Возвращает информацию об измерении длины по id"""
     return await session.scalar(
-        select(LengthPetOrm)
-        .filter(LengthPetOrm.id == length_id)
+        select(LengthPetOrm).filter(LengthPetOrm.id == length_id)
     )
 
 
-async def edit_date_length(
-    length_id: int, date: datetime, session: AsyncSession
-):
+async def edit_date_length(length_id: int, date: datetime, session: AsyncSession):
     """Изменяет дату измерения длины."""
     try:
-        stmt = update(LengthPetOrm).filter(
-            LengthPetOrm.id == length_id
-        ).values(date_measure=date.astimezone(timezone.utc))
+        stmt = (
+            update(LengthPetOrm)
+            .filter(LengthPetOrm.id == length_id)
+            .values(date_measure=date.astimezone(timezone.utc))
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при редактировании даты измерения длины: {e}', exc_info=True
+            f"Ошибка при редактировании даты измерения длины: {e}", exc_info=True
         )
         raise
 
@@ -696,14 +702,16 @@ async def edit_description_length(
 ):
     """Изменяет описание измерения длины."""
     try:
-        stmt = update(LengthPetOrm).filter(
-            LengthPetOrm.id == length_id
-        ).values(description=description)
+        stmt = (
+            update(LengthPetOrm)
+            .filter(LengthPetOrm.id == length_id)
+            .values(description=description)
+        )
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
         logger.error(
-            f'Ошибка при редактировании описания измерения длины: {e}', exc_info=True
+            f"Ошибка при редактировании описания измерения длины: {e}", exc_info=True
         )
         raise
 
@@ -715,7 +723,5 @@ async def delete_length(length_id: int, session: AsyncSession):
         await session.execute(stmt)
         await session.commit()
     except Exception as e:
-        logger.error(
-            f'Ошибка при удалении длины с ID {length_id}: {e}', exc_info=True
-        )
+        logger.error(f"Ошибка при удалении длины с ID {length_id}: {e}", exc_info=True)
         raise

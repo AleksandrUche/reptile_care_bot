@@ -17,7 +17,7 @@ from database.engine import async_session
 from database.models.pets_models import CompanyOrm, PetOrm, FeedingScheduleOrm
 from database.models.user_models import UserOrm
 from keyboards.inline_keyboards.pet.feeding_schedule_kb import (
-    get_shedule_feeding_approve_inline_kb,
+    get_schedule_feeding_approve_inline_kb,
 )
 
 
@@ -34,7 +34,8 @@ async def _get_feedings_reminder(session: AsyncSession) -> Optional[list]:
                 .joinedload(PetOrm.company)
                 .joinedload(CompanyOrm.user)
                 .load_only(
-                    UserOrm.telegram_id, UserOrm.tz_region,
+                    UserOrm.telegram_id,
+                    UserOrm.tz_region,
                 )
             )
             .filter(
@@ -47,9 +48,7 @@ async def _get_feedings_reminder(session: AsyncSession) -> Optional[list]:
         result = await session.execute(stmt)
         return result.scalars().all()
     except Exception as e:
-        logger.info(
-            f'Не удалось найти запланированные кормления: {e}', exc_info=True
-        )
+        logger.info(f"Не удалось найти запланированные кормления: {e}", exc_info=True)
         return None
 
 
@@ -58,22 +57,22 @@ async def _send_notification_safe(bot, feeding: FeedingScheduleOrm):
     for _ in range(2):
         try:
             date_time = feeding.scheduled_time
-            shedule_time = date_time.astimezone(
+            schedule_time = date_time.astimezone(
                 ZoneInfo(feeding.pet.company.user.tz_region)
-            ).strftime('%d.%m.%Y, %H:%M')
+            ).strftime("%d.%m.%Y, %H:%M")
 
-            inline_kb = await get_shedule_feeding_approve_inline_kb(
+            inline_kb = await get_schedule_feeding_approve_inline_kb(
                 feeding.id, feeding.pet.id, feeding.pet.name
             )
 
             await bot.send_message(
                 chat_id=feeding.pet.company.user.telegram_id,
-                text=f'⏰ Напоминаю, пора покормить {feeding.pet.name}!\n'
-                     f'Вид: {feeding.pet.view}\n'
-                     f'Морфа: {feeding.pet.morph}\n'
-                     f'Описание к кормлению: {feeding.description}\n'
-                     f'Пол питомца: {feeding.pet.gender.value}\n'
-                     f'Дата кормления: {shedule_time}',
+                text=f"⏰ Напоминаю, пора покормить {feeding.pet.name}!\n"
+                f"Вид: {feeding.pet.view}\n"
+                f"Морфа: {feeding.pet.morph}\n"
+                f"Описание к кормлению: {feeding.description}\n"
+                f"Пол питомца: {feeding.pet.gender.value}\n"
+                f"Дата кормления: {schedule_time}",
                 reply_markup=inline_kb,
             )
             return
@@ -96,7 +95,7 @@ async def run_reminder_of_feedings(ctx: Context):
     async with async_session() as session:
         try:
             feedings = await _get_feedings_reminder(session)
-            logger.info(f'Повторных напоминаний найдено - {len(feedings)}')
+            logger.info(f"Повторных напоминаний найдено - {len(feedings)}")
             if not feedings:
                 return None
 
@@ -105,9 +104,9 @@ async def run_reminder_of_feedings(ctx: Context):
             for feeding in feedings:
                 try:
                     logger.info(
-                        f'Отправка повторного напоминания № {count} пользователю id '
-                        f'{feeding.pet.company.user.telegram_id} -> питомец '
-                        f'«{feeding.pet.name}» id {feeding.pet.id}'
+                        f"Отправка повторного напоминания № {count} пользователю id "
+                        f"{feeding.pet.company.user.telegram_id} -> питомец "
+                        f"«{feeding.pet.name}» id {feeding.pet.id}"
                     )
                     count += 1
                     await _send_notification_safe(bot, feeding)
@@ -115,23 +114,22 @@ async def run_reminder_of_feedings(ctx: Context):
                 except Exception as e:
                     await session.rollback()
                     logger.info(
-                        f'Не удалось отправить сообщение пользователю о кормлении: {e}',
-                        exc_info=True
+                        f"Не удалось отправить сообщение пользователю о кормлении: {e}",
+                        exc_info=True,
                     )
 
         except Exception as e:
             logger.info(
-                f'Не удалось найти запланированные кормления: {e}', exc_info=True
+                f"Не удалось найти запланированные кормления: {e}", exc_info=True
             )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     # Тестовый запуск TODO убрать, добавить в тестирование
     async def test_func():
         async with async_session() as session:
             aa = await _get_feedings_reminder(session)
             bot = Bot(token=BOT_TOKEN)
             await _send_notification_safe(bot, aa[0])
-
 
     asyncio.run(test_func())
