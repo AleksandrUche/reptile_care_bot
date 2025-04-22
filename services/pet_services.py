@@ -197,38 +197,40 @@ async def get_pet_all_information(pet_id: int, company_id: int, group_id: int,
     }
 
 
-async def add_weight_pet(pet_id: int, weight: float, session: AsyncSession):
+async def add_weight_pet(
+    pet_id: int, weight: float, date: datetime, session: AsyncSession
+):
     """
     Добавляет вес для определенного питомца.
     """
-    current_date = datetime.now().replace(tzinfo=timezone.utc)
     stmt = WeightPetOrm(
         weight=weight,
         pet_id=pet_id,
-        date_measure=current_date,
+        date_measure=date.astimezone(timezone.utc),
     )
     session.add(stmt)
     try:
         await session.commit()
     except Exception as e:
-        logger.error(f'Ошибка при добавлении веса: {e}', exc_info=True)
+        logger.error(f'Ошибка при добавлении веса для pet_id- {pet_id}: {e}', exc_info=True)
         return False
     else:
         return True
 
 
-async def add_length_pet(pet_id: int, length: float, session: AsyncSession):
+async def add_length_pet(
+    pet_id: int, length: float, date: datetime, session: AsyncSession
+):
     """
     Добавляет длину для определенного питомца.
     """
-    current_date = datetime.now().replace(tzinfo=timezone.utc)
-    stmt = LengthPetOrm(
-        length=length,
-        pet_id=pet_id,
-        date_measure=current_date,
-    )
-    session.add(stmt)
     try:
+        stmt = LengthPetOrm(
+            length=length,
+            pet_id=pet_id,
+            date_measure=date.astimezone(timezone.utc),
+        )
+        session.add(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении длины: {e}', exc_info=True)
@@ -237,16 +239,16 @@ async def add_length_pet(pet_id: int, length: float, session: AsyncSession):
         return True
 
 
-async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSession):
+async def add_molting_pet(pet_id: int, date: datetime, session: AsyncSession):
     """
     Добавляет дату линьку для определенного питомца.
     """
-    stmt = MoltingPetOrm(
-        pet_id=pet_id,
-        date_measure=date_molting,
-    )
-    session.add(stmt)
     try:
+        stmt = MoltingPetOrm(
+            pet_id=pet_id,
+            date_measure=date.astimezone(timezone.utc),
+        )
+        session.add(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении даты линьки: {e}', exc_info=True)
@@ -256,23 +258,25 @@ async def add_molting_pet(pet_id: int, date_molting: DateTime, session: AsyncSes
 
 
 async def add_feeding_pet_date(
-    pet_id: int, session: AsyncSession, description: str = None
+    pet_id: int, date: datetime, session: AsyncSession, description: str = None
 ):
     """
     Добавляет дату кормления питомца.
     """
     try:
-        current_date = datetime.now().replace(tzinfo=timezone.utc)
         stmt = FeedingPetOrm(
             pet_id=pet_id,
-            date_feed=current_date,
+            date_feed=date.astimezone(timezone.utc),
             description=description,
         )
         session.add(stmt)
         await session.commit()
     except Exception as e:
         logger.error(f'Ошибка при добавлении кормления: {e}', exc_info=True)
-        raise
+        return False
+    else:
+        return True
+
 
 
 async def add_feeding_shedule(
