@@ -169,11 +169,6 @@ async def next_page_feeding_history_handler(
         page = callback_data.page + 1
 
         feeding_pet_history = await get_all_pet_feeding(callback_data.pet_id, session)
-        if not feeding_pet_history:
-            await callback.message.answer(
-                text='У данного питомца нет истории кормлений.'
-            )
-            return
         inline_kb = await show_feeding_history_inline_kb(
             feeding_pet_history,
             callback_data.user_tz,
@@ -192,7 +187,7 @@ async def next_page_feeding_history_handler(
     else:
         # Для обработки пустого списка при удалении всех событий
         if not feeding_pet_history:
-            await callback.message.answer(
+            await callback.message.edit_text(
                 text='У данного питомца не найдена история кормлений.',
                 reply_markup=inline_kb,
             )
@@ -603,7 +598,7 @@ async def next_page_molting_history_handler(
     else:
         # Для обработки пустого списка при удалении всех событий
         if not molting_history:
-            await callback.message.answer(
+            await callback.message.edit_text(
                 text='У данного питомца не найдена история линек.',
                 reply_markup=inline_kb,
             )
@@ -1017,7 +1012,7 @@ async def next_page_weight_history_handler(
     else:
         # Для обработки пустого списка при удалении всех событий
         if not weight_history:
-            await callback.message.answer(
+            await callback.message.edit_text(
                 text='У данного питомца не найдена история взвешиваний.',
                 reply_markup=inline_kb,
             )
@@ -1431,7 +1426,7 @@ async def next_page_length_history_handler(
     else:
         # Для обработки пустого списка при удалении всех событий
         if not length_history:
-            await callback.message.answer(
+            await callback.message.edit_text(
                 text='У данного питомца не найдена история измерений длины.',
                 reply_markup=inline_kb,
             )
