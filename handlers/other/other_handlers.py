@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from keyboards.inline_keyboards.other_kb import main_menu_inline, back_to_main_menu
 from lexicon.lexicon import LEXICON_RU
-from services.registration_services import user_registration
+from services.registration_services import user_registration, get_user
 
 router = Router(name='other')
 
@@ -18,12 +18,16 @@ async def start_handler(message: Message, session: AsyncSession):
 
 
 @router.message(Command('menu'))
-async def get_main_menu(message: Message):
+async def get_main_menu(message: Message, session: AsyncSession):
     """Срабатывает на команду /menu (возврат в меню)"""
-    await message.answer(
-        text='📋Главное меню📋',
-        reply_markup=main_menu_inline,
-    )
+    user_exist = await get_user(message.from_user.id, session)
+    if user_exist:
+        await message.answer(
+            text='📋Главное меню📋',
+            reply_markup=main_menu_inline,
+        )
+    else:
+        await start_handler(message, session)
 
 
 @router.callback_query(F.data == 'back_to_main_menu')
