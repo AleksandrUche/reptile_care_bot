@@ -1,7 +1,14 @@
 from __future__ import annotations
 
-from sqlalchemy import ForeignKey, Boolean, DateTime, BigInteger, func, Enum, \
-    UniqueConstraint
+from sqlalchemy import (
+    ForeignKey,
+    Boolean,
+    DateTime,
+    BigInteger,
+    func,
+    Enum,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from database.engine import Base
@@ -120,3 +127,10 @@ class UserGroupAssociation(Base):
     __table_args__ = (
         UniqueConstraint('user_id', 'group_id', name='uq_user_group'),
     )
+
+
+class Channel(Base):
+    __tablename__ = 'channel'
+    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
+    channel_id: Mapped[int] = mapped_column(BigInteger, unique=True)
+    title: Mapped[str] = mapped_column('Название')
